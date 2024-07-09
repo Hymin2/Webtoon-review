@@ -1,4 +1,4 @@
-title: [BE/AOS] type: 이슈 #이슈번호
+[BE/AOS] type: 이슈 #이슈번호
 
 ## 💻 작업 내용
 

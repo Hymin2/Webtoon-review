@@ -4,3 +4,10 @@ spring:
     url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${MYSQL_USERNAME}
     password: ${MYSQL_PASSWORD}
+
+server:
+  ssl:
+    enabled: true
+    key-store-type: ${SSL_TYPE}
+    key-store: classpath:${SSL_PATH}
+    key-store-password: ${SSL_PASSWORD}

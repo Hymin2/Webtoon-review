@@ -11,15 +11,6 @@ public class UserResponse {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class RegisterResult {
-
-        private Long id;
-    }
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class LoginResult {
 
         private String sessionId;

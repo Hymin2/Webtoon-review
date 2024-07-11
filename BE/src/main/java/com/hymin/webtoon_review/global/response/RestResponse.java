@@ -15,4 +15,9 @@ public class RestResponse {
         this.message = message;
         this.time = Time.now();
     }
+
+    public static RestResponse onCreated() {
+        return new RestResponse(ResponseStatus.CREATED.getHttpStatusValue(),
+            ResponseStatus.CREATED.getMessage());
+    }
 }

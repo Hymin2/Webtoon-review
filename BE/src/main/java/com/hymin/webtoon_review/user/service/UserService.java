@@ -40,4 +40,12 @@ public class UserService {
 
         return UserMapper.toLoginResult(sessionId);
     }
+
+    public Boolean checkDuplicatedUsername(String username) {
+        return !userRepository.existsByUsername(username);
+    }
+
+    public Boolean checkDuplicatedNickname(String nickname) {
+        return !userRepository.existsByNickname(nickname);
+    }
 }

@@ -25,7 +25,7 @@ public class UserService {
     }
 
     public LoginResult login(LoginInfo loginInfo) {
-        if (userRepository.existsByUsernameAndPassword(loginInfo.getUsername(),
+        if (!userRepository.existsByUsernameAndPassword(loginInfo.getUsername(),
             loginInfo.getPassword())) {
             throw new UserNotFoundException(ResponseStatus.USER_NOT_FOUND);
         }

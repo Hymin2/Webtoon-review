@@ -5,6 +5,7 @@ import com.hymin.webtoon_review.global.response.RestResponse;
 import com.hymin.webtoon_review.user.dto.UserRequest.LoginInfo;
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
 import com.hymin.webtoon_review.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -19,14 +20,14 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public RestResponse register(@RequestBody RegisterInfo registerInfo) {
+    public RestResponse register(@Valid @RequestBody RegisterInfo registerInfo) {
         userService.register(registerInfo);
 
         return RestResponse.onCreated();
     }
 
     @PostMapping("/login")
-    public RestResponse login(@RequestBody LoginInfo loginInfo) {
+    public RestResponse login(@Valid @RequestBody LoginInfo loginInfo) {
         return ApiResponse.onSuccess(userService.login(loginInfo));
     }
 }

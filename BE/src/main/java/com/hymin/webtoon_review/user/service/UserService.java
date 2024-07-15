@@ -5,6 +5,7 @@ import com.hymin.webtoon_review.user.dto.UserRequest.LoginInfo;
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
 import com.hymin.webtoon_review.user.dto.UserResponse.LoginResult;
 import com.hymin.webtoon_review.user.entity.User;
+import com.hymin.webtoon_review.user.exception.AlreadyUserExistsException;
 import com.hymin.webtoon_review.user.exception.UserNotFoundException;
 import com.hymin.webtoon_review.user.mapper.UserMapper;
 import com.hymin.webtoon_review.user.repository.UserRepository;
@@ -19,6 +20,11 @@ public class UserService {
     private final UserRepository userRepository;
 
     public void register(RegisterInfo registerInfo) {
+        if (userRepository.existsByUsernameOrNickname(registerInfo.getUsername(),
+            registerInfo.getNickname())) {
+            throw new AlreadyUserExistsException(ResponseStatus.ALREADY_USER_EXISTS);
+        }
+
         User user = UserMapper.toUser(registerInfo);
 
         userRepository.save(user);

@@ -12,6 +12,7 @@ public enum ResponseStatus {
     CREATED(HttpStatus.CREATED, "정상 처리 됐습니다."),
 
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 접근입니다."),
+    INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 입력입니다."),
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
     ;

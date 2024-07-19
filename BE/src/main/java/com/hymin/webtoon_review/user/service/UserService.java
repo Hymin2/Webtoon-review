@@ -1,11 +1,12 @@
 package com.hymin.webtoon_review.user.service;
 
 import com.hymin.webtoon_review.global.response.ResponseStatus;
+import com.hymin.webtoon_review.global.security.JwtService;
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
-import com.hymin.webtoon_review.user.dto.UserResponse.LoginResult;
 import com.hymin.webtoon_review.user.entity.Authority;
 import com.hymin.webtoon_review.user.entity.User;
 import com.hymin.webtoon_review.user.exception.AlreadyUserExistsException;
+import com.hymin.webtoon_review.user.exception.UserNotFoundException;
 import com.hymin.webtoon_review.user.mapper.UserMapper;
 import com.hymin.webtoon_review.user.repository.AuthorityRepository;
 import com.hymin.webtoon_review.user.repository.UserRepository;
@@ -23,6 +24,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final AuthorityRepository authorityRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
     @Transactional
     public void register(RegisterInfo registerInfo) {
@@ -39,10 +41,14 @@ public class UserService {
         user.setAuthorities(List.of(authority));
     }
 
-    public LoginResult login(Authentication authentication) {
-        // TODO Jwt 생성 후 리턴
+    public String login(Authentication authentication) {
+        if (!authentication.isAuthenticated()) {
+            throw new UserNotFoundException(ResponseStatus.LOGIN_FAILED);
+        }
+        
+        String jwt = jwtService.createJwt(authentication);
 
-        return null;
+        return "Bearer " + jwt;
     }
 
     public Boolean checkDuplicatedUsername(String username) {

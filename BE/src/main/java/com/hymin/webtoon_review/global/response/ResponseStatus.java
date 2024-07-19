@@ -15,7 +15,9 @@ public enum ResponseStatus {
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 입력입니다."),
 
     LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
-    INVALID_JSON_WEB_TOKEN(HttpStatus.UNAUTHORIZED, "잘못된 토큰입니다."),
+    INVALID_JSON_WEB_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 토큰입니다."),
+
+    FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다."),
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
 

@@ -16,6 +16,11 @@ public class RestResponse {
         this.time = Time.now();
     }
 
+    public static RestResponse onSuccess() {
+        return new RestResponse(ResponseStatus.OK.getHttpStatusValue(),
+            ResponseStatus.OK.getMessage());
+    }
+
     public static RestResponse onCreated() {
         return new RestResponse(ResponseStatus.CREATED.getHttpStatusValue(),
             ResponseStatus.CREATED.getMessage());

@@ -1,5 +1,9 @@
 package com.hymin.webtoon_review.global.config;
 
+import com.hymin.webtoon_review.global.handler.CustomAccessDeniedHandler;
+import com.hymin.webtoon_review.global.handler.CustomAuthenticationEntryPoint;
+import com.hymin.webtoon_review.global.security.JwtService;
+import com.hymin.webtoon_review.global.security.filter.JwtAuthenticationFilter;
 import com.hymin.webtoon_review.global.security.filter.UsernamePasswordAuthenticationFilter;
 import com.hymin.webtoon_review.global.security.provider.JwtAuthenticationProvider;
 import com.hymin.webtoon_review.global.security.provider.UsernamePasswordAuthenticationProvider;
@@ -14,13 +18,13 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
 
     @Bean
@@ -35,7 +39,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtAuthenticationProvider jwtAuthenticationProvider() {
-        return new JwtAuthenticationProvider();
+        return new JwtAuthenticationProvider(jwtService);
     }
 
     @Bean
@@ -44,6 +48,11 @@ public class SecurityConfig {
             .authenticationProvider(usernamePasswordAuthenticationProvider())
             .authenticationProvider(jwtAuthenticationProvider())
             .build();
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(HttpSecurity http) throws Exception {
+        return new JwtAuthenticationFilter(authenticationManager(http));
     }
 
     @Bean
@@ -58,11 +67,18 @@ public class SecurityConfig {
             .csrf((csrf) -> csrf.disable())
             .cors((cors) -> cors.disable())
             .authorizeHttpRequests((authorizeRequests) -> {
-                authorizeRequests.requestMatchers("/users/**").permitAll();
-                authorizeRequests.anyRequest().hasRole("USER");
+                authorizeRequests
+                    .requestMatchers("/users/**").permitAll()
+                    .requestMatchers("/admin/**").hasRole("ADMIN")
+                    .anyRequest().hasRole("USER");
             })
-            .addFilterAt(usernamePasswordAuthenticationFilter(http),
-                BasicAuthenticationFilter.class);
+            .addFilterBefore(usernamePasswordAuthenticationFilter(http),
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(jwtAuthenticationFilter(http),
+                org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling((handler) -> handler
+                .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+                .accessDeniedHandler(new CustomAccessDeniedHandler()));
 
         return http.build();
     }

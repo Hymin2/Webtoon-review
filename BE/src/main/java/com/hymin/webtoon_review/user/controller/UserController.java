@@ -1,12 +1,15 @@
 package com.hymin.webtoon_review.user.controller;
 
+import com.hymin.webtoon_review.global.annotation.Auth;
 import com.hymin.webtoon_review.global.response.ApiResponse;
 import com.hymin.webtoon_review.global.response.RestResponse;
-import com.hymin.webtoon_review.user.dto.UserRequest.LoginInfo;
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
 import com.hymin.webtoon_review.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -22,15 +25,19 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping
-    public RestResponse register(@Valid @RequestBody RegisterInfo registerInfo) {
+    public ResponseEntity<RestResponse> register(@Valid @RequestBody RegisterInfo registerInfo) {
         userService.register(registerInfo);
 
-        return RestResponse.onCreated();
+        return ResponseEntity.status(HttpStatus.CREATED).body(RestResponse.onCreated());
     }
 
     @PostMapping("/login")
-    public RestResponse login(@Valid @RequestBody LoginInfo loginInfo) {
-        return ApiResponse.onSuccess(userService.login(loginInfo));
+    public ResponseEntity<RestResponse> login(@Auth Authentication authentication) {
+        String jwt = userService.login(authentication);
+
+        return ResponseEntity.status(HttpStatus.OK)
+            .header("Authorization", jwt)
+            .body(RestResponse.onSuccess());
     }
 
     @GetMapping("/check/username")

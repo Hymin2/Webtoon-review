@@ -23,3 +23,5 @@ server:
     key-store: classpath:${SSL_PATH}
     key-store-password: ${SSL_PASSWORD}
 
+jwt:
+  key: ${JWT_KEY}

@@ -41,12 +41,12 @@ public class UserController {
     }
 
     @GetMapping("/check/username")
-    public RestResponse checkDuplicatedUsername(@RequestParam String username) {
+    public RestResponse checkDuplicatedUsername(@RequestParam("username") String username) {
         return ApiResponse.onSuccess(userService.checkDuplicatedUsername(username));
     }
 
     @GetMapping("/check/nickname")
-    public RestResponse checkDuplicatedNickname(@RequestParam String nickname) {
+    public RestResponse checkDuplicatedNickname(@RequestParam("nickname") String nickname) {
         return ApiResponse.onSuccess(userService.checkDuplicatedNickname(nickname));
     }
 }

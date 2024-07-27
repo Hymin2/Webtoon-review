@@ -28,10 +28,10 @@ class RegisterViewModel @Inject constructor(
     private val _isNicknameEmpty = MutableLiveData<Boolean>()
     val isNicknameEmpty: LiveData<Boolean> get() = _isNicknameEmpty
 
-    private val _isDuplicatedUsername = MutableLiveData<Boolean>()
+    private val _isDuplicatedUsername = MutableLiveData(false)
     val isDuplicatedUsername: LiveData<Boolean> get() = _isDuplicatedUsername
 
-    private val _isDuplicatedNickname = MutableLiveData<Boolean>()
+    private val _isDuplicatedNickname = MutableLiveData(false)
     val isDuplicatedNickname: LiveData<Boolean> get() = _isDuplicatedNickname
 
     private val _isRegisterSuccess = MutableLiveData<Boolean>()

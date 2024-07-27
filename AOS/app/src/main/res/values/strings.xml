@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">webtoon-review</string>
+    <string name="id">아이디</string>
+    <string name="pw">비밀번호</string>
+    <string name="register_text">계정이 없으신가요?</string>
+    <string name="nickname">닉네임</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

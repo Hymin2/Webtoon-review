@@ -44,14 +44,14 @@ class UserControllerTest {
 
         // when
         when(userService.checkDuplicatedUsername(username))
-            .thenReturn(true);
+            .thenReturn(false);
 
         // then
         mockMvc.perform(get("/users/check/username")
                 .queryParam("username", username))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value(200))
-            .andExpect(jsonPath("$.data").value(true));
+            .andExpect(jsonPath("$.data").value(false));
     }
 
     @Test
@@ -62,19 +62,37 @@ class UserControllerTest {
 
         // when
         when(userService.checkDuplicatedUsername(username))
-            .thenReturn(false);
+            .thenReturn(true);
 
         // then
         mockMvc.perform(get("/users/check/username")
                 .queryParam("username", username))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value(200))
-            .andExpect(jsonPath("$.data").value(false));
+            .andExpect(jsonPath("$.data").value(true));
     }
 
     @Test
     @DisplayName("사용 가능한 nickname")
     public void availableNickname() throws Exception {
+        // given
+        String nickname = "nickname";
+
+        // when
+        when(userService.checkDuplicatedNickname(nickname))
+            .thenReturn(false);
+
+        // then
+        mockMvc.perform(get("/users/check/nickname")
+                .queryParam("nickname", nickname))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value(200))
+            .andExpect(jsonPath("$.data").value(false));
+    }
+
+    @Test
+    @DisplayName("사용 불가능한 nickname")
+    public void notAvailableNickname() throws Exception {
         // given
         String nickname = "nickname";
 
@@ -88,24 +106,6 @@ class UserControllerTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value(200))
             .andExpect(jsonPath("$.data").value(true));
-    }
-
-    @Test
-    @DisplayName("사용 불가능한 nickname")
-    public void notAvailableNickname() throws Exception {
-        // given
-        String nickname = "nickname";
-
-        // when
-        when(userService.checkDuplicatedNickname(nickname))
-            .thenReturn(false);
-
-        // then
-        mockMvc.perform(get("/users/check/nickname")
-                .queryParam("nickname", nickname))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.status").value(200))
-            .andExpect(jsonPath("$.data").value(false));
     }
 
     @Test

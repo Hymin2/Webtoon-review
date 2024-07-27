@@ -45,18 +45,18 @@ public class UserService {
         if (!authentication.isAuthenticated()) {
             throw new UserNotFoundException(ResponseStatus.LOGIN_FAILED);
         }
-        
+
         String jwt = jwtService.createJwt(authentication);
 
         return "Bearer " + jwt;
     }
 
     public Boolean checkDuplicatedUsername(String username) {
-        return !userRepository.existsByUsername(username);
+        return userRepository.existsByUsername(username);
     }
 
     public Boolean checkDuplicatedNickname(String nickname) {
-        return !userRepository.existsByNickname(nickname);
+        return userRepository.existsByNickname(nickname);
     }
 
     private Authority createUserAuthority(User user) {

@@ -78,7 +78,7 @@ class UserServiceTest {
         // then
         Boolean b = userService.checkDuplicatedNickname(nickname);
 
-        assertEquals(b, true);
+        assertEquals(b, false);
     }
 
     @Test
@@ -93,7 +93,7 @@ class UserServiceTest {
         // then
         Boolean b = userService.checkDuplicatedNickname(nickname);
 
-        assertEquals(b, false);
+        assertEquals(b, true);
     }
 
     @Test

@@ -22,9 +22,8 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication)
         throws AuthenticationException {
-        String jwt = authentication.getCredentials().toString();
-
         try {
+            String jwt = authentication.getCredentials().toString();
             Claims claims = jwtService.parseJwt(jwt);
 
             String username = claims.getSubject();
@@ -36,7 +35,7 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
             return new JwtAuthentication(username, "", authorities);
         } catch (ExpiredJwtException e) {
             throw new BadCredentialsException("만료된 토큰입니다.", e);
-        } catch (JwtException e) {
+        } catch (JwtException | NullPointerException e) {
             throw new BadCredentialsException("유효하지 않는 토큰입니다.", e);
         }
     }

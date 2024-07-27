@@ -1,5 +1,7 @@
 package com.hymin.webtoon_review.di
 
+import android.content.Context
+import com.hymin.webtoon_review.data.remote.CustomCallAdapterFactory
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
@@ -34,11 +36,15 @@ class NetworkModule {
     @Singleton
     fun provideRetrofit(
         okHttpClient: OkHttpClient,
+        context: Context,
     ): Retrofit {
-        return Retrofit.Builder().baseUrl("http://10.0.2.2:8080/").addConverterFactory(
-            MoshiConverterFactory.create(
-                Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+        return Retrofit.Builder().baseUrl("http://10.0.2.2:8080/")
+            .addConverterFactory(
+                MoshiConverterFactory.create(
+                    Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
+                )
             )
-        ).client(okHttpClient).build()
+            .addCallAdapterFactory(CustomCallAdapterFactory(context))
+            .client(okHttpClient).build()
     }
 }

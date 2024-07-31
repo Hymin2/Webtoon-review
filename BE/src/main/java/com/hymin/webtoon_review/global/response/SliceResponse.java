@@ -1,31 +1,37 @@
 package com.hymin.webtoon_review.global.response;
 
+import java.util.List;
 import lombok.Getter;
 
 @Getter
-public class SliceResponse<T> extends ApiResponse {
+public class SliceResponse<T extends List> extends ApiResponse {
 
     private Boolean hasNext;
+    private Integer size;
     private Integer count;
-    private Integer nextId;
 
-    protected SliceResponse(Integer status, String message, T data, Boolean hasNext,
-        Integer count, Integer nextId) {
+    protected SliceResponse(Integer status, String message, T data, Boolean hasNext, Integer size,
+        Integer count) {
         super(status, message, data);
         this.hasNext = hasNext;
+        this.size = size;
         this.count = count;
-        this.nextId = nextId;
     }
 
-    public static <T> SliceResponse<T> onSuccess(T data, Boolean hasNext, Integer count,
-        Integer nextId) {
+    public static <T extends List> SliceResponse<T> onSuccess(T data, Integer size) {
+        boolean hasNext = data != null && data.size() - 1 == size;
+
+        if (hasNext) {
+            data.remove(data.size() - 1);
+        }
+
         return new SliceResponse<>(
             ResponseStatus.OK.getHttpStatusValue(),
             ResponseStatus.OK.getMessage(),
             data,
             hasNext,
-            count,
-            nextId
+            size,
+            data.size()
         );
     }
 }

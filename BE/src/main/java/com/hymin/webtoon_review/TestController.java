@@ -5,6 +5,7 @@ import com.hymin.webtoon_review.global.response.ApiResponse;
 import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.global.response.RestResponse;
 import com.hymin.webtoon_review.global.response.SliceResponse;
+import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +21,7 @@ public class TestController {
 
     @GetMapping("/slice")
     public RestResponse sliceTest() {
-        return SliceResponse.onSuccess("slice test", false, 1, 0);
+        return SliceResponse.onSuccess(List.of(), 10);
     }
 
     @GetMapping("/error")

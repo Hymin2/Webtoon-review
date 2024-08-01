@@ -28,6 +28,6 @@ public class Platform {
     @Column(nullable = false)
     private String name;
 
-    @OneToMany
+    @OneToMany(mappedBy = "platform")
     private List<Webtoon> webtoons;
 }

@@ -27,7 +27,7 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<WebtoonInfo> getWebtoons(Pageable pageable, List<String> dayOfWeek,
+    public List<WebtoonInfo> getWebtoons(Pageable pageable, String name, List<String> dayOfWeek,
         List<String> platform, List<String> genre) {
         return jpaQueryFactory
             .select(Projections.constructor(WebtoonInfo.class,
@@ -53,6 +53,7 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
             .on(webtoonGenre.webtoon.eq(webtoon))
             .innerJoin(QGenre.genre)
             .on(QGenre.genre.name.in(genre).and(webtoonGenre.genre.eq(QGenre.genre)))
+            .where(webtoon.name.contains(name))
             .orderBy(toOrderSpecifier(pageable.getSort()))
             .offset(pageable.getOffset())
             .limit(pageable.getPageSize() + 1)

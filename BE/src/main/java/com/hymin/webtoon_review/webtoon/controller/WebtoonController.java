@@ -22,11 +22,12 @@ public class WebtoonController {
     @GetMapping
     public RestResponse getWebtoons(
         @PageableDefault(size = 10, sort = "updateAt,desc") Pageable pageable,
+        @RequestParam(name = "name", required = false) String name,
         @RequestParam(name = "dayOfWeek", required = false) List<String> dayOfWeek,
         @RequestParam(name = "platform", required = false) List<String> platform,
         @RequestParam(name = "genre", required = false) List<String> genre) {
         return SliceResponse.onSuccess(
-            webtoonService.getWentoons(pageable, dayOfWeek, platform, genre),
+            webtoonService.getWentoons(pageable, name, dayOfWeek, platform, genre),
             pageable.getPageSize());
     }
 }

@@ -13,8 +13,8 @@ public class WebtoonService {
 
     private final WebtoonRepository webtoonRepository;
 
-    public List<WebtoonInfo> getWentoons(Pageable pageable, List<String> dayOfWeek,
+    public List<WebtoonInfo> getWentoons(Pageable pageable, String name, List<String> dayOfWeek,
         List<String> platform, List<String> genre) {
-        return webtoonRepository.getWebtoons(pageable, dayOfWeek, platform, genre);
+        return webtoonRepository.getWebtoons(pageable, name, dayOfWeek, platform, genre);
     }
 }

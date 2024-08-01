@@ -1,10 +1,11 @@
 package com.hymin.webtoon_review.global.response;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.Getter;
 
 @Getter
-public class SliceResponse<T extends List> extends ApiResponse {
+public class SliceResponse<T> extends ApiResponse {
 
     private Boolean hasNext;
     private Integer size;
@@ -18,20 +19,23 @@ public class SliceResponse<T extends List> extends ApiResponse {
         this.count = count;
     }
 
-    public static <T extends List> SliceResponse<T> onSuccess(T data, Integer size) {
+    public static <T> SliceResponse<List<T>> onSuccess(List<T> data, Integer size) {
         boolean hasNext = data != null && data.size() - 1 == size;
 
+        List<T> newList = new ArrayList<T>();
+        newList.addAll(data);
+
         if (hasNext) {
-            data.remove(data.size() - 1);
+            newList.remove(newList.size() - 1);
         }
 
         return new SliceResponse<>(
             ResponseStatus.OK.getHttpStatusValue(),
             ResponseStatus.OK.getMessage(),
-            data,
+            newList,
             hasNext,
             size,
-            data.size()
+            newList.size()
         );
     }
 }

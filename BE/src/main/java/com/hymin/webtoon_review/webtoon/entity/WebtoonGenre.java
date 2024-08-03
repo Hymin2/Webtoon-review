@@ -1,6 +1,5 @@
-package com.hymin.webtoon_review.user.entity;
+package com.hymin.webtoon_review.webtoon.entity;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,21 +13,22 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Table
-@Getter
 @Entity
+@Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Authority {
+public class WebtoonGenre {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
+    @ManyToOne
+    @JoinColumn(name = "webtoon_id")
+    private Webtoon webtoon;
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "genre_id")
+    private Genre genre;
 }

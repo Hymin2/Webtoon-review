@@ -1,6 +1,6 @@
-package com.hymin.webtoon_review.webtoon.entity;
+package com.hymin.webtoon_review.user.entity;
 
-import com.hymin.webtoon_review.user.entity.User;
+import com.hymin.webtoon_review.webtoon.entity.Webtoon;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,7 +19,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Bookmark {
+public class WebtoonRecommend {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,8 @@
 package com.hymin.webtoon_review.webtoon.entity;
 
 import com.hymin.webtoon_review.global.BaseEntity;
+import com.hymin.webtoon_review.user.entity.Bookmark;
+import com.hymin.webtoon_review.user.entity.WebtoonRecommend;
 import com.hymin.webtoon_review.webtoon.entity.enums.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

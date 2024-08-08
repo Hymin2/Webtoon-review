@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 public class WebtoonResponse {
 
@@ -19,8 +20,29 @@ public class WebtoonResponse {
         private String description;
         private String thumbnail;
         private String platform;
+        private Integer views;
+        private Integer recommendedCount;
+        private Boolean isRecommended;
+        private Boolean isBookmarked;
+        @Setter
         private List<String> authorName;
+        @Setter
         private List<String> dayOfWeeks;
+        @Setter
         private List<String> genres;
+
+        public WebtoonInfo(Long id, String name, String description, String thumbnail,
+            String platform, Integer views, Integer recommendedCount, Integer isRecommended,
+            Integer isBookmarked) {
+            this.id = id;
+            this.name = name;
+            this.description = description;
+            this.thumbnail = thumbnail;
+            this.platform = platform;
+            this.views = views == null ? 0 : views;
+            this.recommendedCount = recommendedCount == null ? 0 : recommendedCount;
+            this.isRecommended = isRecommended != null;
+            this.isBookmarked = isBookmarked != null;
+        }
     }
 }

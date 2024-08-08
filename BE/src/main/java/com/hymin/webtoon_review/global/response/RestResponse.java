@@ -25,4 +25,9 @@ public class RestResponse {
         return new RestResponse(ResponseStatus.CREATED.getHttpStatusValue(),
             ResponseStatus.CREATED.getMessage());
     }
+
+    public static RestResponse noContent() {
+        return new RestResponse(ResponseStatus.NO_CONTENT.getHttpStatusValue(),
+            ResponseStatus.NO_CONTENT.getMessage());
+    }
 }

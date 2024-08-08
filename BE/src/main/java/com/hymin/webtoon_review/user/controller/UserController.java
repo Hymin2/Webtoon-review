@@ -68,6 +68,24 @@ public class UserController {
         @PathVariable(name = "id") Long id) {
         userService.removeBookmark(authentication, id);
 
+        return RestResponse.noContent();
+    }
+
+    @PostMapping("/recommendations")
+    public RestResponse addRecommendation(
+        @Auth Authentication authentication,
+        @RequestBody WebtoonInfo webtoonInfo) {
+        userService.addRecommendation(authentication, webtoonInfo.getWebtoonId());
+
         return RestResponse.onCreated();
+    }
+
+    @DeleteMapping("/recommendations/{id}")
+    public RestResponse removeRecommendation(
+        @Auth Authentication authentication,
+        @PathVariable(name = "id") Long id) {
+        userService.removeRecommendation(authentication, id);
+
+        return RestResponse.noContent();
     }
 }

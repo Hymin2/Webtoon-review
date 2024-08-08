@@ -11,7 +11,7 @@ public class WebtoonSelectResult {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Platform {
+    public static class PlatformSelectResult {
 
         private Long webtoonId;
         private String name;
@@ -21,7 +21,7 @@ public class WebtoonSelectResult {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class DayOfWeek {
+    public static class DayOfWeekSelectResult {
 
         private Long webtoonId;
         private String name;
@@ -31,7 +31,7 @@ public class WebtoonSelectResult {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Genre {
+    public static class GenreSelectResult {
 
         private Long webtoonId;
         private String name;
@@ -41,7 +41,7 @@ public class WebtoonSelectResult {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class Author {
+    public static class AuthorSelectResult {
 
         private Long webtoonId;
         private String name;

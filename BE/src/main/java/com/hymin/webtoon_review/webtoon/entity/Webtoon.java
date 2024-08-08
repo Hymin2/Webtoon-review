@@ -45,6 +45,9 @@ public class Webtoon extends BaseEntity {
     @Enumerated(value = EnumType.STRING)
     private Status status;
 
+    @Column(name = "views")
+    private Integer views;
+
     @JoinColumn(name = "platform_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Platform platform;
@@ -57,4 +60,10 @@ public class Webtoon extends BaseEntity {
 
     @OneToMany(mappedBy = "webtoon")
     private List<WebtoonDayOfWeek> webtoonDayOfWeeks;
+
+    @OneToMany(mappedBy = "webtoon")
+    private List<WebtoonRecommend> webtoonRecommends;
+
+    @OneToMany(mappedBy = "webtoon")
+    private List<Bookmark> bookmarks;
 }

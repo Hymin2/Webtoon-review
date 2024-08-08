@@ -1,9 +1,12 @@
 package com.hymin.webtoon_review.webtoon.service;
 
+import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonInfo;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.AuthorSelectResult;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.DayOfWeekSelectResult;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.GenreSelectResult;
+import com.hymin.webtoon_review.webtoon.entity.Webtoon;
+import com.hymin.webtoon_review.webtoon.exception.WebtoonNotFoundException;
 import com.hymin.webtoon_review.webtoon.repository.WebtoonRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -65,5 +68,10 @@ public class WebtoonService {
             );
 
         return webtoons;
+    }
+
+    public Webtoon getWebtoon(Long webtoonId) {
+        return webtoonRepository.findById(webtoonId).orElseThrow(() -> new WebtoonNotFoundException(
+            ResponseStatus.WEBTOON_NOT_FOUND));
     }
 }

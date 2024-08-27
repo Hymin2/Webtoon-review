@@ -23,13 +23,15 @@ public class WebtoonService {
 
     @Transactional(readOnly = true)
     public List<WebtoonInfo> getWentoons(Authentication authentication, Pageable pageable,
-        String name, List<String> daysOfWeek,
+        String name, String lastValue, List<String> daysOfWeek,
         List<String> platforms, List<String> genres) {
 
         List<WebtoonInfo> webtoons = webtoonRepository.getWebtoons(
             authentication.getName(),
             pageable,
-            name, daysOfWeek,
+            name,
+            lastValue,
+            daysOfWeek,
             platforms, genres);
 
         List<Long> webtoonIdList = webtoons

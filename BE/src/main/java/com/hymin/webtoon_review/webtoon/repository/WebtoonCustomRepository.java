@@ -10,7 +10,7 @@ import org.springframework.data.domain.Pageable;
 public interface WebtoonCustomRepository {
 
     List<WebtoonInfo> getWebtoons(String username, Pageable pageable, String name,
-        List<String> dayOfWeek,
+        String lastValue, List<String> dayOfWeek,
         List<String> platform,
         List<String> genre);
 

@@ -1,5 +1,8 @@
 package com.hymin.webtoon_review.webtoon.repository;
 
+import static com.hymin.webtoon_review.user.entity.QBookmark.bookmark;
+import static com.hymin.webtoon_review.user.entity.QUser.user;
+import static com.hymin.webtoon_review.user.entity.QWebtoonRecommend.webtoonRecommend;
 import static com.hymin.webtoon_review.webtoon.entity.QAuthor.author;
 import static com.hymin.webtoon_review.webtoon.entity.QDayOfWeek.dayOfWeek1;
 import static com.hymin.webtoon_review.webtoon.entity.QGenre.genre;
@@ -9,22 +12,23 @@ import static com.hymin.webtoon_review.webtoon.entity.QWebtoonAuthor.webtoonAuth
 import static com.hymin.webtoon_review.webtoon.entity.QWebtoonDayOfWeek.webtoonDayOfWeek;
 import static com.hymin.webtoon_review.webtoon.entity.QWebtoonGenre.webtoonGenre;
 
-import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.Author;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.DayOfWeek;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.Genre;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.Platform;
-import com.hymin.webtoon_review.webtoon.entity.Webtoon;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonInfo;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.AuthorSelectResult;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.DayOfWeekSelectResult;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.GenreSelectResult;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
+import com.querydsl.jpa.impl.JPAQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.annotations.QueryHints;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -34,44 +38,71 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<Webtoon> getWebtoons(Pageable pageable, String name, List<String> daysOfWeek,
-        List<String> platforms, List<String> genres) {
-        BooleanExpression containsName;
+    public List<WebtoonInfo> getWebtoons(
+        String username,
+        Pageable pageable,
+        String name,
+        String lastValue,
+        List<String> daysOfWeek,
+        List<String> platforms,
+        List<String> genres) {
+        BooleanExpression containsName = null;
 
-        if (name == null || name.isEmpty()) {
-            containsName = webtoon.name.contains("");
-        } else {
+        if (name != null && name.isEmpty()) {
             containsName = webtoon.name.contains(name);
         }
 
-        return jpaQueryFactory
-            .selectFrom(webtoon)
-            .where(containsName
-                .and(getSubQueryAboutDayOfWeek(daysOfWeek).exists())
-                .and(getSubQueryAboutPlatform(platforms).exists())
-                .and(getSubQueryAboutGenre(genres).exists()))
-            .orderBy(toOrderSpecifier(pageable.getSort()))
-            .offset(pageable.getOffset())
-            .limit(pageable.getPageSize() + 1)
-            .fetch();
-    }
-
-    @Override
-    public List<Platform> getPlatforms(List<Long> webtoonId) {
-        return jpaQueryFactory
-            .select(Projections.constructor(WebtoonSelectResult.Platform.class,
+        JPAQuery<WebtoonInfo> query = jpaQueryFactory
+            .select(Projections.constructor(WebtoonInfo.class,
                 webtoon.id,
-                platform.name))
-            .from(platform)
-            .join(platform.webtoons, webtoon)
-            .on(webtoon.id.in(webtoonId))
+                webtoon.name,
+                webtoon.description,
+                webtoon.thumbnail,
+                platform.name,
+                webtoon.updatedAt,
+                webtoon.views,
+                getSubQueryAboutRecommendedCount(),
+                getSubQueryAboutIsRecommended(username),
+                getSubQueryAboutIsBookmarked(username)
+            ))
+            .distinct()
+            .from(webtoon);
+
+        if (daysOfWeek != null) {
+            query
+                .join(webtoon.webtoonDayOfWeeks, webtoonDayOfWeek)
+                .join(webtoonDayOfWeek.dayOfWeek, dayOfWeek1)
+                .on(dayOfWeek1.dayOfWeek.stringValue().in(daysOfWeek));
+        }
+
+        if (genres != null) {
+            query
+                .join(webtoon.webtoonGenres, webtoonGenre)
+                .join(webtoonGenre.genre, genre)
+                .on(genre.name.in(genres));
+        }
+
+        if (platforms != null) {
+            query
+                .join(webtoon.platform, platform)
+                .on(platform.name.in(platforms));
+        } else {
+            query
+                .join(webtoon.platform, platform);
+        }
+
+        return query
+            .where(getLastValueCondition(pageable.getSort(), lastValue), containsName)
+            .orderBy(toOrderSpecifier(pageable.getSort()))
+            .limit(pageable.getPageSize() + 1)
+            .setHint(QueryHints.COMMENT, "straight_join")
             .fetch();
     }
 
     @Override
-    public List<DayOfWeek> getDayOfWeek(List<Long> webtoonId) {
+    public List<DayOfWeekSelectResult> getDayOfWeek(List<Long> webtoonId) {
         return jpaQueryFactory
-            .select(Projections.constructor(WebtoonSelectResult.DayOfWeek.class,
+            .select(Projections.constructor(DayOfWeekSelectResult.class,
                 webtoon.id,
                 dayOfWeek1.dayOfWeek.stringValue()))
             .from(webtoonDayOfWeek)
@@ -83,9 +114,9 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
     }
 
     @Override
-    public List<Genre> getGenres(List<Long> webtoonId) {
+    public List<GenreSelectResult> getGenres(List<Long> webtoonId) {
         return jpaQueryFactory
-            .select(Projections.constructor(WebtoonSelectResult.Genre.class,
+            .select(Projections.constructor(GenreSelectResult.class,
                 webtoon.id,
                 genre.name))
             .from(webtoonGenre)
@@ -97,9 +128,9 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
     }
 
     @Override
-    public List<Author> getAuthors(List<Long> webtoonId) {
+    public List<AuthorSelectResult> getAuthors(List<Long> webtoonId) {
         return jpaQueryFactory
-            .select(Projections.constructor(WebtoonSelectResult.Author.class,
+            .select(Projections.constructor(AuthorSelectResult.class,
                 webtoon.id,
                 author.name))
             .from(webtoonAuthor)
@@ -110,50 +141,57 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
             .fetch();
     }
 
-    private JPQLQuery<Integer> getSubQueryAboutGenre(List<String> genres) {
-        JPQLQuery<Integer> query = JPAExpressions
+    private JPQLQuery<Integer> getSubQueryAboutIsBookmarked(String username) {
+        return JPAExpressions
             .selectOne()
-            .from(webtoonGenre)
-            .join(webtoonGenre.genre, genre);
-
-        if (genres == null || genres.isEmpty()) {
-            return query
-                .where(webtoonGenre.webtoon.eq(webtoon));
-        } else {
-            return query
-                .on(genre.name.in(genres))
-                .where(webtoonGenre.webtoon.eq(webtoon));
-        }
+            .from(bookmark)
+            .join(user)
+            .on(bookmark.webtoon.eq(webtoon), user.username.eq(username),
+                bookmark.user.eq(user));
     }
 
-    private JPQLQuery<Integer> getSubQueryAboutPlatform(List<String> platforms) {
-        JPQLQuery<Integer> query = JPAExpressions
+    private JPQLQuery<Integer> getSubQueryAboutIsRecommended(String username) {
+        return JPAExpressions
             .selectOne()
-            .from(platform);
-
-        if (platforms == null || platforms.isEmpty()) {
-            return query
-                .where(webtoon.platform.eq(platform));
-        } else {
-            return query
-                .where(platform.name.in(platforms).and(webtoon.platform.eq(platform)));
-        }
+            .from(webtoonRecommend)
+            .join(user)
+            .on(webtoonRecommend.webtoon.eq(webtoon), user.username.eq(username),
+                webtoonRecommend.user.eq(user));
     }
 
-    private JPQLQuery<Integer> getSubQueryAboutDayOfWeek(List<String> daysOfWeek) {
-        JPQLQuery<Integer> query = JPAExpressions
-            .selectOne()
-            .from(webtoonDayOfWeek)
-            .innerJoin(webtoonDayOfWeek.dayOfWeek, dayOfWeek1);
+    private JPQLQuery<Integer> getSubQueryAboutRecommendedCount() {
+        return JPAExpressions
+            .select(webtoonRecommend.count().intValue())
+            .from(webtoonRecommend)
+            .where(webtoonRecommend.webtoon.eq(webtoon))
+            .groupBy(webtoon.id);
+    }
 
-        if (daysOfWeek == null || daysOfWeek.isEmpty()) {
-            return query
-                .where(webtoonDayOfWeek.webtoon.eq(webtoon));
-        } else {
-            return query
-                .on(dayOfWeek1.dayOfWeek.stringValue().in(daysOfWeek))
-                .where(webtoonDayOfWeek.webtoon.eq(webtoon));
+    private BooleanExpression getLastValueCondition(Sort sort, String lastValue) {
+        Sort.Order order = sort.stream()
+            .findFirst()
+            .get();
+        String property = order.getProperty();
+
+        if (order == null || lastValue == null || lastValue.isEmpty()) {
+            return null;
         }
+
+        if (property.equals("updatedAt") && order.isAscending()) {
+            return webtoon.updatedAt.gt(LocalDateTime.parse(lastValue));
+        } else if (property.equals("updatedAt") && order.isDescending()) {
+            return webtoon.updatedAt.lt(LocalDateTime.parse(lastValue));
+        } else if (property.equals("name") && order.isAscending()) {
+            return webtoon.name.gt(lastValue);
+        } else if (property.equals("name") && order.isDescending()) {
+            return webtoon.name.lt(lastValue);
+        } else if (property.equals("views") && order.isAscending()) {
+            return webtoon.views.gt(Integer.valueOf(lastValue));
+        } else if (property.equals("views") && order.isDescending()) {
+            return webtoon.views.lt(Integer.valueOf(lastValue));
+        }
+
+        return null;
     }
 
     private OrderSpecifier<?>[] toOrderSpecifier(Sort sort) {
@@ -162,10 +200,16 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
         sort.stream()
             .forEach((order) -> {
                 Order direction = order.getDirection().isAscending() ? Order.ASC : Order.DESC;
-
                 switch (order.getProperty()) {
                     case "updatedAt":
-                        orderSpecifiers.add(new OrderSpecifier(direction, webtoon.updatedAt));
+                        orderSpecifiers.add(
+                            new OrderSpecifier(direction, webtoon.updatedAt));
+                        break;
+                    case "name":
+                        orderSpecifiers.add(new OrderSpecifier(direction, webtoon.name));
+                        break;
+                    case "views":
+                        orderSpecifiers.add(new OrderSpecifier(direction, webtoon.views));
                         break;
                 }
             });

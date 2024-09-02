@@ -13,7 +13,7 @@ import com.hymin.webtoon_review.global.security.authentication.UsernamePasswordA
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
 import com.hymin.webtoon_review.user.exception.AlreadyUserExistsException;
 import com.hymin.webtoon_review.user.exception.UserNotFoundException;
-import com.hymin.webtoon_review.user.service.UserService;
+import com.hymin.webtoon_review.user.facade.UserFacade;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class UserControllerTest {
     private MockMvc mockMvc;
 
     @MockBean
-    private UserService userService;
+    private UserFacade userFacade;
 
     @Test
     @DisplayName("사용 가능한 username")
@@ -43,7 +43,7 @@ class UserControllerTest {
         String username = "user";
 
         // when
-        when(userService.checkDuplicatedUsername(username))
+        when(userFacade.checkDuplicatedUsername(username))
             .thenReturn(false);
 
         // then
@@ -61,7 +61,7 @@ class UserControllerTest {
         String username = "user";
 
         // when
-        when(userService.checkDuplicatedUsername(username))
+        when(userFacade.checkDuplicatedUsername(username))
             .thenReturn(true);
 
         // then
@@ -79,7 +79,7 @@ class UserControllerTest {
         String nickname = "nickname";
 
         // when
-        when(userService.checkDuplicatedNickname(nickname))
+        when(userFacade.checkDuplicatedNickname(nickname))
             .thenReturn(false);
 
         // then
@@ -97,7 +97,7 @@ class UserControllerTest {
         String nickname = "nickname";
 
         // when
-        when(userService.checkDuplicatedNickname(nickname))
+        when(userFacade.checkDuplicatedNickname(nickname))
             .thenReturn(true);
 
         // then
@@ -138,7 +138,7 @@ class UserControllerTest {
 
         // when
         doThrow(new AlreadyUserExistsException(ResponseStatus.ALREADY_USER_EXISTS))
-            .when(userService).register(registerInfo);
+            .when(userFacade).register(registerInfo);
 
         // then
         mockMvc.perform(post("/users")
@@ -156,7 +156,7 @@ class UserControllerTest {
             "credentials", List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
         // when
-        when(userService.login(authentication))
+        when(userFacade.login(authentication))
             .thenReturn("Bearer ");
 
         // then
@@ -173,7 +173,7 @@ class UserControllerTest {
             "credentials");
 
         // when
-        when(userService.login(authentication))
+        when(userFacade.login(authentication))
             .thenThrow(UserNotFoundException.class);
 
         // then

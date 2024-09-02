@@ -13,7 +13,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,59 +20,32 @@ public class WebtoonService {
 
     private final WebtoonRepository webtoonRepository;
 
-    @Transactional(readOnly = true)
-    public List<WebtoonInfo> getWentoons(Authentication authentication, Pageable pageable,
+    public List<WebtoonInfo> getWebtoonInfoList(Authentication authentication, Pageable pageable,
         String name, String lastValue, List<String> daysOfWeek,
         List<String> platforms, List<String> genres) {
-
-        List<WebtoonInfo> webtoons = webtoonRepository.getWebtoons(
+        return webtoonRepository.getWebtoons(
             authentication.getName(),
             pageable,
             name,
             lastValue,
             daysOfWeek,
             platforms, genres);
-
-        List<Long> webtoonIdList = webtoons
-            .stream()
-            .map(WebtoonInfo::getId)
-            .toList();
-
-        List<DayOfWeekSelectResult> dayOfWeekSelectResultList = webtoonRepository.getDayOfWeek(
-            webtoonIdList);
-        List<GenreSelectResult> genreSelectResultList = webtoonRepository.getGenres(webtoonIdList);
-        List<AuthorSelectResult> authorSelectResultList = webtoonRepository.getAuthors(
-            webtoonIdList);
-
-        webtoons
-            .stream()
-            .forEach((webtoon) -> {
-                    webtoon.setDayOfWeeks(dayOfWeekSelectResultList
-                        .stream()
-                        .filter((dow) -> webtoon.getId().equals(dow.getWebtoonId()))
-                        .map(DayOfWeekSelectResult::getName)
-                        .toList()
-                    );
-
-                    webtoon.setGenres(genreSelectResultList
-                        .stream()
-                        .filter((genre) -> webtoon.getId().equals(genre.getWebtoonId()))
-                        .map(GenreSelectResult::getName)
-                        .toList());
-
-                    webtoon.setAuthorName(authorSelectResultList
-                        .stream()
-                        .filter((author) -> webtoon.getId().equals(author.getWebtoonId()))
-                        .map(AuthorSelectResult::getName)
-                        .toList());
-                }
-            );
-
-        return webtoons;
     }
 
-    public Webtoon getWebtoon(Long webtoonId) {
-        return webtoonRepository.findById(webtoonId).orElseThrow(() -> new WebtoonNotFoundException(
+    public List<DayOfWeekSelectResult> getDayOfWeekSelectResultList(List<Long> webtoonIdList) {
+        return webtoonRepository.getDayOfWeek(webtoonIdList);
+    }
+
+    public List<GenreSelectResult> getGenreSelectResultList(List<Long> webtoonIdList) {
+        return webtoonRepository.getGenres(webtoonIdList);
+    }
+
+    public List<AuthorSelectResult> getAuthorSelectResultList(List<Long> webtoonIdList) {
+        return webtoonRepository.getAuthors(webtoonIdList);
+    }
+
+    public Webtoon get(Long id) {
+        return webtoonRepository.findById(id).orElseThrow(() -> new WebtoonNotFoundException(
             ResponseStatus.WEBTOON_NOT_FOUND));
     }
 }

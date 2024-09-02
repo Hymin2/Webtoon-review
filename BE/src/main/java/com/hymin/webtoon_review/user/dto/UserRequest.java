@@ -36,12 +36,4 @@ public class UserRequest {
         private String username;
         private String password;
     }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class WebtoonInfo {
-
-        private Long webtoonId;
-    }
 }

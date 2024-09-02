@@ -8,8 +8,8 @@ import com.hymin.webtoon_review.global.security.JwtService;
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
 import com.hymin.webtoon_review.user.exception.AlreadyUserExistsException;
 import com.hymin.webtoon_review.user.exception.UserNotFoundException;
+import com.hymin.webtoon_review.user.facade.UserFacade;
 import com.hymin.webtoon_review.user.repository.AuthorityRepository;
-import com.hymin.webtoon_review.user.repository.UserRepository;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 class UserServiceTest {
 
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
     @Mock
     private AuthorityRepository authorityRepository;
     @Mock
@@ -34,7 +34,7 @@ class UserServiceTest {
     @Mock
     private JwtService jwtService;
     @InjectMocks
-    private UserService userService;
+    private UserFacade userFacade;
 
     @Test
     @DisplayName("사용 가능한 username")
@@ -43,10 +43,10 @@ class UserServiceTest {
         String username = "user";
 
         // when
-        when(userRepository.existsByUsername(username)).thenReturn(false);
+        when(userService.existsByUsername(username)).thenReturn(false);
 
         // then
-        Boolean b = userService.checkDuplicatedUsername(username);
+        Boolean b = userFacade.checkDuplicatedUsername(username);
 
         assertEquals(b, true);
     }
@@ -58,10 +58,10 @@ class UserServiceTest {
         String username = "user";
 
         // when
-        when(userRepository.existsByUsername(username)).thenReturn(true);
+        when(userService.existsByUsername(username)).thenReturn(true);
 
         // then
-        Boolean b = userService.checkDuplicatedUsername(username);
+        Boolean b = userFacade.checkDuplicatedUsername(username);
 
         assertEquals(b, false);
     }
@@ -73,10 +73,10 @@ class UserServiceTest {
         String nickname = "nickname";
 
         // when
-        when(userRepository.existsByNickname(nickname)).thenReturn(false);
+        when(userService.existsByNickname(nickname)).thenReturn(false);
 
         // then
-        Boolean b = userService.checkDuplicatedNickname(nickname);
+        Boolean b = userFacade.checkDuplicatedNickname(nickname);
 
         assertEquals(b, false);
     }
@@ -88,10 +88,10 @@ class UserServiceTest {
         String nickname = "nickname";
 
         // when
-        when(userRepository.existsByNickname(nickname)).thenReturn(true);
+        when(userService.existsByNickname(nickname)).thenReturn(true);
 
         // then
-        Boolean b = userService.checkDuplicatedNickname(nickname);
+        Boolean b = userFacade.checkDuplicatedNickname(nickname);
 
         assertEquals(b, true);
     }
@@ -107,12 +107,12 @@ class UserServiceTest {
             .build();
 
         // when
-        when(userRepository.existsByUsernameOrNickname(registerInfo.getUsername(),
+        when(userService.existsByUsernameOrNickname(registerInfo.getUsername(),
             registerInfo.getNickname()))
             .thenReturn(false);
 
         // then
-        userService.register(registerInfo);
+        userFacade.register(registerInfo);
     }
 
     @Test
@@ -126,13 +126,13 @@ class UserServiceTest {
             .build();
 
         // when
-        when(userRepository.existsByUsernameOrNickname(registerInfo.getUsername(),
+        when(userService.existsByUsernameOrNickname(registerInfo.getUsername(),
             registerInfo.getNickname()))
             .thenReturn(true);
 
         // then
         assertThrows(AlreadyUserExistsException.class, () -> {
-            userService.register(registerInfo);
+            userFacade.register(registerInfo);
         });
     }
 
@@ -144,7 +144,7 @@ class UserServiceTest {
             List.of(new SimpleGrantedAuthority("USER")));
 
         // then
-        String jwt = userService.login(authentication);
+        String jwt = userFacade.login(authentication);
 
         assertEquals(true, jwt.contains("Bearer "));
     }
@@ -157,7 +157,7 @@ class UserServiceTest {
 
         // then
         assertThrows(UserNotFoundException.class, () -> {
-            userService.login(authentication);
+            userFacade.login(authentication);
         });
     }
 }

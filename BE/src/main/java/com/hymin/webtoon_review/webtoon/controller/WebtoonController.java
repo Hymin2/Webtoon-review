@@ -3,14 +3,17 @@ package com.hymin.webtoon_review.webtoon.controller;
 import com.hymin.webtoon_review.global.annotation.Auth;
 import com.hymin.webtoon_review.global.response.RestResponse;
 import com.hymin.webtoon_review.global.response.SliceResponse;
-import com.hymin.webtoon_review.webtoon.service.WebtoonService;
+import com.hymin.webtoon_review.webtoon.facade.WebtoonFacade;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/webtoons")
 public class WebtoonController {
 
-    private final WebtoonService webtoonService;
+    private final WebtoonFacade webtoonFacade;
 
     @GetMapping
     public RestResponse getWebtoons(
@@ -32,8 +35,46 @@ public class WebtoonController {
         @RequestParam(name = "platform", required = false) List<String> platform,
         @RequestParam(name = "genre", required = false) List<String> genre) {
         return SliceResponse.onSuccess(
-            webtoonService.getWentoons(authentication, pageable, name, lastValue, dayOfWeek,
+            webtoonFacade.getWentoonList(authentication, pageable, name, lastValue, dayOfWeek,
                 platform, genre),
             pageable.getPageSize());
+    }
+
+    @PostMapping("/{id}/bookmarks")
+    public RestResponse addBookmark(
+        @Auth Authentication authentication,
+        @PathVariable(name = "id") Long id) {
+        webtoonFacade.addBookmark(authentication, id);
+
+        return RestResponse.onCreated();
+    }
+
+    @DeleteMapping("/{webtoon_id}/bookmarks/{bookmark_id}")
+    public RestResponse removeBookmark(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "bookmark_id") Long bookmarkId) {
+        webtoonFacade.removeBookmark(authentication, webtoonId, bookmarkId);
+
+        return RestResponse.noContent();
+    }
+
+    @PostMapping("/{id}/recommendations")
+    public RestResponse addRecommendation(
+        @Auth Authentication authentication,
+        @PathVariable(name = "id") Long id) {
+        webtoonFacade.addRecommendation(authentication, id);
+
+        return RestResponse.onCreated();
+    }
+
+    @DeleteMapping("/{webtoon_id}/recommendations/{recommendation_id}")
+    public RestResponse removeRecommendation(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "Recommendation_id") Long recommendationId) {
+        webtoonFacade.removeRecommendation(authentication, webtoonId, recommendationId);
+
+        return RestResponse.noContent();
     }
 }

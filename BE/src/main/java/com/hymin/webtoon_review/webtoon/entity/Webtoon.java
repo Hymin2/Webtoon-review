@@ -68,4 +68,7 @@ public class Webtoon extends BaseEntity {
 
     @OneToMany(mappedBy = "webtoon")
     private List<Bookmark> bookmarks;
+
+    @OneToMany(mappedBy = "webtoon")
+    private List<Comment> comments;
 }

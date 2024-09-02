@@ -6,15 +6,23 @@ import com.hymin.webtoon_review.user.entity.Bookmark;
 import com.hymin.webtoon_review.user.entity.User;
 import com.hymin.webtoon_review.user.entity.WebtoonRecommend;
 import com.hymin.webtoon_review.user.service.UserService;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonRequest.CommentInfo;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonRequest.ReplyInfo;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonInfo;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.AuthorSelectResult;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.DayOfWeekSelectResult;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.GenreSelectResult;
+import com.hymin.webtoon_review.webtoon.entity.Comment;
+import com.hymin.webtoon_review.webtoon.entity.Reply;
 import com.hymin.webtoon_review.webtoon.entity.Webtoon;
 import com.hymin.webtoon_review.webtoon.mapper.BookmarkMapper;
+import com.hymin.webtoon_review.webtoon.mapper.CommentMapper;
 import com.hymin.webtoon_review.webtoon.mapper.RecommendMapper;
+import com.hymin.webtoon_review.webtoon.mapper.ReplyMapper;
 import com.hymin.webtoon_review.webtoon.service.BookmarkService;
+import com.hymin.webtoon_review.webtoon.service.CommentService;
 import com.hymin.webtoon_review.webtoon.service.RecommendService;
+import com.hymin.webtoon_review.webtoon.service.ReplyService;
 import com.hymin.webtoon_review.webtoon.service.WebtoonService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +37,10 @@ public class WebtoonFacade {
 
     private final UserService userService;
     private final WebtoonService webtoonService;
+    private final CommentService commentService;
     private final BookmarkService bookmarkService;
     private final RecommendService recommendService;
+    private final ReplyService replyService;
 
     @Transactional(readOnly = true)
     public List<WebtoonInfo> getWentoonList(Authentication authentication, Pageable pageable,
@@ -85,10 +95,11 @@ public class WebtoonFacade {
     @Transactional
     public void removeBookmark(Authentication authentication, Long webtoonId, Long bookmarkId) {
         User user = userService.get(authentication.getName());
+        Webtoon webtoon = webtoonService.get(webtoonId);
         Bookmark bookmark = bookmarkService.get(bookmarkId);
 
         if (!bookmark.getUser().equals(user) ||
-            !bookmark.getWebtoon().getId().equals(webtoonId)) {
+            !bookmark.getWebtoon().equals(webtoon)) {
             throw new GeneralException(ResponseStatus.BAD_REQUEST);
         }
 
@@ -107,14 +118,69 @@ public class WebtoonFacade {
     public void removeRecommendation(Authentication authentication, Long webtoonId,
         Long recommendId) {
         User user = userService.get(authentication.getName());
+        Webtoon webtoon = webtoonService.get(webtoonId);
         WebtoonRecommend webtoonRecommend = recommendService.get(recommendId);
 
         if (!webtoonRecommend.getUser().equals(user) ||
-            !webtoonRecommend.getWebtoon().getId().equals(webtoonId)) {
+            !webtoonRecommend.getWebtoon().equals(webtoon)) {
             throw new GeneralException(ResponseStatus.BAD_REQUEST);
         }
 
         recommendService.delete(webtoonRecommend);
+    }
+
+    @Transactional
+    public void addComment(Authentication authentication, Long id, CommentInfo commentInfo) {
+        User user = userService.get(authentication.getName());
+        Webtoon webtoon = webtoonService.get(id);
+
+        commentService.save(CommentMapper.toComment(user, webtoon, commentInfo));
+    }
+
+    @Transactional
+    public void removeComment(Authentication authentication, Long webtoonId, Long commentId) {
+        User user = userService.get(authentication.getName());
+        Webtoon webtoon = webtoonService.get(webtoonId);
+        Comment comment = commentService.get(commentId);
+
+        if (!comment.getUser().equals(user) ||
+            !comment.getWebtoon().equals(webtoon)) {
+            throw new GeneralException(ResponseStatus.BAD_REQUEST);
+        }
+
+        commentService.delete(comment);
+    }
+
+    @Transactional
+    public void addReply(Authentication authentication, Long webtoonId, Long commentId,
+        ReplyInfo replyInfo) {
+        User user = userService.get(authentication.getName());
+        Webtoon webtoon = webtoonService.get(webtoonId);
+        Comment comment = commentService.get(commentId);
+
+        if (!comment.getUser().equals(user) ||
+            !comment.getWebtoon().equals(webtoon)) {
+            throw new GeneralException(ResponseStatus.BAD_REQUEST);
+        }
+
+        replyService.save(ReplyMapper.toReply(user, comment));
+    }
+
+    @Transactional
+    public void removeReply(Authentication authentication, Long webtoonId, Long commentId,
+        Long replyId) {
+        User user = userService.get(authentication.getName());
+        Webtoon webtoon = webtoonService.get(webtoonId);
+        Comment comment = commentService.get(commentId);
+        Reply reply = replyService.get(replyId);
+
+        if (!reply.getUser().equals(user) ||
+            !reply.getComment().equals(comment) ||
+            !comment.getWebtoon().equals(webtoon)) {
+            throw new GeneralException(ResponseStatus.BAD_REQUEST);
+        }
+
+        replyService.delete(reply);
     }
 
     private List<Long> getWebtoonIdList(List<WebtoonInfo> webtoonInfoList) {

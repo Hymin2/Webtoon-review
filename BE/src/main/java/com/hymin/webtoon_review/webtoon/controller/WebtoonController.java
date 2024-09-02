@@ -3,6 +3,8 @@ package com.hymin.webtoon_review.webtoon.controller;
 import com.hymin.webtoon_review.global.annotation.Auth;
 import com.hymin.webtoon_review.global.response.RestResponse;
 import com.hymin.webtoon_review.global.response.SliceResponse;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonRequest.CommentInfo;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonRequest.ReplyInfo;
 import com.hymin.webtoon_review.webtoon.facade.WebtoonFacade;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -74,6 +77,48 @@ public class WebtoonController {
         @PathVariable(name = "webtoon_id") Long webtoonId,
         @PathVariable(name = "Recommendation_id") Long recommendationId) {
         webtoonFacade.removeRecommendation(authentication, webtoonId, recommendationId);
+
+        return RestResponse.noContent();
+    }
+
+    @PostMapping("/{id}/comments")
+    public RestResponse addComment(
+        @Auth Authentication authentication,
+        @PathVariable(name = "id") Long id,
+        @RequestBody CommentInfo commentInfo) {
+        webtoonFacade.addComment(authentication, id, commentInfo);
+
+        return RestResponse.onCreated();
+    }
+
+    @DeleteMapping("/{webtoon_id}/comments/{comment_id}")
+    public RestResponse removeComment(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "comment_id") Long commentId) {
+        webtoonFacade.removeComment(authentication, webtoonId, commentId);
+
+        return RestResponse.noContent();
+    }
+
+    @PostMapping("/{webtoon_id}/comments/{comment_id}/replies")
+    public RestResponse addReply(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "comment_id") Long commentId,
+        @RequestBody ReplyInfo replyInfo) {
+        webtoonFacade.addReply(authentication, webtoonId, commentId, replyInfo);
+
+        return RestResponse.onCreated();
+    }
+
+    @DeleteMapping("/{webtoon_id}/comments/{comment_id}/replies/{reply_id}")
+    public RestResponse removeReply(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "comment_id") Long commentId,
+        @PathVariable(name = "reply_id") Long replyId) {
+        webtoonFacade.removeReply(authentication, webtoonId, commentId, replyId);
 
         return RestResponse.noContent();
     }

@@ -39,4 +39,8 @@ public class Reply {
     @ManyToOne
     @JoinColumn(name = "comment_id")
     private Comment comment;
+
+    public void delete() {
+        status = Boolean.FALSE;
+    }
 }

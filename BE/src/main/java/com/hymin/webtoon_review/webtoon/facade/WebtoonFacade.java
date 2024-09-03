@@ -148,7 +148,7 @@ public class WebtoonFacade {
             throw new GeneralException(ResponseStatus.BAD_REQUEST);
         }
 
-        commentService.delete(comment);
+        comment.delete();
     }
 
     @Transactional
@@ -163,7 +163,7 @@ public class WebtoonFacade {
             throw new GeneralException(ResponseStatus.BAD_REQUEST);
         }
 
-        replyService.save(ReplyMapper.toReply(user, comment));
+        replyService.save(ReplyMapper.toReply(user, comment, replyInfo));
     }
 
     @Transactional
@@ -180,7 +180,7 @@ public class WebtoonFacade {
             throw new GeneralException(ResponseStatus.BAD_REQUEST);
         }
 
-        replyService.delete(reply);
+        reply.delete();
     }
 
     private List<Long> getWebtoonIdList(List<WebtoonInfo> webtoonInfoList) {

@@ -11,8 +11,9 @@ public class CommentMapper {
         return Comment.builder()
             .user(user)
             .webtoon(webtoon)
-            .content(commentInfo.getComment())
+            .content(commentInfo.getContent())
             .score(commentInfo.getScore())
+            .status(Boolean.TRUE)
             .build();
     }
 }

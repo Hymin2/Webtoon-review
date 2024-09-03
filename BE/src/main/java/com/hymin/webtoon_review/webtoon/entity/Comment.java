@@ -48,4 +48,8 @@ public class Comment extends BaseEntity {
 
     @OneToMany(mappedBy = "comment")
     private List<Reply> replies;
+
+    public void delete() {
+        status = Boolean.FALSE;
+    }
 }

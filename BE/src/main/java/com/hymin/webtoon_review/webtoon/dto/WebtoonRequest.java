@@ -13,7 +13,7 @@ public class WebtoonRequest {
     @AllArgsConstructor
     public static class CommentInfo {
 
-        private String comment;
+        private String content;
         private Double score;
     }
 
@@ -23,6 +23,6 @@ public class WebtoonRequest {
     @AllArgsConstructor
     public static class ReplyInfo {
 
-        private String comment;
+        private String content;
     }
 }

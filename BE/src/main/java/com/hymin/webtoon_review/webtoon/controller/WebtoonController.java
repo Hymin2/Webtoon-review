@@ -43,12 +43,6 @@ public class WebtoonController {
             pageable.getPageSize());
     }
 
-    @GetMapping("/{id}")
-    public RestResponse getWebtoon(@PathVariable(name = "id") Long id) {
-        webtoonFacade.getWebtoon(id);
-        return RestResponse.onSuccess();
-    }
-
     @PostMapping("/{id}/bookmarks")
     public RestResponse addBookmark(
         @Auth Authentication authentication,

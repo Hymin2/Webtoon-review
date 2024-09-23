@@ -1,10 +1,10 @@
-package com.hymin.webtoon_review;
+package com.hymin.gateway;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class WebtoonReviewApplicationTests {
+class GatewayApplicationTests {
 
 	@Test
 	void contextLoads() {

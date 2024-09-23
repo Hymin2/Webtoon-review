@@ -1,13 +1,13 @@
-package com.hymin.webtoon_review;
+package com.hymin.gateway;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class WebtoonReviewApplication {
+public class GatewayApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(WebtoonReviewApplication.class, args);
+		SpringApplication.run(GatewayApplication.class, args);
 	}
 
 }

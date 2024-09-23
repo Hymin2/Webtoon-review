@@ -21,6 +21,8 @@ public enum ResponseStatus {
     FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다."),
 
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "사용자를 찾을 수 없습니다."),
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
+    REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "대댓글을 찾을 수 없습니다."),
     WEBTOON_NOT_FOUND(HttpStatus.NOT_FOUND, "웹툰을 찾을 수 없습니다."),
     BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND, "북마크를 찾을 수 없습니다."),
     RECOMMENDATION_NOT_FOUND(HttpStatus.NOT_FOUND, "추천을 찾을 수 없습니다."),

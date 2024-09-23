@@ -1,5 +1,7 @@
 package com.hymin.webtoon_review.user.entity;
 
+import com.hymin.webtoon_review.webtoon.entity.Comment;
+import com.hymin.webtoon_review.webtoon.entity.Reply;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -38,6 +40,12 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Authority> authorities;
+
+    @OneToMany(mappedBy = "user")
+    private List<Comment> comments;
+
+    @OneToMany(mappedBy = "user")
+    private List<Reply> replies;
 
     public void setAuthorities(List<Authority> authorities) {
         this.authorities = authorities;

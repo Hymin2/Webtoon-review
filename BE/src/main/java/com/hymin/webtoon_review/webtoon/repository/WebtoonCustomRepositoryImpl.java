@@ -48,7 +48,7 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
         List<String> genres) {
         BooleanExpression containsName = null;
 
-        if (name != null && name.isEmpty()) {
+        if (name != null && !name.isEmpty()) {
             containsName = webtoon.name.contains(name);
         }
 

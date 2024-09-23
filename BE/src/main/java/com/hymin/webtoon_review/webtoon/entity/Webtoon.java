@@ -71,4 +71,8 @@ public class Webtoon extends BaseEntity {
 
     @OneToMany(mappedBy = "webtoon")
     private List<Comment> comments;
+
+    public void increaseView() {
+        this.views++;
+    }
 }

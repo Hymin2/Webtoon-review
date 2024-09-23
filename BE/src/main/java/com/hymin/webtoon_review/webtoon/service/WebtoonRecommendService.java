@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class RecommendService {
+public class WebtoonRecommendService {
 
     private final WebtoonRecommendRepository recommendRepository;
 
@@ -25,7 +25,7 @@ public class RecommendService {
     public void delete(WebtoonRecommend recommend) {
         recommendRepository.delete(recommend);
     }
-    
+
     public void delete(Long id) {
         recommendRepository.deleteById(id);
     }

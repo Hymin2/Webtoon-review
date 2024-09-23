@@ -43,6 +43,12 @@ public class WebtoonController {
             pageable.getPageSize());
     }
 
+    @GetMapping("/{id}")
+    public RestResponse getWebtoon(@PathVariable(name = "id") Long id) {
+        webtoonFacade.getWebtoon(id);
+        return RestResponse.onSuccess();
+    }
+
     @PostMapping("/{id}/bookmarks")
     public RestResponse addBookmark(
         @Auth Authentication authentication,
@@ -119,6 +125,51 @@ public class WebtoonController {
         @PathVariable(name = "comment_id") Long commentId,
         @PathVariable(name = "reply_id") Long replyId) {
         webtoonFacade.removeReply(authentication, webtoonId, commentId, replyId);
+
+        return RestResponse.noContent();
+    }
+
+    @PostMapping("/{webtoon_id}/comments/{comment_id}/recommendations")
+    public RestResponse addCommentRecommendation(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "comment_id") Long commentId) {
+        webtoonFacade.addCommentRecommend(authentication, webtoonId, commentId);
+
+        return RestResponse.noContent();
+    }
+
+    @DeleteMapping("/{webtoon_id}/comments/{comment_id}/recommendations/{recommendations_id}")
+    public RestResponse removeCommentRecommendation(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "comment_id") Long commentId,
+        @PathVariable(name = "recommendations_id") Long recommendId) {
+        webtoonFacade.removeCommentRecommend(authentication, webtoonId, commentId, recommendId);
+
+        return RestResponse.noContent();
+    }
+
+    @PostMapping("/{webtoon_id}/comments/{comment_id}/replies/{reply_id}/recommendations")
+    public RestResponse addReplyRecommendation(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "comment_id") Long commentId,
+        @PathVariable(name = "reply_id") Long replyId) {
+        webtoonFacade.addReplyRecommend(authentication, webtoonId, commentId, replyId);
+
+        return RestResponse.noContent();
+    }
+
+    @DeleteMapping("/{webtoon_id}/comments/{comment_id}/replies/{reply_id}/recommendations/{recommend_id}")
+    public RestResponse removeReplyRecommendation(
+        @Auth Authentication authentication,
+        @PathVariable(name = "webtoon_id") Long webtoonId,
+        @PathVariable(name = "comment_id") Long commentId,
+        @PathVariable(name = "reply_id") Long replyId,
+        @PathVariable(name = "recommend_id") Long recommendId) {
+        webtoonFacade.removeReplyRecommend(authentication, webtoonId, commentId, replyId,
+            recommendId);
 
         return RestResponse.noContent();
     }

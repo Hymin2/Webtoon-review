@@ -25,45 +25,45 @@ public class RedisSortedSetService {
         zSetOperations = reactiveRedisOperations.opsForZSet();
     }
 
-    public Mono<Boolean> add(String username, String request, double score) {
-        String key = getKey(username, request);
+    public Mono<Boolean> add(String user, String request, double score) {
+        String key = getKey(user, request);
         String value = UUID.randomUUID().toString();
 
         return zSetOperations.add(key, value, score);
     }
 
-    public Flux<Object> get(String username, String request) {
-        String key = getKey(username, request);
+    public Flux<Object> get(String user, String request) {
+        String key = getKey(user, request);
 
         return zSetOperations.range(key, Range.from(Bound.inclusive(0L)).to(Bound.inclusive(-1L)));
     }
 
-    public Mono<Long> size(String username, String request) {
-        String key = getKey(username, request);
+    public Mono<Long> size(String user, String request) {
+        String key = getKey(user, request);
 
         return zSetOperations.size(key);
     }
 
-    public Mono<Boolean> setExpire(String username, String request, long second) {
-        String key = getKey(username, request);
+    public Mono<Boolean> setExpire(String user, String request, long second) {
+        String key = getKey(user, request);
 
         return reactiveRedisOperations.expire(key, Duration.ofSeconds(second));
     }
 
-    public Mono<Long> remove(String username, String request, String value) {
-        String key = getKey(username, request);
+    public Mono<Long> remove(String user, String request, String value) {
+        String key = getKey(user, request);
 
         return zSetOperations.remove(key, value);
     }
 
-    public Mono<Long> remove(String username, String request, Long from, Long to) {
-        String key = getKey(username, request);
+    public Mono<Long> remove(String user, String request, Long from, Long to) {
+        String key = getKey(user, request);
 
         return zSetOperations.removeRange(key,
             Range.from(Bound.inclusive(from)).to(Bound.inclusive(to)));
     }
 
-    private String getKey(String username, String request) {
-        return BASE_KEY + ":" + username + ":" + request;
+    private String getKey(String user, String request) {
+        return BASE_KEY + ":" + user + ":" + request;
     }
 }

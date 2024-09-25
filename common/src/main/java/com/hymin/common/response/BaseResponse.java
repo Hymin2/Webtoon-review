@@ -15,4 +15,8 @@ public class BaseResponse {
         this.message = message;
         this.time = Time.now();
     }
+
+    public BaseResponse onSuccess() {
+        return new BaseResponse(200, "정상 처리 됐습니다.");
+    }
 }

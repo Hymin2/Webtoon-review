@@ -1,0 +1,21 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/Hymin2/Webtoon-review
+          search-paths: config-file/**
+          default-label: dev
+  data:
+    redis:
+      host: localhost
+      port: 7777
+      password: pw
+
+jwt:
+  key: ${JWT_KEY}

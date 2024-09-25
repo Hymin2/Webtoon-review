@@ -1,0 +1,9 @@
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+
+jwt:
+  key: 98mcd5h098432nmhtxc792834hxmn9870t23q4hn9-98cM)NH%^$&NGV50&gn5v$&)*c&($Gt8o7cG08)9HMfdsafas

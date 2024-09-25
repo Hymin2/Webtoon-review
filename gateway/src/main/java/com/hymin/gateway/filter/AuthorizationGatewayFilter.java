@@ -4,9 +4,6 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -18,18 +15,20 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
-public class AuthorizationGatewayFilter extends AbstractGatewayFilterFactory<AuthorizationGatewayFilter.Config> {
+public class AuthorizationGatewayFilter extends
+    AbstractGatewayFilterFactory<AuthorizationGatewayFilter.Config> {
 
     @Value("${jwt.key}")
     private String key;
 
+    public AuthorizationGatewayFilter() {
+        super(Config.class);
+    }
+
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
-            if (!config.isUse()) {
-                return chain.filter(exchange);
-            } else if (!existsAuthorization(exchange)) {
+            if (!existsAuthorization(exchange)) {
                 return onError(exchange);
             }
 
@@ -87,9 +86,8 @@ public class AuthorizationGatewayFilter extends AbstractGatewayFilterFactory<Aut
         return response.setComplete();
     }
 
-    @Getter
-    @Setter
+
     public static class Config {
-        private boolean use;
+
     }
 }

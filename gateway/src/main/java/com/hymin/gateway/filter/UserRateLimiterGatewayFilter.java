@@ -10,23 +10,19 @@ import org.springframework.stereotype.Component;
 public class UserRateLimiterGatewayFilter extends
     RateLimiterGatewayFilter<UserRateLimiterGatewayFilter.Config> {
 
-    public UserRateLimiterGatewayFilter(Class<Config> configClass,
-        RedisSortedSetService redisSortedSetService) {
-        super(configClass, redisSortedSetService);
+    public UserRateLimiterGatewayFilter(RedisSortedSetService redisSortedSetService) {
+        super(Config.class, redisSortedSetService);
     }
-    
+
     @Override
     public GatewayFilter apply(Config config) {
         return (exchange, chain) -> {
             String username = exchange.getRequest().getHeaders().getFirst("User-Id");
             String request = config.getRequest();
 
-            if (isAllowed(username, request, config.getRequestLimitPerInterval())) {
-                return onSuccess(exchange, chain, username, request,
-                    config.getRequestLimitPerInterval());
-            } else {
-                return onError(exchange);
-            }
+            return isAllowed(username, request, config.getRequestLimitPerInterval())
+                .flatMap(b -> b ? onSuccess(exchange, chain, username, request,
+                    config.getRequestLimitPerInterval()) : onError(exchange));
         };
     }
 

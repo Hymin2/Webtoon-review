@@ -33,14 +33,15 @@ public abstract class RateLimiterGatewayFilter<C> extends AbstractGatewayFilterF
         return response.setComplete();
     }
 
-    protected boolean isAllowed(String username, String request, Integer requestLimitPerInterval) {
-        return Boolean.TRUE.equals(redisSortedSetService.size(username, request)
+    protected Mono<Boolean> isAllowed(String username, String request,
+        Integer requestLimitPerInterval) {
+        return redisSortedSetService.size(username, request)
             .flatMap(size -> {
                 if (size != null && size < requestLimitPerInterval) {
                     return Mono.just(true);
                 } else {
                     return Mono.just(false);
                 }
-            }).block());
+            });
     }
 }

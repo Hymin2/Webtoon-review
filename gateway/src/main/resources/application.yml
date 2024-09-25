@@ -1,0 +1,65 @@
+server:
+  port: 8080
+
+spring:
+  cloud:
+    gateway:
+      default-filters:
+        - name: AuthorizationGatewayFilter
+          args:
+            use: true
+      routes:
+        - id: user-register-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users
+            - Method=POST
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+            - name: AuthorizationGatewayFilter
+              args:
+                use: false
+        - id: user-login-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/users/login
+            - Method=POST
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+            - name: AuthorizationGatewayFilter
+              args:
+                use: false
+        - id: webtoon-service-get-post
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/webtoons/**
+            - Method=GET,POST
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+            - name: UserRateLimiterGatewayFilter
+              args:
+                rateLimitIntervalInSeconds: 1
+                requestLimitPerInterval: 5
+        - id: webtoon-list-get-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/webtoons
+            - Method=GET
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+            - name: UserRateLimiterGatewayFilter
+              args:
+                rateLimitIntervalInSeconds: 1
+                requestLimitPerInterval: 5

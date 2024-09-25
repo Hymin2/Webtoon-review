@@ -16,7 +16,7 @@ public class BaseResponse {
         this.time = Time.now();
     }
 
-    public BaseResponse onSuccess() {
+    public static BaseResponse onSuccess() {
         return new BaseResponse(200, "정상 처리 됐습니다.");
     }
 }

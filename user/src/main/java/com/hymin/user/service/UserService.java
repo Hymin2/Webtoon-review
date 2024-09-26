@@ -54,7 +54,6 @@ public class UserService {
         user.setAuthorities(List.of(authority));
 
         userRepository.save(user);
-        authorityRepository.save(authority);
     }
 
     public String login(Authentication authentication) {

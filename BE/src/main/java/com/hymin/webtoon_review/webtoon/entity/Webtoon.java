@@ -50,6 +50,30 @@ public class Webtoon extends BaseEntity {
     @Column(name = "views")
     private Integer views;
 
+    @Column(name = "recommendation_count")
+    private Integer recommendationCount;
+
+    @Column(name = "comment_count")
+    private Integer commentCount;
+
+    @Column(name = "total_star_score")
+    private Integer totalStarScore;
+
+    @Column(name = "man_star_score")
+    private Integer manStarScore;
+
+    @Column(name = "female_star_score")
+    private Integer femaleStarScore;
+
+    @Column(name = "total_popularity_score")
+    private Integer totalPopularityScore;
+
+    @Column(name = "man_popularity_score")
+    private Integer manPopularityScore;
+
+    @Column(name = "female_popularity_score")
+    private Integer femalePopularityScore;
+
     @JoinColumn(name = "platform_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Platform platform;

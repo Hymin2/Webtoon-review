@@ -3,29 +3,31 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_login"
-    app:startDestination="@id/loginFragment">
+    app:startDestination="@id/navLogin">
 
     <fragment
-        android:id="@+id/loginFragment"
+        android:id="@+id/navLogin"
         android:name="com.hymin.webtoon_review.ui.login.LoginFragment"
-        android:label="LoginFragment">
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login">
         <action
             android:id="@+id/action_loginFragment_to_registerFragment"
-            app:destination="@id/registerFragment" />
+            app:destination="@id/navRegister" />
         <action
             android:id="@+id/action_loginFragment_to_mainActivity"
-            app:destination="@id/mainActivity" />
+            app:destination="@id/navMain" />
     </fragment>
     <fragment
-        android:id="@+id/registerFragment"
+        android:id="@+id/navRegister"
         android:name="com.hymin.webtoon_review.ui.register.RegisterFragment"
-        android:label="RegisterFragment">
+        android:label="fragment_register"
+        tools:layout="@layout/fragment_register">
         <action
             android:id="@+id/action_registerFragment_to_loginFragment"
-            app:destination="@id/loginFragment" />
+            app:destination="@id/navLogin" />
     </fragment>
     <activity
-        android:id="@+id/mainActivity"
+        android:id="@+id/navMain"
         android:name="com.hymin.webtoon_review.ui.main.MainActivity"
         android:label="activity_main"
         tools:layout="@layout/activity_main" />

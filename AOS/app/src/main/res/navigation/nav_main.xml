@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_main"
+    app:startDestination="@id/navHome">
+
+    <fragment
+        android:id="@+id/navHome"
+        android:name="com.hymin.webtoon_review.ui.main.home.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_chatFragment"
+            app:destination="@id/navChat" />
+        <action
+            android:id="@+id/action_homeFragment_to_communityFragment"
+            app:destination="@id/navCommunity" />
+        <action
+            android:id="@+id/action_homeFragment_to_myPageFragment"
+            app:destination="@id/navMyPage" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navCommunity"
+        android:name="com.hymin.webtoon_review.ui.main.community.CommunityFragment"
+        android:label="fragment_community"
+        tools:layout="@layout/fragment_community">
+        <action
+            android:id="@+id/action_communityFragment_to_homeFragment"
+            app:destination="@id/navHome" />
+        <action
+            android:id="@+id/action_communityFragment_to_myPageFragment"
+            app:destination="@id/navMyPage" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navChat"
+        android:name="com.hymin.webtoon_review.ui.main.chat.ChatFragment"
+        android:label="fragment_chat"
+        tools:layout="@layout/fragment_chat">
+        <action
+            android:id="@+id/action_chatFragment_to_homeFragment"
+            app:destination="@id/navHome" />
+        <action
+            android:id="@+id/action_chatFragment_to_communityFragment"
+            app:destination="@id/navCommunity" />
+        <action
+            android:id="@+id/action_chatFragment_to_myPageFragment"
+            app:destination="@id/navMyPage" />
+    </fragment>
+    <fragment
+        android:id="@+id/navMyPage"
+        android:name="com.hymin.webtoon_review.ui.main.my_page.MyPageFragment"
+        android:label="fragment_my_page"
+        tools:layout="@layout/fragment_my_page">
+        <action
+            android:id="@+id/action_myPageFragment_to_homeFragment"
+            app:destination="@id/navHome" />
+        <action
+            android:id="@+id/action_myPageFragment_to_communityFragment"
+            app:destination="@id/navCommunity" />
+    </fragment>
+
+
+</navigation>

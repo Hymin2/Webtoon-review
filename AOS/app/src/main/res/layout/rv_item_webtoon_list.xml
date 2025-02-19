@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="webtoon"
+            type="com.hymin.webtoon_review.data.model.home.WebtoonListModel" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp">
+
+        <com.google.android.material.imageview.ShapeableImageView
+            android:id="@+id/imgWebtoon"
+            android:layout_width="130dp"
+            android:layout_height="200dp"
+            android:src="@color/material_dynamic_secondary80"
+            app:imageUrl="@{webtoon.thumbnail}"
+            app:shapeAppearanceOverlay="@style/CustomShapeAppearance"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvDayOfWeek"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@{webtoon.dayOfWeek}"
+            android:textSize="8sp"
+            android:textColor="@color/white"
+            android:background="@drawable/rectangle_style"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp"
+            android:paddingTop="1dp"
+            android:paddingBottom="1dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="5dp"
+            app:layout_constraintStart_toStartOf="@id/imgWebtoon"
+            app:layout_constraintTop_toTopOf="@id/imgWebtoon" />
+
+        <TextView
+            android:id="@+id/tvStar"
+            android:layout_width="10dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:text="@string/star"
+            android:textSize="8sp"
+            android:textColor="#FFD200"
+            android:textStyle="bold"
+            android:background="@drawable/rectangle_left_style"
+            android:layout_marginStart="3dp"
+            app:layout_constraintStart_toEndOf="@id/tvDayOfWeek"
+            app:layout_constraintTop_toTopOf="@id/tvDayOfWeek"
+            app:layout_constraintBottom_toBottomOf="@id/tvDayOfWeek" />
+
+        <TextView
+            android:id="@+id/tvStarScore"
+            android:layout_width="20dp"
+            android:layout_height="0dp"
+            android:gravity="center"
+            android:text="@{webtoon.starScore}"
+            android:textSize="8sp"
+            android:textColor="@color/black"
+            android:textStyle="bold"
+            android:background="@drawable/rectangle_right_style"
+            app:layout_constraintStart_toEndOf="@id/tvStar"
+            app:layout_constraintTop_toTopOf="@id/tvStar"
+            app:layout_constraintBottom_toBottomOf="@id/tvStar" />
+
+        <TextView
+            android:id="@+id/tvWebtoonName"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{webtoon.webtoonName}"
+            android:textSize="14sp"
+            android:layout_marginTop="3dp"
+            android:layout_marginStart="3dp"
+            app:layout_constraintStart_toStartOf="@id/imgWebtoon"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/imgWebtoon" />
+
+        <TextView
+            android:id="@+id/tvWebtoonAuthor"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="@{webtoon.author}"
+            android:textColor="#A4A4A4"
+            android:textSize="12sp"
+            app:layout_constraintStart_toStartOf="@id/tvWebtoonName"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvWebtoonName" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

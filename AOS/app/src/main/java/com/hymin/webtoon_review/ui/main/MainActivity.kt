@@ -1,16 +1,16 @@
 package com.hymin.webtoon_review.ui.main
 
-import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.viewModels
-import androidx.lifecycle.Observer
+import androidx.appcompat.app.AppCompatActivity
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
+import com.hymin.webtoon_review.R
 import com.hymin.webtoon_review.databinding.ActivityMainBinding
-import com.hymin.webtoon_review.ui.intro.IntroActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: MainViewModel by viewModels()
 
@@ -21,16 +21,15 @@ class MainActivity : ComponentActivity() {
         setContentView(binding.root)
 
         init()
-
-        viewModel.isExistJwt().observe(this, Observer { exist ->
-            if (!exist) {
-                startActivity(Intent(this, IntroActivity::class.java))
-                finish()
-            }
-        })
     }
 
     private fun init() {
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.mainFragmentContainerView) as NavHostFragment
+        val navController = navHostFragment.navController
+        val viewBottomNavigation = binding.bottomNv
+        viewBottomNavigation.setupWithNavController(navController)
+
         binding.vm = viewModel
         binding.lifecycleOwner = this
     }

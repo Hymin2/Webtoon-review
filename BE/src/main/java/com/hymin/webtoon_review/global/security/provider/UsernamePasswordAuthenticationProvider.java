@@ -29,8 +29,12 @@ public class UsernamePasswordAuthenticationProvider implements AuthenticationPro
                 return new UsernamePasswordAuthentication(username, password);
             }
 
-            return new UsernamePasswordAuthentication(username, password,
+            UsernamePasswordAuthentication usernamePasswordAuthentication = new UsernamePasswordAuthentication(
+                username, password,
                 userDetails.getAuthorities());
+            usernamePasswordAuthentication.setDetails(userDetails.getUsername());
+
+            return usernamePasswordAuthentication;
         } catch (UsernameNotFoundException e) {
             return new UsernamePasswordAuthentication(username, password);
         }

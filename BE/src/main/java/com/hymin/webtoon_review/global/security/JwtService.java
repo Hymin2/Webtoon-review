@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,12 +25,13 @@ public class JwtService {
         Date now = new Date();
 
         String authorities = auth.getAuthorities().stream()
-            .map((a) -> a.getAuthority())
+            .map(GrantedAuthority::getAuthority)
             .collect(Collectors.joining(", "));
 
         return Jwts.builder()
             .setSubject(auth.getName())
             .claim("authorities", authorities)
+            .claim("nickname", auth.getDetails())
             .signWith(getKey(), SignatureAlgorithm.HS256)
             .setIssuedAt(now)
             .setExpiration(new Date(now.getTime() + ACCESS_VALID_SECOND))

@@ -60,17 +60,18 @@ public class AdminService {
                 Platform randomPlatform = platforms.get(random.nextInt(platforms.size()));
 
                 if (randomStauts < 5) {
-                    status = Status.ONGOING;
+                    status = Status.연재중;
                 } else if (randomStauts < 7) {
-                    status = Status.PAUSED;
+                    status = Status.휴재중;
                 } else {
-                    status = Status.COMPLETED;
+                    status = Status.완결;
                 }
 
                 Webtoon webtoon = Webtoon.builder()
                     .name("웹툰" + i + k)
                     .description("웹툰 설명설명설명설명설명설명설명설명설명설명설명설명설명설명설명설명설명설명설명설명")
                     .thumbnail("썸네일")
+                    .views(0)
                     .status(status)
                     .platform(randomPlatform)
                     .build();

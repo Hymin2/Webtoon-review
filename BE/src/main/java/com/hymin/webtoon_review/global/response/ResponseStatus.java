@@ -24,8 +24,17 @@ public enum ResponseStatus {
     COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "댓글을 찾을 수 없습니다."),
     REPLY_NOT_FOUND(HttpStatus.NOT_FOUND, "대댓글을 찾을 수 없습니다."),
     WEBTOON_NOT_FOUND(HttpStatus.NOT_FOUND, "웹툰을 찾을 수 없습니다."),
+    RECOMMEND_NOT_FOUND(HttpStatus.NOT_FOUND, "추천을 찾을 수 없습니다."),
     BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND, "북마크를 찾을 수 없습니다."),
-    RECOMMENDATION_NOT_FOUND(HttpStatus.NOT_FOUND, "추천을 찾을 수 없습니다."),
+    CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
+
+    INVALID_CHAT_ROOM_ACCESS(HttpStatus.BAD_REQUEST, "잘못된 채팅방 접근입니다."),
+    INVALID_BOOKMARK(HttpStatus.BAD_REQUEST, "잘못된 북마크입니다."),
+    INVALID_COMMENT(HttpStatus.BAD_REQUEST, "잘못된 댓글입니다."),
+    INVALID_REPLY(HttpStatus.BAD_REQUEST, "잘못된 답글입니다."),
+    INVALID_WEBTOON_RECOMMEND(HttpStatus.BAD_REQUEST, "잘못된 웹툰 추천입니다."),
+    INVALID_COMMENT_RECOMMEND(HttpStatus.BAD_REQUEST, "잘못된 댓글 추천입니다."),
+    INVALID_REPLY_RECOMMEND(HttpStatus.BAD_REQUEST, "잘못된 답글 추천입니다."),
 
     ALREADY_USER_EXISTS(HttpStatus.CONFLICT, "이미 존재하는 사용자입니다."),
 

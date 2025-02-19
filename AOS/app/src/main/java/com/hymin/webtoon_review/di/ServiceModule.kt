@@ -1,5 +1,6 @@
 package com.hymin.webtoon_review.di
 
+import com.hymin.webtoon_review.data.remote.service.HomeService
 import com.hymin.webtoon_review.data.remote.service.UserService
 import dagger.Module
 import dagger.Provides
@@ -15,5 +16,11 @@ class ServiceModule {
     @Singleton
     fun provideUserService(retrofit: Retrofit): UserService {
         return retrofit.create(UserService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeService(retrofit: Retrofit): HomeService {
+        return retrofit.create(HomeService::class.java)
     }
 }

@@ -29,7 +29,7 @@ public class DayOfWeek {
 
     @Column(nullable = false)
     @Enumerated(value = EnumType.STRING)
-    private com.hymin.webtoon_review.webtoon.entity.enums.DayOfWeek dayOfWeek;
+    private com.hymin.webtoon_review.webtoon.entity.enums.DayOfWeek name;
 
     @OneToMany(mappedBy = "dayOfWeek")
     private List<WebtoonDayOfWeek> webtoonDayOfWeeks;

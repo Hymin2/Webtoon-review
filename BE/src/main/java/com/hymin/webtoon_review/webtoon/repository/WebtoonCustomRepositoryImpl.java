@@ -4,7 +4,7 @@ import static com.hymin.webtoon_review.user.entity.QBookmark.bookmark;
 import static com.hymin.webtoon_review.user.entity.QUser.user;
 import static com.hymin.webtoon_review.user.entity.QWebtoonRecommend.webtoonRecommend;
 import static com.hymin.webtoon_review.webtoon.entity.QAuthor.author;
-import static com.hymin.webtoon_review.webtoon.entity.QDayOfWeek.dayOfWeek1;
+import static com.hymin.webtoon_review.webtoon.entity.QDayOfWeek.dayOfWeek;
 import static com.hymin.webtoon_review.webtoon.entity.QGenre.genre;
 import static com.hymin.webtoon_review.webtoon.entity.QPlatform.platform;
 import static com.hymin.webtoon_review.webtoon.entity.QWebtoon.webtoon;
@@ -12,10 +12,12 @@ import static com.hymin.webtoon_review.webtoon.entity.QWebtoonAuthor.webtoonAuth
 import static com.hymin.webtoon_review.webtoon.entity.QWebtoonDayOfWeek.webtoonDayOfWeek;
 import static com.hymin.webtoon_review.webtoon.entity.QWebtoonGenre.webtoonGenre;
 
-import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonInfo;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonDetails;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonSimple;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.AuthorSelectResult;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.DayOfWeekSelectResult;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.GenreSelectResult;
+import com.hymin.webtoon_review.webtoon.entity.QGenre;
 import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
@@ -28,42 +30,35 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.QueryHints;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
+@Slf4j
 @RequiredArgsConstructor
 public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
 
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<WebtoonInfo> getWebtoons(
-        String username,
+    public List<WebtoonSimple> getWebtoonList(
         Pageable pageable,
-        String name,
         String lastValue,
-        List<String> daysOfWeek,
-        List<String> platforms,
-        List<String> genres) {
-        BooleanExpression containsName = null;
-
-        if (name != null && !name.isEmpty()) {
-            containsName = webtoon.name.contains(name);
-        }
-
-        JPAQuery<WebtoonInfo> query = jpaQueryFactory
-            .select(Projections.constructor(WebtoonInfo.class,
+        String daysOfWeek,
+        String genre,
+        String updatedAt) {
+        JPAQuery<WebtoonSimple> query = jpaQueryFactory
+            .select(Projections.constructor(WebtoonSimple.class,
                 webtoon.id,
                 webtoon.name,
-                webtoon.description,
                 webtoon.thumbnail,
-                platform.name,
-                webtoon.updatedAt,
-                webtoon.views,
-                getSubQueryAboutRecommendedCount(),
-                getSubQueryAboutIsRecommended(username),
-                getSubQueryAboutIsBookmarked(username)
+                webtoon.recommendationCount,
+                webtoon.totalStarScore,
+                webtoon.totalPopularityScore,
+                webtoon.manPopularityScore,
+                webtoon.femalePopularityScore,
+                webtoon.updatedAt
             ))
             .distinct()
             .from(webtoon);
@@ -71,28 +66,20 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
         if (daysOfWeek != null) {
             query
                 .join(webtoon.webtoonDayOfWeeks, webtoonDayOfWeek)
-                .join(webtoonDayOfWeek.dayOfWeek, dayOfWeek1)
-                .on(dayOfWeek1.dayOfWeek.stringValue().in(daysOfWeek));
+                .join(webtoonDayOfWeek.dayOfWeek, dayOfWeek)
+                .on(dayOfWeek.name.stringValue().eq(daysOfWeek));
         }
 
-        if (genres != null) {
+        if (genre != null) {
             query
                 .join(webtoon.webtoonGenres, webtoonGenre)
-                .join(webtoonGenre.genre, genre)
-                .on(genre.name.in(genres));
-        }
-
-        if (platforms != null) {
-            query
-                .join(webtoon.platform, platform)
-                .on(platform.name.in(platforms));
-        } else {
-            query
-                .join(webtoon.platform, platform);
+                .join(webtoonGenre.genre, QGenre.genre)
+                .on(QGenre.genre.name.eq(genre));
         }
 
         return query
-            .where(getLastValueCondition(pageable.getSort(), lastValue), containsName)
+            .where(getLastValueCondition(pageable.getSort(), lastValue),
+                getUpdatedAtCondition(updatedAt))
             .orderBy(toOrderSpecifier(pageable.getSort()))
             .limit(pageable.getPageSize() + 1)
             .setHint(QueryHints.COMMENT, "straight_join")
@@ -100,16 +87,58 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
     }
 
     @Override
+    public List<WebtoonSimple> getHotWebtoonList() {
+        return jpaQueryFactory
+            .select(Projections.constructor(WebtoonSimple.class,
+                webtoon.id,
+                webtoon.name,
+                webtoon.thumbnail,
+                webtoon.recommendationCount,
+                webtoon.totalStarScore,
+                webtoon.totalPopularityScore,
+                webtoon.manPopularityScore,
+                webtoon.femalePopularityScore,
+                webtoon.updatedAt))
+            .from(webtoon)
+            .orderBy(webtoon.totalPopularityScore.desc())
+            .limit(30l)
+            .fetch();
+    }
+
+    @Override
+    public WebtoonDetails getWebtoon(String username, Long webtoonId) {
+        return jpaQueryFactory
+            .selectDistinct(Projections.constructor(WebtoonDetails.class,
+                webtoon.id,
+                webtoon.name,
+                webtoon.thumbnail.stringValue(),
+                webtoon.description,
+                platform.name,
+                webtoon.views,
+                webtoon.totalStarScore,
+                webtoon.manStarScore,
+                webtoon.femaleStarScore,
+                webtoon.recommendationCount,
+                getSubQueryAboutIsRecommended(username),
+                getSubQueryAboutIsBookmarked(username)
+            ))
+            .from(webtoon)
+            .where(webtoon.id.eq(webtoonId))
+            .join(webtoon.platform, platform)
+            .fetchOne();
+    }
+
+    @Override
     public List<DayOfWeekSelectResult> getDayOfWeek(List<Long> webtoonId) {
         return jpaQueryFactory
             .select(Projections.constructor(DayOfWeekSelectResult.class,
                 webtoon.id,
-                dayOfWeek1.dayOfWeek.stringValue()))
+                dayOfWeek.name.stringValue()))
             .from(webtoonDayOfWeek)
             .join(webtoonDayOfWeek.webtoon, webtoon)
             .on(webtoon.id.in(webtoonId))
-            .join(webtoonDayOfWeek.dayOfWeek, dayOfWeek1)
-            .orderBy(dayOfWeek1.id.asc())
+            .join(webtoonDayOfWeek.dayOfWeek, dayOfWeek)
+            .orderBy(dayOfWeek.id.asc())
             .fetch();
     }
 
@@ -159,36 +188,49 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
                 webtoonRecommend.user.eq(user));
     }
 
-    private JPQLQuery<Integer> getSubQueryAboutRecommendedCount() {
-        return JPAExpressions
-            .select(webtoonRecommend.count().intValue())
-            .from(webtoonRecommend)
-            .where(webtoonRecommend.webtoon.eq(webtoon))
-            .groupBy(webtoon.id);
+    private BooleanExpression getUpdatedAtCondition(String updatedAt) {
+        if (updatedAt == null) {
+            return null;
+        }
+
+        return webtoon.updatedAt.stringValue().gt(updatedAt);
     }
 
     private BooleanExpression getLastValueCondition(Sort sort, String lastValue) {
         Sort.Order order = sort.stream()
             .findFirst()
-            .get();
-        String property = order.getProperty();
+            .orElse(null);
 
         if (order == null || lastValue == null || lastValue.isEmpty()) {
             return null;
         }
 
-        if (property.equals("updatedAt") && order.isAscending()) {
+        String property = order.getProperty();
+
+        if (property.equals("최신순") && order.isAscending()) {
             return webtoon.updatedAt.gt(LocalDateTime.parse(lastValue));
-        } else if (property.equals("updatedAt") && order.isDescending()) {
+        } else if (property.equals("최신순") && order.isDescending()) {
             return webtoon.updatedAt.lt(LocalDateTime.parse(lastValue));
-        } else if (property.equals("name") && order.isAscending()) {
-            return webtoon.name.gt(lastValue);
-        } else if (property.equals("name") && order.isDescending()) {
-            return webtoon.name.lt(lastValue);
-        } else if (property.equals("views") && order.isAscending()) {
-            return webtoon.views.gt(Integer.valueOf(lastValue));
-        } else if (property.equals("views") && order.isDescending()) {
-            return webtoon.views.lt(Integer.valueOf(lastValue));
+        } else if (property.equals("인기순") && order.isAscending()) {
+            return webtoon.totalPopularityScore.gt(Integer.valueOf(lastValue));
+        } else if (property.equals("인기순") && order.isDescending()) {
+            return webtoon.totalPopularityScore.lt(Integer.valueOf(lastValue));
+        } else if (property.equals("남성 인기순") && order.isAscending()) {
+            return webtoon.manPopularityScore.gt(Integer.valueOf(lastValue));
+        } else if (property.equals("남성 인기순") && order.isDescending()) {
+            return webtoon.manPopularityScore.lt(Integer.valueOf(lastValue));
+        } else if (property.equals("여성 인기순") && order.isAscending()) {
+            return webtoon.femalePopularityScore.gt(Integer.valueOf(lastValue));
+        } else if (property.equals("여성 인기순") && order.isDescending()) {
+            return webtoon.femalePopularityScore.lt(Integer.valueOf(lastValue));
+        } else if (property.equals("별점순") && order.isAscending()) {
+            return webtoon.totalStarScore.gt(Integer.valueOf(lastValue));
+        } else if (property.equals("별점순") && order.isDescending()) {
+            return webtoon.totalStarScore.lt(Integer.valueOf(lastValue));
+        } else if (property.equals("추천순") && order.isAscending()) {
+            return webtoon.recommendationCount.gt(Integer.valueOf(lastValue));
+        } else if (property.equals("추천순") && order.isDescending()) {
+            return webtoon.recommendationCount.lt(Integer.valueOf(lastValue));
         }
 
         return null;
@@ -200,16 +242,30 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
         sort.stream()
             .forEach((order) -> {
                 Order direction = order.getDirection().isAscending() ? Order.ASC : Order.DESC;
+                log.info(order.getProperty());
                 switch (order.getProperty()) {
-                    case "updatedAt":
+                    case "인기순":
                         orderSpecifiers.add(
-                            new OrderSpecifier(direction, webtoon.updatedAt));
+                            new OrderSpecifier<>(direction, webtoon.totalPopularityScore));
                         break;
-                    case "name":
-                        orderSpecifiers.add(new OrderSpecifier(direction, webtoon.name));
+                    case "남성 인기순":
+                        orderSpecifiers.add(
+                            new OrderSpecifier<>(direction, webtoon.manPopularityScore));
                         break;
-                    case "views":
-                        orderSpecifiers.add(new OrderSpecifier(direction, webtoon.views));
+                    case "여성 인기순":
+                        orderSpecifiers.add(
+                            new OrderSpecifier<>(direction, webtoon.femalePopularityScore));
+                        break;
+                    case "별점순":
+                        orderSpecifiers.add(
+                            new OrderSpecifier<>(direction, webtoon.totalStarScore));
+                        break;
+                    case "추천순":
+                        orderSpecifiers.add(
+                            new OrderSpecifier<>(direction, webtoon.recommendationCount));
+                        break;
+                    case "최신순":
+                        orderSpecifiers.add(new OrderSpecifier<>(direction, webtoon.updatedAt));
                         break;
                 }
             });

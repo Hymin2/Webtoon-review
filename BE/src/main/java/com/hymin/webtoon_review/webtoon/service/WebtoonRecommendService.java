@@ -15,7 +15,7 @@ public class WebtoonRecommendService {
 
     public WebtoonRecommend get(Long id) {
         return recommendRepository.findById(id).orElseThrow(
-            () -> new RecommendationNotFoundException(ResponseStatus.RECOMMENDATION_NOT_FOUND));
+            () -> new RecommendationNotFoundException(ResponseStatus.RECOMMEND_NOT_FOUND));
     }
 
     public void save(WebtoonRecommend recommend) {

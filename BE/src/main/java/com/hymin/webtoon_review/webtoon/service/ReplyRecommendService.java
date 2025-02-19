@@ -15,7 +15,7 @@ public class ReplyRecommendService {
 
     public ReplyRecommend get(Long id) {
         return replyRecommendRepository.findById(id).orElseThrow(
-            () -> new RecommendationNotFoundException(ResponseStatus.RECOMMENDATION_NOT_FOUND));
+            () -> new RecommendationNotFoundException(ResponseStatus.RECOMMEND_NOT_FOUND));
     }
 
     public void save(ReplyRecommend recommend) {

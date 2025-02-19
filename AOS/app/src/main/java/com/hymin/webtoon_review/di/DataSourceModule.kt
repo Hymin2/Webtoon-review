@@ -1,6 +1,8 @@
 package com.hymin.webtoon_review.di
 
+import com.hymin.webtoon_review.data.remote.datasource.HomeRemoteDataSource
 import com.hymin.webtoon_review.data.remote.datasource.UserRemoteDataSource
+import com.hymin.webtoon_review.data.remote.service.HomeService
 import com.hymin.webtoon_review.data.remote.service.UserService
 import dagger.Module
 import dagger.Provides
@@ -15,5 +17,11 @@ class DataSourceModule {
     @Singleton
     fun provideUserRemoteDataSource(userService: UserService): UserRemoteDataSource {
         return UserRemoteDataSource(userService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeRemoteDataSource(homeService: HomeService): HomeRemoteDataSource {
+        return HomeRemoteDataSource(homeService)
     }
 }

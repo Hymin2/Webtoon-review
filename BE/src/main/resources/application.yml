@@ -17,5 +17,26 @@ spring:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     defer-datasource-initialization: true
 
+  servlet:
+    multipart:
+      max-request-size: 4096MB
+      max-file-size: 4096MB
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+
+  application:
+    name: webtoon-review
+
 jwt:
   key: ${JWT_KEY}
+
+path:
+  file: c://resources//files
+  thumbnail: c://resources//thumbnails
+
+domain:
+  thumbnail: http://10.0.2.2:8080/webtoons/thumbnails/

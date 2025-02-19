@@ -1,7 +1,9 @@
 package com.hymin.webtoon_review.di
 
 import com.hymin.webtoon_review.data.local.datasource.UserDataStore
+import com.hymin.webtoon_review.data.remote.datasource.HomeRemoteDataSource
 import com.hymin.webtoon_review.data.remote.datasource.UserRemoteDataSource
+import com.hymin.webtoon_review.data.repository.HomeRepository
 import com.hymin.webtoon_review.data.repository.UserRepository
 import dagger.Module
 import dagger.Provides
@@ -19,5 +21,13 @@ class RepositoryModule {
         userDataStore: UserDataStore,
     ): UserRepository {
         return UserRepository(userRemoteDataSource, userDataStore)
+    }
+
+    @Provides
+    @Singleton
+    fun provideHomeRepository(
+        homeRemoteDataSource: HomeRemoteDataSource,
+    ): HomeRepository {
+        return HomeRepository(homeRemoteDataSource)
     }
 }

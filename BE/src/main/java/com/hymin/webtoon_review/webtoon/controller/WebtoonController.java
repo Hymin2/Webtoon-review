@@ -27,7 +27,7 @@ public class WebtoonController {
 
     @GetMapping
     public RestResponse getWebtoons(
-        @PageableDefault(size = 20, sort = "인기순", direction = Direction.ASC) Pageable pageable,
+        @PageableDefault(size = 20, sort = "인기순", direction = Direction.DESC) Pageable pageable,
         @RequestParam(name = "lastValue", required = false) String lastValue,
         @RequestParam(name = "dayOfWeek", required = false) String dayOfWeek,
         @RequestParam(name = "genre", required = false) String genre,

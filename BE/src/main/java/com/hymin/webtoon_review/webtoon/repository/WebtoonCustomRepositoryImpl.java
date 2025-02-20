@@ -241,8 +241,8 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
 
         sort.stream()
             .forEach((order) -> {
-                Order direction = order.getDirection().isAscending() ? Order.ASC : Order.DESC;
-                log.info(order.getProperty());
+                Order direction = Order.DESC;
+
                 switch (order.getProperty()) {
                     case "인기순":
                         orderSpecifiers.add(

@@ -6,6 +6,7 @@ import com.hymin.webtoon_review.webtoon.dto.WebtoonPopularityScore;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -14,6 +15,7 @@ public class WebtoonPopularScoreAsyncService implements AsyncProcessor {
 
     private final JdbcTemplate jdbcTemplate;
 
+    @Async
     @Override
     public void process(List<Job<?>> jobs) {
         List<WebtoonPopularityScore> webtoonPopularityScores = jobs

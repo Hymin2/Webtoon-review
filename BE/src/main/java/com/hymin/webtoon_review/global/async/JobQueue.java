@@ -8,17 +8,19 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class JobQueue {
 
-    private final Map<String, ConcurrentLinkedQueue<Job<?>>> jobs = new ConcurrentHashMap<>();
-    private final Map<String, Integer> thresholds = new ConcurrentHashMap<>();
-    private final Map<String, AsyncProcessor> processors = new ConcurrentHashMap<>();
+    private final Map<String, ConcurrentLinkedQueue<Job<?>>> jobs;
+    private final Map<String, Integer> thresholds;
+    private final Map<String, AsyncProcessor> processors;
 
-    public JobQueue() {
+    private JobQueue(Map<String, ConcurrentLinkedQueue<Job<?>>> jobs,
+        Map<String, Integer> thresholds, Map<String, AsyncProcessor> processors) {
+        this.jobs = jobs;
+        this.thresholds = thresholds;
+        this.processors = processors;
     }
 
-    public void setTopic(String topic, Integer threshold, AsyncProcessor processor) {
-        jobs.put(topic, new ConcurrentLinkedQueue<>());
-        thresholds.put(topic, threshold);
-        processors.put(topic, processor);
+    public static JobQueueBuilder Builder() {
+        return new JobQueueBuilder();
     }
 
     public List<String> getAllTopic() {
@@ -48,5 +50,27 @@ public class JobQueue {
 
     public boolean isGreaterThanThreshold(String topic) {
         return jobs.get(topic).size() >= thresholds.get(topic);
+    }
+
+    public static class JobQueueBuilder {
+
+        private final Map<String, ConcurrentLinkedQueue<Job<?>>> jobs = new ConcurrentHashMap<>();
+        private final Map<String, Integer> thresholds = new ConcurrentHashMap<>();
+        private final Map<String, AsyncProcessor> processors = new ConcurrentHashMap<>();
+
+        public JobQueueBuilder() {
+        }
+
+        public JobQueueBuilder setTopic(String topic, Integer threshold, AsyncProcessor processor) {
+            jobs.put(topic, new ConcurrentLinkedQueue<>());
+            thresholds.put(topic, threshold);
+            processors.put(topic, processor);
+
+            return this;
+        }
+
+        public JobQueue build() {
+            return new JobQueue(jobs, thresholds, processors);
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.hymin.webtoon_review.file.service;
 
 import com.hymin.webtoon_review.file.dto.FileRequest.FileUploadInfo;
 import com.hymin.webtoon_review.file.entity.UploadFile;
+import com.hymin.webtoon_review.file.exception.FileSizeLimitExceededException;
 import com.hymin.webtoon_review.file.mapper.FileMapper;
 import com.hymin.webtoon_review.file.repository.FileRepository;
 import jakarta.annotation.PostConstruct;
@@ -26,6 +27,8 @@ public class FileService {
     private String filePath;
     private final FileRepository fileRepository;
 
+    private static final Integer MAX_FILE_SIZE = 1024 * 1024 * 100;
+
     @PostConstruct
     public void createDirectory() {
         File dir = new File(filePath);
@@ -42,6 +45,10 @@ public class FileService {
     }
 
     public String startUpload(FileUploadInfo fileUploadInfo) {
+        if (isGraterThanMaxFileSize(fileUploadInfo.getFileSize())) {
+            throw new FileSizeLimitExceededException();
+        }
+
         String newFileName = makeFileName(fileUploadInfo.getFileName());
         fileRepository.save(FileMapper.toFile(fileUploadInfo, newFileName));
 
@@ -51,7 +58,7 @@ public class FileService {
     public void upload(MultipartFile file) {
         saveFile(file, makeFileName(file.getOriginalFilename()));
     }
-    
+
     @Transactional
     public void upload(MultipartFile file, String fileName, int chunkSize, int chunk) {
         String chunkFileName = makeFileName(file.getOriginalFilename(), chunk);
@@ -106,5 +113,9 @@ public class FileService {
         String newFileName = fileName + ".part" + chunk;
 
         return newFileName;
+    }
+
+    private Boolean isGraterThanMaxFileSize(Integer fileSize) {
+        return fileSize > MAX_FILE_SIZE;
     }
 }

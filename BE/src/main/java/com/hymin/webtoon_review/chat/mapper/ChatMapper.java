@@ -1,10 +1,12 @@
 package com.hymin.webtoon_review.chat.mapper;
 
-import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatReadCountInfo;
+import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomInfo;
 import com.hymin.webtoon_review.chat.entity.ChatRoom;
 import com.hymin.webtoon_review.chat.entity.UserChatRoom;
 import com.hymin.webtoon_review.user.entity.User;
+import com.hymin.webtoon_review.util.UUIDCompressor;
 import java.util.Map;
+import java.util.UUID;
 
 public class ChatMapper {
 
@@ -17,11 +19,12 @@ public class ChatMapper {
             .build();
     }
 
-    public static ChatReadCountInfo toChatReadCountInfo(Long roomId,
+    public static ChatRoomInfo toChatRoomInfo(Long roomId,
         Map<Object, Object> readCountMap) {
-        return ChatReadCountInfo.builder()
+        return ChatRoomInfo.builder()
             .roomId(roomId)
             .readCountMap(readCountMap)
+            .personalUUID(UUIDCompressor.encode(UUID.randomUUID()))
             .build();
     }
 }

@@ -12,9 +12,10 @@ public class ChatResponse {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class ChatReadCountInfo {
+    public static class ChatRoomInfo {
 
         private Long roomId;
+        private String personalUUID;
         private Map<Object, Object> readCountMap;
     }
 }

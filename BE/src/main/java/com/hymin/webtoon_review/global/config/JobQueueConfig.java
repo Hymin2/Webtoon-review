@@ -1,5 +1,6 @@
 package com.hymin.webtoon_review.global.config;
 
+import com.hymin.webtoon_review.chat.service.ChatMessageAsyncService;
 import com.hymin.webtoon_review.global.async.JobQueue;
 import com.hymin.webtoon_review.global.async.TopicNames;
 import com.hymin.webtoon_review.webtoon.service.WebtoonPopularScoreAsyncService;
@@ -12,15 +13,16 @@ import org.springframework.context.annotation.Configuration;
 @RequiredArgsConstructor
 public class JobQueueConfig {
 
+    private final ChatMessageAsyncService chatMessageAsyncService;
     private final WebtoonViewAsyncService webtoonViewAsyncService;
     private final WebtoonPopularScoreAsyncService webtoonPopularScoreAsyncService;
 
     @Bean
     public JobQueue jobQueue() {
-        JobQueue jobQueue = new JobQueue();
-        jobQueue.setTopic(TopicNames.view.name(), 100, webtoonViewAsyncService);
-        jobQueue.setTopic(TopicNames.popularity.name(), 100, webtoonPopularScoreAsyncService);
-
-        return jobQueue;
+        return JobQueue.Builder()
+            .setTopic(TopicNames.view.name(), 100, webtoonViewAsyncService)
+            .setTopic(TopicNames.popularity.name(), 100, webtoonPopularScoreAsyncService)
+            .setTopic(TopicNames.chat.name(), 100, chatMessageAsyncService)
+            .build();
     }
 }

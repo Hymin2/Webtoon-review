@@ -14,6 +14,7 @@ public class FileRequest {
         private Long userId;
         private String type;
         private String fileName;
+        private Integer fileSize;
         private Integer chunkSize;
     }
 }

@@ -1,5 +1,6 @@
 package com.hymin.webtoon_review.webtoon.repository;
 
+import com.hymin.webtoon_review.webtoon.dto.WebtoonPopularityScore;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonDetails;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonSimple;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.AuthorSelectResult;
@@ -25,4 +26,8 @@ public interface WebtoonCustomRepository {
     List<GenreSelectResult> getGenres(List<Long> webtoonId);
 
     List<AuthorSelectResult> getAuthors(List<Long> webtoonId);
+
+    void updateViews(List<Long> webtoonIdList);
+
+    void updatePopularityScore(List<WebtoonPopularityScore> webtoonPopularityScores);
 }

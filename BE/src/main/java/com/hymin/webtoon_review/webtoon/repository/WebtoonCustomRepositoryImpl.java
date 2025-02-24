@@ -12,6 +12,7 @@ import static com.hymin.webtoon_review.webtoon.entity.QWebtoonAuthor.webtoonAuth
 import static com.hymin.webtoon_review.webtoon.entity.QWebtoonDayOfWeek.webtoonDayOfWeek;
 import static com.hymin.webtoon_review.webtoon.entity.QWebtoonGenre.webtoonGenre;
 
+import com.hymin.webtoon_review.webtoon.dto.WebtoonPopularityScore;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonDetails;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonSimple;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.AuthorSelectResult;
@@ -34,11 +35,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.hibernate.annotations.QueryHints;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @Slf4j
 @RequiredArgsConstructor
 public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
 
+    private final JdbcTemplate jdbcTemplate;
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
@@ -168,6 +171,32 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
             .join(webtoonAuthor.author, author)
             .orderBy(author.name.asc())
             .fetch();
+    }
+
+    @Override
+    public void updateViews(List<Long> webtoonIdList) {
+        String sql = "UPDATE webtoon SET views = views + 1 WHERE id = ?";
+
+        jdbcTemplate.batchUpdate(sql, webtoonIdList, webtoonIdList.size(), (ps, id) -> {
+            ps.setLong(1, id);
+        });
+    }
+
+    @Override
+    public void updatePopularityScore(List<WebtoonPopularityScore> webtoonPopularityScores) {
+        String sql = "UPDATE webtoon "
+            + "SET total_popularity_score = total_popularity_score + ?, "
+            + "man_popularity_score = man_popularity_score + ?, "
+            + "female_popularity_score = female_popularity_score + ? "
+            + "WHERE id = ?";
+
+        jdbcTemplate.batchUpdate(sql, webtoonPopularityScores, webtoonPopularityScores.size(),
+            (ps, webtoonPopularityScore) -> {
+                ps.setInt(1, webtoonPopularityScore.getScore());
+                ps.setInt(2, webtoonPopularityScore.getScore());
+                ps.setInt(3, webtoonPopularityScore.getScore());
+                ps.setLong(4, webtoonPopularityScore.getId());
+            });
     }
 
     private JPQLQuery<Integer> getSubQueryAboutIsBookmarked(String username) {

@@ -1,7 +1,7 @@
 package com.hymin.webtoon_review.chat.controller;
 
 import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessage;
-import com.hymin.webtoon_review.chat.dto.ChatRequest.JoinExitMessage;
+import com.hymin.webtoon_review.chat.dto.ChatRequest.ConnectDisConnectMessage;
 import com.hymin.webtoon_review.chat.facade.ChatFacade;
 import com.hymin.webtoon_review.global.annotation.Auth;
 import com.hymin.webtoon_review.global.response.ApiResponse;
@@ -30,15 +30,17 @@ public class ChatController {
         chatFacade.sendMessage(chatMessage);
     }
 
-    @MessageMapping(value = "/chat/messages/join-exit")
-    public void joinExitMessage(@RequestBody JoinExitMessage joinExitMessage) {
-        chatFacade.sendMessage(joinExitMessage);
+    @MessageMapping(value = "/chat/messages/connect-disconnect")
+    public void sendConnectDisconnectMessage(
+        @RequestBody ConnectDisConnectMessage connectDisConnectMessage) {
+        chatFacade.sendMessage(connectDisConnectMessage);
     }
 
-    @GetMapping("/chat/messages/{roomId}/counts")
-    public RestResponse getReadCounts(@PathVariable("roomId") Long roomId,
+    @GetMapping("/chat/messages/{roomId}/info")
+    public RestResponse getRoomInfoPrevConnect(@PathVariable("roomId") Long roomId,
         @Auth Authentication authentication) {
-        return ApiResponse.onSuccess(chatFacade.getReadCount(roomId, authentication.getName()));
+        return ApiResponse.onSuccess(
+            chatFacade.getRoomInfoPrevConnect(roomId, authentication.getName()));
     }
 
     @PostMapping("/chat/room/{roomId}")

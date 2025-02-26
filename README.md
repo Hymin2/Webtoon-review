@@ -8,10 +8,11 @@
 
 ## 개발 환경 ##
 - Back-End
- - Java 17, Spring Boot 3.3.1, Spring JPA, Spring Security
+  - Java 17, Spring Boot 3.3.1, Spring JPA, Spring Security
 - Android
- - Kotlin 1.9
-- STOMP
+  - Kotlin 1.9
+- Messaging
+  - STOMP
 
 <br><br>
 

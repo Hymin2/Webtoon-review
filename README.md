@@ -7,23 +7,17 @@
 <br><br>
 
 ## 개발 환경 ##
-- Back-End
-  - Java 17, Spring Boot 3.3.1, Spring JPA, Spring Security
-- Android
-  - Kotlin 1.9
-- Messaging
-  - STOMP
-
+- Back-End: Java 17, Spring Boot 3.3.1, Spring JPA, Spring Security
+- Android: Kotlin 1.9
+- Database: MySQL 8.0
+- Messaging: STOMP
 <br><br>
 
 ## 시스템 아키텍처 ##
-
 <br><br>
 
 ## ERD ##
-
 <br><br>
 
 ## 서비스 화면 ##
-
 <br><br>

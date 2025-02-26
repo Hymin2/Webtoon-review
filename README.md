@@ -14,9 +14,13 @@
 <br><br>
 
 ## 시스템 아키텍처 ##
+![webtoon_review drawio](https://github.com/user-attachments/assets/367c443f-292b-4555-8de4-06e587fd00c2)
+
 <br><br>
 
 ## ERD ##
+![webtoon-review (2)](https://github.com/user-attachments/assets/cf48a30c-f8db-4eb5-8144-d3f48d0dbc54)
+
 <br><br>
 
 ## 서비스 화면 ##

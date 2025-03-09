@@ -26,7 +26,7 @@ public class UserChatRoom extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long lastReadMessageId;
+    private String lastReadMessageId;
     private Boolean isConnected;
 
     @ManyToOne(fetch = FetchType.LAZY)

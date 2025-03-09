@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +18,7 @@ public class WebtoonPopularScoreAsyncService implements AsyncProcessor {
 
     @Async
     @Override
+    @Transactional
     public void process(List<Job<?>> jobs) {
         webtoonRepository.updatePopularityScore(
             jobs

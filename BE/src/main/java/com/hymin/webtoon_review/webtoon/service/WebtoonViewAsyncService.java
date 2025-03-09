@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -18,6 +19,7 @@ public class WebtoonViewAsyncService implements AsyncProcessor {
 
     @Async
     @Override
+    @Transactional
     public void process(List<Job<?>> jobs) {
         webtoonRepository.updateViews(
             jobs

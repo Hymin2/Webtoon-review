@@ -52,11 +52,12 @@ public class WebtoonFacade {
         return setWebtoonSimpleList(webtoonSimpleList);
     }
 
+    @Transactional(readOnly = true)
     public List<WebtoonSimple> getHotWebtoonList() {
         return setWebtoonSimpleList(webtoonService.getHotWebtoonList());
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public WebtoonDetails getWebtoonDetails(Authentication authentication, Long id) {
         WebtoonDetails webtoonDetails = webtoonService.get(authentication.getName(), id);
         jobQueue.add(TopicNames.view.name(), Job.of(id));

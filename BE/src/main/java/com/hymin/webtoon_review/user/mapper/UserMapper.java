@@ -10,6 +10,7 @@ public class UserMapper {
             .username(registerInfo.getUsername())
             .password(encodedPassword)
             .nickname(registerInfo.getNickname())
+            .gender(registerInfo.getGender())
             .build();
     }
 }

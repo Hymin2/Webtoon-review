@@ -26,6 +26,8 @@ public class UserRequest {
         @NotBlank
         @Pattern(regexp = "^[a-zA-Z0-9가-힣\\-_]{4,20}$")
         private String nickname;
+
+        private String gender;
     }
 
     @Getter

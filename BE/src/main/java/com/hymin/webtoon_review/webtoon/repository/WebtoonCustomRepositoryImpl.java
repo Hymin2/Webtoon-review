@@ -32,7 +32,6 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.annotations.QueryHints;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -85,7 +84,6 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
                 getUpdatedAtCondition(updatedAt))
             .orderBy(toOrderSpecifier(pageable.getSort()))
             .limit(pageable.getPageSize() + 1)
-            .setHint(QueryHints.COMMENT, "straight_join")
             .fetch();
     }
 

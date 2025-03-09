@@ -15,7 +15,6 @@ public class ChatMapper {
             .user(user)
             .chatRoom(chatRoom)
             .isConnected(false)
-            .lastReadMessageId(0L)
             .build();
     }
 

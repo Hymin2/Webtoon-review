@@ -13,16 +13,15 @@ public class ChatMessageCustomRepositoryImpl implements ChatMessageCustomReposit
 
     @Override
     public void saveAll(List<ChatMessage> chatMessages) {
-        String sql = "INSERT INTO message(id, user_id, chat_room_id, type, content, created_at, updated_at) VALUES (?,(SELECT id FROM user WHERE nickname = ?),?,?,?,?,?)";
+        String sql = "INSERT INTO message(user_id, chat_room_id, type, content, created_at, updated_at) VALUES ((SELECT id FROM user WHERE nickname = ?),?,?,?,?,?)";
 
         jdbcTemplate.batchUpdate(sql, chatMessages, chatMessages.size(), (ps, message) -> {
-            ps.setString(1, message.getId());
-            ps.setString(2, message.getSender());
-            ps.setLong(3, message.getRoomId());
-            ps.setString(4, message.getType().name());
-            ps.setString(5, message.getMessage());
+            ps.setString(1, message.getSender());
+            ps.setLong(2, message.getRoomId());
+            ps.setString(3, message.getType().name());
+            ps.setString(4, message.getMessage());
+            ps.setString(5, Time.now());
             ps.setString(6, Time.now());
-            ps.setString(7, Time.now());
         });
     }
 }

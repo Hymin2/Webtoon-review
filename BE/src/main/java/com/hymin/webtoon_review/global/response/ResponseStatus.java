@@ -27,6 +27,7 @@ public enum ResponseStatus {
     RECOMMEND_NOT_FOUND(HttpStatus.NOT_FOUND, "추천을 찾을 수 없습니다."),
     BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND, "북마크를 찾을 수 없습니다."),
     CHAT_ROOM_NOT_FOUND(HttpStatus.NOT_FOUND, "채팅방을 찾을 수 없습니다."),
+    UPLOAD_FILE_NOT_FOUND(HttpStatus.NOT_FOUND, "업로드 파일 정보를 찾을 수 없습니다."),
 
     INVALID_CHAT_ROOM_ACCESS(HttpStatus.BAD_REQUEST, "잘못된 채팅방 접근입니다."),
     INVALID_BOOKMARK(HttpStatus.BAD_REQUEST, "잘못된 북마크입니다."),

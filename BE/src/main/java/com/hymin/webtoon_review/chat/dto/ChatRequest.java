@@ -14,24 +14,23 @@ public class ChatRequest {
     @AllArgsConstructor
     public static class ChatMessage {
 
-        @Setter
-        private String id;
         private Long roomId;
         private ChatType type;
         @Setter
         private String sender;
         private String message;
         private String personalUUID;
+        private String createdAt;
     }
 
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor
     public static class ConnectDisConnectMessage {
-
+        
         private Long roomId;
         private ChatType type;
         private String personalUUID;
-        private String lastMessageUUID;
+        private String lastMessageCreatedAt;
     }
 }

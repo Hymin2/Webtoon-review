@@ -2,21 +2,21 @@ spring:
   datasource:
     read:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
       username: ${MYSQL_USERNAME}
       password: ${MYSQL_PASSWORD}
       hikari:
         maximum-pool-size: 7
     write:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&rewriteBatchedStatement=true&allowPublicKeyRetrieval=true
       username: ${MYSQL_USERNAME}
       password: ${MYSQL_PASSWORD}
       hikari:
         maximum-pool-size: 2
     async-write:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+      jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&rewriteBatchedStatement=true&allowPublicKeyRetrieval=true
       username: ${MYSQL_USERNAME}
       password: ${MYSQL_PASSWORD}
       hikari:
@@ -36,8 +36,9 @@ spring:
 
   servlet:
     multipart:
-      max-request-size: 4096MB
-      max-file-size: 4096MB
+      max-request-size: 10MB
+      max-file-size: 10MB
+      file-size-threshold: 10
 
   data:
     redis:

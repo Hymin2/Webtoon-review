@@ -4,6 +4,8 @@ import com.hymin.webtoon_review.chat.enums.ChatType;
 import com.hymin.webtoon_review.global.BaseEntity;
 import com.hymin.webtoon_review.user.entity.User;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -22,7 +24,8 @@ import lombok.NoArgsConstructor;
 public class Message extends BaseEntity {
 
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private ChatType type;
     private String content;
 

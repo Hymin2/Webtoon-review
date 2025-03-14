@@ -3,11 +3,15 @@ package com.hymin.webtoon_review.file.service;
 import com.hymin.webtoon_review.file.dto.FileRequest.FileUploadInfo;
 import com.hymin.webtoon_review.file.entity.UploadFile;
 import com.hymin.webtoon_review.file.exception.FileSizeLimitExceededException;
+import com.hymin.webtoon_review.file.exception.UploadFileNotFoundException;
 import com.hymin.webtoon_review.file.mapper.FileMapper;
 import com.hymin.webtoon_review.file.repository.FileRepository;
 import jakarta.annotation.PostConstruct;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +30,7 @@ public class FileService {
     private String filePath;
     private final FileRepository fileRepository;
 
+    private static final Integer BUFFER_SIZE = 8 * 1024;
     private static final Integer MAX_FILE_SIZE = 1024 * 1024 * 100;
 
     @PostConstruct
@@ -44,34 +48,42 @@ public class FileService {
         return uploadFile == null ? 0 : uploadFile.getSavedChunk() + 1;
     }
 
+    public String getFileUrl(String fileName) {
+        return "";
+    }
+
+    @Transactional
     public String startUpload(FileUploadInfo fileUploadInfo) {
         if (isGraterThanMaxFileSize(fileUploadInfo.getFileSize())) {
             throw new FileSizeLimitExceededException();
         }
 
-        String newFileName = makeFileName(fileUploadInfo.getFileName());
+        String newFileName = makeNewFileName(fileUploadInfo.getFileName());
         fileRepository.save(FileMapper.toFile(fileUploadInfo, newFileName));
 
         return newFileName;
     }
 
-    public void upload(MultipartFile file) {
-        saveFile(file, makeFileName(file.getOriginalFilename()));
+    public void upload(InputStream inputStream, String fileName) {
+        saveFile(inputStream, fileName);
+    }
+
+    public void upload(InputStream inputStream, String fileName, int chunkSize, int chunk) {
+        String chunkFileName = makeChunkFileName(fileName, chunk);
+        saveFile(inputStream, chunkFileName);
+
+        if (isLastChunk(chunk, chunkSize)) {
+            String[] fileNameAndExtension = getFileNameAndExtension(fileName);
+
+            mergeFiles(fileNameAndExtension[0], fileNameAndExtension[1], chunkSize);
+        }
     }
 
     @Transactional
-    public void upload(MultipartFile file, String fileName, int chunkSize, int chunk) {
-        String chunkFileName = makeFileName(file.getOriginalFilename(), chunk);
-        saveFile(file, chunkFileName);
+    public void updateFileChunkInfo(String fileName) {
         UploadFile uploadFile = fileRepository.findByName(fileName)
-            .orElseThrow(RuntimeException::new);
+            .orElseThrow(UploadFileNotFoundException::new);
         uploadFile.increaseSavedChunk();
-
-        if (chunkSize == chunk) {
-            String[] fileNameSplit = fileName.split("\\.");
-
-            mergeFiles(fileNameSplit[0], fileNameSplit[1], chunkSize);
-        }
     }
 
     private void mergeFiles(String originFileName, String extension, int chunkSize) {
@@ -92,27 +104,50 @@ public class FileService {
         }
     }
 
-    private void saveFile(MultipartFile file, String fileName) {
+    private void saveFile(InputStream inputStream, String fileName) {
         Path path = Paths.get(filePath, fileName);
 
-        try {
-            Files.write(path, file.getBytes());
+        try (OutputStream outputStream = new FileOutputStream(path.toFile())) {
+            int read = 0;
+            byte[] bytes = new byte[BUFFER_SIZE];
+
+            while ((read = inputStream.read(bytes)) != -1) {
+                outputStream.write(bytes, 0, read);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String makeFileName(String fileName) {
-        String[] fileNameSplit = fileName.split("\\.");
-        String newFileName = fileNameSplit[0] + "_" + UUID.randomUUID() + "." + fileNameSplit[1];
+    private String makeNewFileName(String fileName) {
+        String[] nameAndExtension = getFileNameAndExtension(fileName);
+        String newFileName =
+            nameAndExtension[0] + "_" + UUID.randomUUID() + "." + nameAndExtension[1];
 
         return newFileName;
     }
 
-    private String makeFileName(String fileName, Integer chunk) {
-        String newFileName = fileName + ".part" + chunk;
+    private String makeChunkFileName(String fileName, Integer chunk) {
+        String chunkFileName = fileName + ".part" + chunk;
 
-        return newFileName;
+        return chunkFileName;
+    }
+
+    private String[] getFileNameAndExtension(String fileName) {
+        String[] result = new String[2];
+        String[] fileNameSplit = fileName.split("\\.");
+
+        String extension = fileNameSplit[fileNameSplit.length - 1];
+        String originFileName = fileName.replace("." + extension, "");
+
+        result[0] = originFileName;
+        result[1] = fileNameSplit[fileNameSplit.length - 1];
+
+        return result;
+    }
+
+    private Boolean isLastChunk(int chunk, int chunkSize) {
+        return chunk == chunkSize;
     }
 
     private Boolean isGraterThanMaxFileSize(Integer fileSize) {

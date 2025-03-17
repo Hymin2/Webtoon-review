@@ -70,6 +70,10 @@ public class JobQueue {
         }
 
         public JobQueueBuilder setTopic(String topic, Integer threshold, AsyncProcessor processor) {
+            if (jobs.containsKey(topic)) {
+                throw new IllegalArgumentException("Topic " + topic + " already exists");
+            }
+            
             jobs.put(topic, new ConcurrentLinkedQueue<>());
             thresholds.put(topic, threshold);
             processors.put(topic, processor);

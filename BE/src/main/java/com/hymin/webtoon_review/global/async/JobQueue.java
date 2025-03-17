@@ -30,26 +30,34 @@ public class JobQueue {
     }
 
     public void add(String topic, Job<?> job) {
-        jobs.get(topic).add(job);
+        getQueue(topic).add(job);
     }
 
     public void processAll(String topic) {
-        int size = jobs.get(topic).size();
+        int size = getQueue(topic).size();
         List<Job<?>> jobList = new ArrayList<>();
 
         for (int i = 0; i < size; i++) {
-            jobList.add(jobs.get(topic).poll());
+            jobList.add(getQueue(topic).poll());
         }
 
         processors.get(topic).process(jobList);
     }
 
     public boolean isEmpty(String topic) {
-        return jobs.get(topic).isEmpty();
+        return getQueue(topic).isEmpty();
     }
 
     public boolean isGreaterThanThreshold(String topic) {
-        return jobs.get(topic).size() >= thresholds.get(topic);
+        return getQueue(topic).size() >= thresholds.get(topic);
+    }
+
+    private ConcurrentLinkedQueue<Job<?>> getQueue(String topic) {
+        if (!jobs.containsKey(topic)) {
+            throw new IllegalArgumentException("Topic " + topic + " does not exist");
+        }
+
+        return jobs.get(topic);
     }
 
     public static class JobQueueBuilder {

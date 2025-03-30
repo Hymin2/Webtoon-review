@@ -74,6 +74,21 @@ public class Webtoon extends BaseEntity {
     @Column(name = "female_popularity_score")
     private Integer femalePopularityScore;
 
+    @Column(name = "authors")
+    private String authors;
+
+    @Column(name = "day_of_weeks")
+    private String dayOfWeeks;
+
+    @Column(name = "genres")
+    private String genres;
+    
+    @Column(name = "bits_genre", columnDefinition = "INT UNSIGNED")
+    private Integer bitsGenre;
+
+    @Column(name = "bits_day_of_week", columnDefinition = "INT UNSIGNED")
+    private Integer bitsDayOfWeek;
+
     @JoinColumn(name = "platform_id")
     @ManyToOne(fetch = FetchType.LAZY)
     private Platform platform;
@@ -95,8 +110,4 @@ public class Webtoon extends BaseEntity {
 
     @OneToMany(mappedBy = "webtoon")
     private List<Comment> comments;
-
-    public void increaseView() {
-        this.views++;
-    }
 }

@@ -19,7 +19,6 @@ import com.hymin.webtoon_review.webtoon.service.WebtoonService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -30,9 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class WebtoonFacade {
 
-    @Value("${domain.thumbnail}")
-    private String domainThumbnail;
-
     private final JobQueue jobQueue;
     private final UserService userService;
     private final WebtoonService webtoonService;
@@ -41,20 +37,18 @@ public class WebtoonFacade {
     @Transactional(readOnly = true)
     public List<WebtoonSimple> getWentoonList(Pageable pageable, String lastValue,
         String daysOfWeek, String genre, String updatedAt) {
-        List<WebtoonSimple> webtoonSimpleList = webtoonService.getWebtoonList(
+        return webtoonService.getWebtoonList(
             pageable,
             lastValue,
-            daysOfWeek,
-            genre,
+            webtoonService.getDayOfWeek(daysOfWeek),
+            webtoonService.getGenre(genre),
             updatedAt
         );
-
-        return setWebtoonSimpleList(webtoonSimpleList);
     }
 
     @Transactional(readOnly = true)
     public List<WebtoonSimple> getHotWebtoonList() {
-        return setWebtoonSimpleList(webtoonService.getHotWebtoonList());
+        return webtoonService.getHotWebtoonList();
     }
 
     @Transactional(readOnly = true)
@@ -64,19 +58,13 @@ public class WebtoonFacade {
         jobQueue.add(TopicNames.popularity.name(),
             Job.of(WebtoonMapper.toWebtoonPopularityScore(id, 1)));
 
-        return WebtoonMapper.setWebtoonDetails(
-            webtoonDetails,
-            webtoonService.getDayOfWeeks(id),
-            webtoonService.getGenres(id),
-            webtoonService.getAuthors(id),
-            domainThumbnail
-        );
+        return webtoonDetails;
     }
 
     @Transactional(readOnly = true)
     public List<Category> getWebtoonCategories() {
         return WebtoonMapper.toWebtoonCategoryList(
-            webtoonService.getAllGenres()
+            webtoonService.getAllGenre()
         );
     }
 
@@ -105,24 +93,6 @@ public class WebtoonFacade {
         webtoonService.decreaseRecommendCount(webtoonId);
         jobQueue.add(TopicNames.popularity.name(),
             Job.of(WebtoonMapper.toWebtoonPopularityScore(webtoonId, -1)));
-    }
-
-    private List<WebtoonSimple> setWebtoonSimpleList(List<WebtoonSimple> webtoonSimpleList) {
-        List<Long> webtoonIdList = getWebtoonIdList(webtoonSimpleList);
-
-        return WebtoonMapper.setWebtoonSimpleList(
-            webtoonSimpleList,
-            webtoonService.getDayOfWeekSelectResultList(webtoonIdList),
-            webtoonService.getGenreSelectResultList(webtoonIdList),
-            webtoonService.getAuthorSelectResultList(webtoonIdList),
-            domainThumbnail
-        );
-    }
-
-    private List<Long> getWebtoonIdList(List<WebtoonSimple> webtoonSimpleList) {
-        return webtoonSimpleList.stream()
-            .map(WebtoonSimple::getId)
-            .toList();
     }
 
     private boolean isInvalidWebtoonRecommend(User user, Webtoon webtoon,

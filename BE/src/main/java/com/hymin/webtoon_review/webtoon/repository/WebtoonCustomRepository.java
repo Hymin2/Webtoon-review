@@ -3,29 +3,23 @@ package com.hymin.webtoon_review.webtoon.repository;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonPopularityScore;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonDetails;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonSimple;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.AuthorSelectResult;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.DayOfWeekSelectResult;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonSelectResult.GenreSelectResult;
+import com.hymin.webtoon_review.webtoon.entity.DayOfWeek;
+import com.hymin.webtoon_review.webtoon.entity.Genre;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Pageable;
 
 public interface WebtoonCustomRepository {
 
     List<WebtoonSimple> getWebtoonList(Pageable pageable,
         String lastValue,
-        String dayOfWeek,
-        String genre,
+        Optional<DayOfWeek> dayOfWeek,
+        Optional<Genre> genre,
         String updatedAt);
 
     List<WebtoonSimple> getHotWebtoonList();
 
     WebtoonDetails getWebtoon(String username, Long webtoonId);
-
-    List<DayOfWeekSelectResult> getDayOfWeek(List<Long> webtoonId);
-
-    List<GenreSelectResult> getGenres(List<Long> webtoonId);
-
-    List<AuthorSelectResult> getAuthors(List<Long> webtoonId);
 
     void updateViews(List<Long> webtoonIdList);
 

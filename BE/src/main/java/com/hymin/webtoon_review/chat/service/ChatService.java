@@ -8,6 +8,7 @@ import com.hymin.webtoon_review.chat.repository.ChatRoomRepository;
 import com.hymin.webtoon_review.chat.repository.UserChatRoomRepository;
 import com.hymin.webtoon_review.user.entity.User;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,11 +27,19 @@ public class ChatService {
         return chatRoomRepository.findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
     }
 
+    public Optional<ChatRoom> getByWebtoonId(Long webtoonId) {
+        return chatRoomRepository.findByWebtoonId(webtoonId);
+    }
+
     public void joinChatRoom(User user, ChatRoom chatRoom) {
         userChatRoomRepository.save(ChatMapper.toUserChatRoom(user, chatRoom));
     }
 
     public Boolean existsRoomByUsername(Long roomId, String username) {
         return userChatRoomRepository.existsByChatRoomIdAndUserUsername(roomId, username);
+    }
+
+    public void save(ChatRoom chatRoom) {
+        chatRoomRepository.save(chatRoom);
     }
 }

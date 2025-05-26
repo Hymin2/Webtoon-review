@@ -5,6 +5,7 @@ import static com.hymin.webtoon_review.user.entity.QUser.user;
 import static com.hymin.webtoon_review.user.entity.QWebtoonRecommend.webtoonRecommend;
 import static com.hymin.webtoon_review.webtoon.entity.QPlatform.platform;
 import static com.hymin.webtoon_review.webtoon.entity.QWebtoon.webtoon;
+import static com.hymin.webtoon_review.webtoon.entity.QWebtoonFilter.webtoonFilter;
 
 import com.hymin.webtoon_review.webtoon.dto.WebtoonPopularityScore;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonDetails;
@@ -15,7 +16,6 @@ import com.querydsl.core.types.Order;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.JPQLQuery;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -62,8 +62,9 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
                 webtoon.dayOfWeeks,
                 webtoon.genres
             ))
-            .distinct()
-            .from(webtoon)
+            .from(webtoonFilter)
+            .innerJoin(webtoon)
+            .on(webtoonFilter.webtoon.eq(webtoon))
             .where(
                 getLastValueCondition(pageable.getSort(), lastValue),
                 getDayOfWeekCondition(daysOfWeek),
@@ -166,19 +167,12 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
     }
 
     private BooleanExpression getGenreCondition(Optional<Genre> genre) {
-        if (genre.isEmpty()) {
-            return null;
-        }
-        return Expressions.numberTemplate(Integer.class, "bitand({0}, {1})", webtoon.bitsGenre,
-            1 << (genre.get().getId() - 1)).gt(0);
+        return genre.map(webtoonFilter.genre::eq).orElse(null);
+
     }
 
     private BooleanExpression getDayOfWeekCondition(Optional<DayOfWeek> dayOfWeek) {
-        if (dayOfWeek.isEmpty()) {
-            return null;
-        }
-        return Expressions.numberTemplate(Integer.class, "bitand({0}, {1})", webtoon.bitsDayOfWeek,
-            1 << (dayOfWeek.get().getId() - 1)).gt(0);
+        return dayOfWeek.map(webtoonFilter.dayOfWeek::eq).orElse(null);
     }
 
     private BooleanExpression getLastValueCondition(Sort sort, String lastValue) {
@@ -193,29 +187,29 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
         String property = order.getProperty();
 
         if (property.equals("최신순") && order.isAscending()) {
-            return webtoon.updatedAt.gt(LocalDateTime.parse(lastValue));
+            return webtoonFilter.webtoonCreatedAt.gt(LocalDateTime.parse(lastValue));
         } else if (property.equals("최신순") && order.isDescending()) {
-            return webtoon.updatedAt.lt(LocalDateTime.parse(lastValue));
+            return webtoonFilter.webtoonCreatedAt.lt(LocalDateTime.parse(lastValue));
         } else if (property.equals("인기순") && order.isAscending()) {
-            return webtoon.totalPopularityScore.gt(Integer.valueOf(lastValue));
+            return webtoonFilter.totalPopularityScore.gt(Integer.valueOf(lastValue));
         } else if (property.equals("인기순") && order.isDescending()) {
-            return webtoon.totalPopularityScore.lt(Integer.valueOf(lastValue));
+            return webtoonFilter.totalPopularityScore.lt(Integer.valueOf(lastValue));
         } else if (property.equals("남성 인기순") && order.isAscending()) {
-            return webtoon.manPopularityScore.gt(Integer.valueOf(lastValue));
+            return webtoonFilter.manPopularityScore.gt(Integer.valueOf(lastValue));
         } else if (property.equals("남성 인기순") && order.isDescending()) {
-            return webtoon.manPopularityScore.lt(Integer.valueOf(lastValue));
+            return webtoonFilter.manPopularityScore.lt(Integer.valueOf(lastValue));
         } else if (property.equals("여성 인기순") && order.isAscending()) {
-            return webtoon.femalePopularityScore.gt(Integer.valueOf(lastValue));
+            return webtoonFilter.femalePopularityScore.gt(Integer.valueOf(lastValue));
         } else if (property.equals("여성 인기순") && order.isDescending()) {
-            return webtoon.femalePopularityScore.lt(Integer.valueOf(lastValue));
+            return webtoonFilter.femalePopularityScore.lt(Integer.valueOf(lastValue));
         } else if (property.equals("별점순") && order.isAscending()) {
-            return webtoon.totalStarScore.gt(Integer.valueOf(lastValue));
+            return webtoonFilter.totalStarScore.gt(Integer.valueOf(lastValue));
         } else if (property.equals("별점순") && order.isDescending()) {
-            return webtoon.totalStarScore.lt(Integer.valueOf(lastValue));
+            return webtoonFilter.totalStarScore.lt(Integer.valueOf(lastValue));
         } else if (property.equals("추천순") && order.isAscending()) {
-            return webtoon.recommendationCount.gt(Integer.valueOf(lastValue));
+            return webtoonFilter.recommendationCount.gt(Integer.valueOf(lastValue));
         } else if (property.equals("추천순") && order.isDescending()) {
-            return webtoon.recommendationCount.lt(Integer.valueOf(lastValue));
+            return webtoonFilter.recommendationCount.lt(Integer.valueOf(lastValue));
         }
 
         return null;
@@ -231,26 +225,27 @@ public class WebtoonCustomRepositoryImpl implements WebtoonCustomRepository {
                 switch (order.getProperty()) {
                     case "인기순":
                         orderSpecifiers.add(
-                            new OrderSpecifier<>(direction, webtoon.totalPopularityScore));
+                            new OrderSpecifier<>(direction, webtoonFilter.totalPopularityScore));
                         break;
                     case "남성 인기순":
                         orderSpecifiers.add(
-                            new OrderSpecifier<>(direction, webtoon.manPopularityScore));
+                            new OrderSpecifier<>(direction, webtoonFilter.manPopularityScore));
                         break;
                     case "여성 인기순":
                         orderSpecifiers.add(
-                            new OrderSpecifier<>(direction, webtoon.femalePopularityScore));
+                            new OrderSpecifier<>(direction, webtoonFilter.femalePopularityScore));
                         break;
                     case "별점순":
                         orderSpecifiers.add(
-                            new OrderSpecifier<>(direction, webtoon.totalStarScore));
+                            new OrderSpecifier<>(direction, webtoonFilter.totalStarScore));
                         break;
                     case "추천순":
                         orderSpecifiers.add(
-                            new OrderSpecifier<>(direction, webtoon.recommendationCount));
+                            new OrderSpecifier<>(direction, webtoonFilter.recommendationCount));
                         break;
                     case "최신순":
-                        orderSpecifiers.add(new OrderSpecifier<>(direction, webtoon.updatedAt));
+                        orderSpecifiers.add(
+                            new OrderSpecifier<>(direction, webtoonFilter.webtoonCreatedAt));
                         break;
                 }
             });

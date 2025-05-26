@@ -17,8 +17,13 @@ public class JobQueueMonitorService {
         jobQueue.getAllTopic()
             .forEach(topic -> {
                 if (jobQueue.isGreaterThanThreshold(topic)) {
-                    jobQueue.processAll(topic);
+                    jobQueue.process(topic);
                 }
             });
+    }
+
+    @Scheduled(fixedRate = 1000)
+    public void retry() {
+        jobQueue.getAllTopic().forEach(jobQueue::retry);
     }
 }

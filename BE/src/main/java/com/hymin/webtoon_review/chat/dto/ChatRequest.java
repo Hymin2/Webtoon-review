@@ -22,15 +22,4 @@ public class ChatRequest {
         private String personalUUID;
         private String createdAt;
     }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ConnectDisConnectMessage {
-        
-        private Long roomId;
-        private ChatType type;
-        private String personalUUID;
-        private String lastMessageCreatedAt;
-    }
 }

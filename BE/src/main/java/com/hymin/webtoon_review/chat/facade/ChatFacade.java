@@ -1,7 +1,6 @@
 package com.hymin.webtoon_review.chat.facade;
 
 import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessage;
-import com.hymin.webtoon_review.chat.dto.ChatRequest.ConnectDisConnectMessage;
 import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomInfo;
 import com.hymin.webtoon_review.chat.entity.ChatRoom;
 import com.hymin.webtoon_review.chat.exception.InvalidChatRoomAccessException;
@@ -13,9 +12,13 @@ import com.hymin.webtoon_review.global.async.JobQueue;
 import com.hymin.webtoon_review.global.async.TopicNames;
 import com.hymin.webtoon_review.user.entity.User;
 import com.hymin.webtoon_review.user.service.UserService;
+import com.hymin.webtoon_review.webtoon.entity.Webtoon;
+import com.hymin.webtoon_review.webtoon.service.WebtoonService;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @RequiredArgsConstructor
@@ -26,6 +29,7 @@ public class ChatFacade {
     private final ChatService chatService;
     private final NotificationService notificationService;
     private final SimpMessageSendingOperations simpleMessageSendingOperations;
+    private final WebtoonService webtoonService;
 
     public void sendMessage(ChatMessage chatMessage) {
         simpleMessageSendingOperations
@@ -34,24 +38,42 @@ public class ChatFacade {
         jobQueue.add(TopicNames.chat.name(), Job.of(chatMessage));
     }
 
-    public void sendMessage(ConnectDisConnectMessage connectDisConnectMessage) {
+    public void sendConnectDisconnectMessage(ChatMessage chatMessage) {
         simpleMessageSendingOperations
-            .convertAndSend("/topic/chat/" + connectDisConnectMessage.getRoomId(),
-                connectDisConnectMessage);
+            .convertAndSend("/topic/chat/" + chatMessage.getRoomId(),
+                chatMessage);
     }
 
-    public ChatRoomInfo getRoomInfoPrevConnect(Long roomId, String username) {
-        if (chatService.existsRoomByUsername(roomId, username)) {
+    public ChatRoomInfo getRoomInfoPrevConnect(Long webtoonId, String username) {
+        ChatRoom chatRoom = chatService.getByWebtoonId(webtoonId)
+            .orElseThrow(InvalidChatRoomAccessException::new);
+
+        if (chatService.existsRoomByUsername(chatRoom.getId(), username)) {
             throw new InvalidChatRoomAccessException();
         }
 
-        return ChatMapper.toChatRoomInfo(roomId, chatService.getUserChatRooms(roomId));
+        return ChatMapper.toChatRoomInfo(chatRoom.getId(), chatService.getUserChatRooms(
+            chatRoom.getId()));
     }
 
-    public void joinChatRoom(Long roomId, String username) {
+    @Transactional
+    public void joinChatRoom(Long webtoonId, String username) {
         User user = userService.get(username);
-        ChatRoom chatRoom = chatService.get(roomId);
+        Optional<ChatRoom> chatRoom = chatService.getByWebtoonId(webtoonId);
 
-        chatService.joinChatRoom(user, chatRoom);
+        if (chatRoom.isEmpty()) {
+            Webtoon webtoon = webtoonService.get(webtoonId);
+            ChatRoom newChatRoom = ChatRoom.builder()
+                .webtoon(webtoon)
+                .name(webtoon.getName())
+                .build();
+
+            chatService.save(newChatRoom);
+            chatService.joinChatRoom(user, newChatRoom);
+        } else if (!chatService.existsRoomByUsername(chatRoom.get().getId(), user.getUsername())) {
+            chatService.joinChatRoom(user, chatRoom.get());
+        } else {
+            throw new InvalidChatRoomAccessException();
+        }
     }
 }

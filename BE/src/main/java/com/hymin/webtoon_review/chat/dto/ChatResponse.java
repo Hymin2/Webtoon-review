@@ -1,5 +1,6 @@
 package com.hymin.webtoon_review.chat.dto;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +17,8 @@ public class ChatResponse {
 
         private Long roomId;
         private String personalUUID;
-        private Map<Object, Object> readCountMap;
+        private Integer userCount;
+        private Integer connectedUserCount;
+        private Map<LocalDateTime, Long> readCountMap;
     }
 }

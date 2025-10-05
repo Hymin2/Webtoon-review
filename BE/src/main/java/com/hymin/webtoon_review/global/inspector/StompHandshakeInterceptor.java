@@ -5,9 +5,11 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
+@Component
 @RequiredArgsConstructor
 public class StompHandshakeInterceptor implements HandshakeInterceptor {
 
@@ -20,9 +22,12 @@ public class StompHandshakeInterceptor implements HandshakeInterceptor {
 
         String nickname = jwtService.parseJwt(token)
             .get("nickname", String.class);
+        String username = jwtService.parseJwt(token)
+            .getSubject();
 
         attributes.put("nickname", nickname);
-        
+        attributes.put("username", username);
+
         return true;
     }
 

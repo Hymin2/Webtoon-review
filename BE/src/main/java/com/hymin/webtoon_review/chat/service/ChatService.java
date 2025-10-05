@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +22,10 @@ public class ChatService {
 
     public List<UserChatRoom> getUserChatRooms(Long roomId) {
         return userChatRoomRepository.findByChatRoomId(roomId);
+    }
+
+    public List<User> getConnectedUsers(Long roomId) {
+        return userChatRoomRepository.findConnectedUserByRoomId(roomId);
     }
 
     public ChatRoom get(Long roomId) {
@@ -37,6 +42,18 @@ public class ChatService {
 
     public Boolean existsRoomByUsername(Long roomId, String username) {
         return userChatRoomRepository.existsByChatRoomIdAndUserUsername(roomId, username);
+    }
+
+    @Transactional
+    public void connect(String nickname, Long chatRoomId) {
+        userChatRoomRepository.findByUserNicknameAndChatRoomId(nickname, chatRoomId)
+            .connect();
+    }
+
+    @Transactional
+    public void disconnect(String nickname, Long chatRoomId) {
+        userChatRoomRepository.findByUserNicknameAndChatRoomId(nickname, chatRoomId)
+            .disconnect();
     }
 
     public void save(ChatRoom chatRoom) {

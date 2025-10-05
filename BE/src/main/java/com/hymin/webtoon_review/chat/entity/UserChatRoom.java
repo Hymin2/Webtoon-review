@@ -38,4 +38,12 @@ public class UserChatRoom extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id", nullable = false)
     private ChatRoom chatRoom;
+
+    public void connect() {
+        isConnected = true;
+    }
+
+    public void disconnect() {
+        isConnected = false;
+    }
 }

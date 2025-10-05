@@ -1,10 +1,12 @@
 package com.hymin.webtoon_review.chat.controller;
 
+import com.hymin.webtoon_review.chat.dto.ChatRequest.AckMessage;
 import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessage;
 import com.hymin.webtoon_review.chat.facade.ChatFacade;
 import com.hymin.webtoon_review.global.annotation.Auth;
 import com.hymin.webtoon_review.global.response.ApiResponse;
 import com.hymin.webtoon_review.global.response.RestResponse;
+import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
@@ -26,18 +28,31 @@ public class ChatController {
         @RequestBody ChatMessage chatMessage,
         SimpMessageHeaderAccessor headerAccessor
     ) {
-        chatMessage.setSender((String) headerAccessor.getSessionAttributes().get("nickname"));
-        chatFacade.sendMessage(chatMessage);
+        chatFacade.sendMessage(headerAccessor, chatMessage);
     }
 
     @MessageMapping(value = "/chat/messages/connect")
-    public void sendConnectMessage(@RequestBody ChatMessage chatMessage) {
-        chatFacade.sendConnectDisconnectMessage(chatMessage);
+    public void sendConnectMessage(
+        @RequestBody ChatMessage chatMessage,
+        SimpMessageHeaderAccessor headerAccessor
+    ) {
+        chatFacade.sendMessage(headerAccessor, chatMessage);
     }
 
     @MessageMapping(value = "/chat/messages/disconnect")
-    public void sendDisconnectMessage(@RequestBody ChatMessage chatMessage) {
-        chatFacade.sendConnectDisconnectMessage(chatMessage);
+    public void sendDisconnectMessage(
+        @RequestBody ChatMessage chatMessage,
+        SimpMessageHeaderAccessor headerAccessor
+    ) {
+        chatFacade.sendMessage(headerAccessor, chatMessage);
+    }
+
+    @MessageMapping(value = "/chat/messages/ack")
+    public void receiveAck(
+        @RequestBody AckMessage ackMessage,
+        Principal principal
+    ) {
+        chatFacade.receiveAck(principal.getName(), ackMessage);
     }
 
     @GetMapping("/chat/room/info")

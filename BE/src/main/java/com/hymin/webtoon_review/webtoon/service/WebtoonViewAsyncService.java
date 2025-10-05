@@ -1,7 +1,8 @@
 package com.hymin.webtoon_review.webtoon.service;
 
-import com.hymin.webtoon_review.global.async.AsyncProcessor;
-import com.hymin.webtoon_review.global.async.Job;
+import com.hymin.webtoon_review.global.annotation.Queue;
+import com.hymin.webtoon_review.global.queue.Job;
+import com.hymin.webtoon_review.global.queue.QueueProcessor;
 import com.hymin.webtoon_review.webtoon.repository.WebtoonRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -13,19 +14,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class WebtoonViewAsyncService implements AsyncProcessor {
+@Queue(topic = "view", threshold = 1)
+public class WebtoonViewAsyncService implements QueueProcessor<Long> {
 
     private final WebtoonRepository webtoonRepository;
 
     @Async
     @Override
     @Transactional
-    public void process(List<Job<?>> jobs) {
+    public void process(List<Job<Long>> jobs) {
         webtoonRepository.updateViews(
             jobs
                 .stream()
-                .map(job -> (Long) job.getData())
+                .map(Job::getData)
                 .toList()
         );
+    }
+
+    @Override
+    public Class<Long> getType() {
+        return Long.class;
     }
 }

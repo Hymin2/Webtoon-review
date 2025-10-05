@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.global.async;
+package com.hymin.webtoon_review.global.queue;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +20,5 @@ public class JobQueueMonitorService {
                     jobQueue.process(topic);
                 }
             });
-    }
-
-    @Scheduled(fixedRate = 1000)
-    public void retry() {
-        jobQueue.getAllTopic().forEach(jobQueue::retry);
     }
 }

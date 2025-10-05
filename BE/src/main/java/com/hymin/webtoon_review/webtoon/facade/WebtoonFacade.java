@@ -1,8 +1,8 @@
 package com.hymin.webtoon_review.webtoon.facade;
 
-import com.hymin.webtoon_review.global.async.Job;
-import com.hymin.webtoon_review.global.async.JobQueue;
-import com.hymin.webtoon_review.global.async.TopicNames;
+import com.hymin.webtoon_review.global.queue.Job;
+import com.hymin.webtoon_review.global.queue.QueueTemplate;
+import com.hymin.webtoon_review.global.queue.TopicNames;
 import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.user.entity.User;
 import com.hymin.webtoon_review.user.entity.WebtoonRecommend;
@@ -29,7 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class WebtoonFacade {
 
-    private final JobQueue jobQueue;
+    private final QueueTemplate queueTemplate;
     private final UserService userService;
     private final WebtoonService webtoonService;
     private final WebtoonRecommendService webtoonRecommendService;
@@ -54,8 +54,8 @@ public class WebtoonFacade {
     @Transactional(readOnly = true)
     public WebtoonDetails getWebtoonDetails(Authentication authentication, Long id) {
         WebtoonDetails webtoonDetails = webtoonService.get(authentication.getName(), id);
-        jobQueue.add(TopicNames.view.name(), Job.of(id));
-        jobQueue.add(TopicNames.popularity.name(),
+        queueTemplate.add(TopicNames.view.name(), Job.of(id));
+        queueTemplate.add(TopicNames.popularity.name(),
             Job.of(WebtoonMapper.toWebtoonPopularityScore(id, 1)));
 
         return webtoonDetails;
@@ -75,7 +75,7 @@ public class WebtoonFacade {
 
         webtoonRecommendService.save(WebtoonRecommendMapper.toWebtoonRecommend(user, webtoon));
         webtoonService.increaseRecommendCount(webtoonId);
-        jobQueue.add(TopicNames.popularity.name(),
+        queueTemplate.add(TopicNames.popularity.name(),
             Job.of(WebtoonMapper.toWebtoonPopularityScore(webtoonId, 1)));
     }
 
@@ -91,7 +91,7 @@ public class WebtoonFacade {
 
         webtoonRecommendService.delete(webtoonRecommend);
         webtoonService.decreaseRecommendCount(webtoonId);
-        jobQueue.add(TopicNames.popularity.name(),
+        queueTemplate.add(TopicNames.popularity.name(),
             Job.of(WebtoonMapper.toWebtoonPopularityScore(webtoonId, -1)));
     }
 

@@ -1,8 +1,8 @@
 package com.hymin.webtoon_review.webtoon.facade;
 
-import com.hymin.webtoon_review.global.async.Job;
-import com.hymin.webtoon_review.global.async.JobQueue;
-import com.hymin.webtoon_review.global.async.TopicNames;
+import com.hymin.webtoon_review.global.queue.Job;
+import com.hymin.webtoon_review.global.queue.JobQueue;
+import com.hymin.webtoon_review.global.queue.TopicNames;
 import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.user.entity.User;
 import com.hymin.webtoon_review.user.service.UserService;
@@ -81,7 +81,7 @@ public class WebtoonCommentFacade {
         Webtoon webtoon = webtoonService.get(webtoonId);
         Comment comment = commentService.get(commentId);
 
-        if (isInvalidComment(user, webtoon, comment)) {
+        if (isInvalidComment(webtoon, comment)) {
             throw new InvalidCommentException(ResponseStatus.INVALID_COMMENT);
         }
 

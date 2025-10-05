@@ -1,8 +1,8 @@
 package com.hymin.webtoon_review.webtoon.facade;
 
-import com.hymin.webtoon_review.global.async.Job;
-import com.hymin.webtoon_review.global.async.JobQueue;
-import com.hymin.webtoon_review.global.async.TopicNames;
+import com.hymin.webtoon_review.global.queue.Job;
+import com.hymin.webtoon_review.global.queue.JobQueue;
+import com.hymin.webtoon_review.global.queue.TopicNames;
 import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.user.entity.Bookmark;
 import com.hymin.webtoon_review.user.entity.User;
@@ -36,7 +36,7 @@ public class WebtoonBookmarkFacade {
         jobQueue.add(TopicNames.popularity.name(),
             Job.of(WebtoonMapper.toWebtoonPopularityScore(webtoonId, 2)));
     }
-    
+
     @Transactional
     public void removeBookmark(Authentication authentication, Long webtoonId, Long bookmarkId) {
         User user = userService.get(authentication.getName());

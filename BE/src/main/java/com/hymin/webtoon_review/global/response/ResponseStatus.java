@@ -14,9 +14,11 @@ public enum ResponseStatus {
 
     BAD_REQUEST(HttpStatus.BAD_REQUEST, "잘못된 접근입니다."),
     INVALID_INPUT(HttpStatus.BAD_REQUEST, "잘못된 입력입니다."),
+    EARLY_REFRESH_ATTEMPT(HttpStatus.BAD_REQUEST, "이른 토큰 재발급 요청입니다."),
 
     LOGIN_FAILED(HttpStatus.UNAUTHORIZED, "로그인에 실패했습니다."),
-    INVALID_JSON_WEB_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 토큰입니다."),
+    REFRESH_TOKEN_REUSE(HttpStatus.UNAUTHORIZED, "다시 로그인해주세요."),
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "유효하지 않거나 만료된 토큰입니다."),
 
     FORBIDDEN(HttpStatus.FORBIDDEN, "권한이 없습니다."),
 

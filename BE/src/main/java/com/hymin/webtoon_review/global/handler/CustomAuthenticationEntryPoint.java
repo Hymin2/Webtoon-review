@@ -18,7 +18,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
         AuthenticationException authException) throws IOException, ServletException {
-        ErrorResponse errorResponse = ErrorResponse.of(ResponseStatus.INVALID_JSON_WEB_TOKEN);
+        ErrorResponse errorResponse = ErrorResponse.of(ResponseStatus.INVALID_TOKEN);
         ObjectMapper mapper = new ObjectMapper();
 
         response.setCharacterEncoding("UTF-8");

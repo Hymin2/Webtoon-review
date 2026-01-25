@@ -1,5 +1,8 @@
 package com.hymin.webtoon_review.global.security.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hymin.webtoon_review.global.response.ErrorResponse;
+import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.global.security.authentication.JwtAuthentication;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,39 +19,42 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private final ObjectMapper objectMapper;
     private final AuthenticationManager authenticationManager;
-
-    private final String[] notFilters = {
-        "/users/login",
-        "/users",
-        "/users/check/username",
-        "/users/check/nickname"};
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
         FilterChain filterChain) throws ServletException, IOException {
         try {
+            String path = request.getRequestURI();
             String auth = request.getHeader("Authorization");
 
-            Authentication authentication = authenticationManager.authenticate(
-                new JwtAuthentication("", auth));
+            JwtAuthentication token = new JwtAuthentication("", auth);
+            token.setDetails(path);
 
+            Authentication authentication = authenticationManager.authenticate(token);
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (AuthenticationException e) {
 
-        } finally {
+            filterChain.doFilter(request, response);
+        } catch (AuthenticationException e) {
+            String path = request.getRequestURI();
+
+            if (path.equals("/users/refresh")) {
+                handleException(response);
+                return;
+            }
+
             filterChain.doFilter(request, response);
         }
     }
 
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        boolean b = false;
+    private void handleException(HttpServletResponse response)
+        throws IOException {
+        ErrorResponse errorResponse = ErrorResponse.of(ResponseStatus.INVALID_TOKEN);
+        String json = objectMapper.writeValueAsString(errorResponse);
 
-        for (String notFilter : notFilters) {
-            b = b || request.getRequestURI().contains(notFilter);
-        }
-
-        return b;
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write(json);
     }
 }

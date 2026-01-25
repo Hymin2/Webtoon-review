@@ -16,11 +16,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.DynamicInsert;
 
 @Table
 @Getter
 @Entity
 @Builder
+@DynamicInsert
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
@@ -41,6 +45,11 @@ public class User {
     @Column(nullable = false)
     private String nickname;
 
+    @Column(nullable = false)
+    @ColumnDefault(value = "0")
+    private Integer point;
+
+    @Setter
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Authority> authorities;
 
@@ -50,7 +59,4 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Reply> replies;
 
-    public void setAuthorities(List<Authority> authorities) {
-        this.authorities = authorities;
-    }
 }

@@ -1,6 +1,7 @@
 package com.hymin.webtoon_review.global.security;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -19,22 +20,43 @@ public class JwtService {
 
     @Value("${jwt.key}")
     private String key;
-    private final long ACCESS_VALID_SECOND = 1000L * 60 * 60 * 24 * 30;
 
-    public String createJwt(Authentication auth) {
-        Date now = new Date();
-
+    public String createJwt(Authentication auth, Date now, Date expiration) {
         String authorities = auth.getAuthorities().stream()
             .map(GrantedAuthority::getAuthority)
             .collect(Collectors.joining(", "));
 
+        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getDetails();
+
         return Jwts.builder()
             .setSubject(auth.getName())
+            .claim("id", userDetails.getId())
+            .claim("username", userDetails.getUsername())
+            .claim("nickname", userDetails.getNickname())
             .claim("authorities", authorities)
-            .claim("nickname", auth.getDetails())
             .signWith(getKey(), SignatureAlgorithm.HS256)
             .setIssuedAt(now)
-            .setExpiration(new Date(now.getTime() + ACCESS_VALID_SECOND))
+            .setExpiration(expiration)
+            .compact();
+    }
+
+    public String refreshJwt(String accessToken, Date now, Date expiration) {
+        Claims claims;
+        try {
+            claims = parseJwt(accessToken);
+        } catch (ExpiredJwtException e) {
+            claims = e.getClaims();
+        }
+
+        return Jwts.builder()
+            .setSubject(claims.getSubject())
+            .claim("id", claims.get("id"))
+            .claim("username", claims.get("username"))
+            .claim("nickname", claims.get("nickname"))
+            .claim("authorities", claims.get("authorities"))
+            .signWith(getKey(), SignatureAlgorithm.HS256)
+            .setIssuedAt(now)
+            .setExpiration(expiration)
             .compact();
     }
 

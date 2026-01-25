@@ -3,6 +3,8 @@ package com.hymin.webtoon_review.user.controller;
 import com.hymin.webtoon_review.global.annotation.Auth;
 import com.hymin.webtoon_review.global.response.ApiResponse;
 import com.hymin.webtoon_review.global.response.RestResponse;
+import com.hymin.webtoon_review.user.dto.UserRequest.DeviceRequest;
+import com.hymin.webtoon_review.user.dto.UserRequest.RefreshRequest;
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
 import com.hymin.webtoon_review.user.facade.UserFacade;
 import jakarta.validation.Valid;
@@ -13,6 +15,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -32,12 +35,41 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<RestResponse> login(@Auth Authentication authentication) {
-        String jwt = userFacade.login(authentication);
+    public RestResponse login(
+        @Auth Authentication authentication,
+        @RequestHeader("X-Device-Type") String deviceType,
+        @RequestHeader("X-Client-Id") String clientId) {
+        return ApiResponse.onSuccess(userFacade.login(authentication, deviceType, clientId));
+    }
 
-        return ResponseEntity.status(HttpStatus.OK)
-            .header("Authorization", jwt)
-            .body(RestResponse.onSuccess());
+    @PostMapping("/logout")
+    public RestResponse logout(
+        @Auth Authentication authentication,
+        @RequestHeader("X-Device-Type") String deviceType,
+        @RequestHeader("X-Client-Id") String clientId) {
+        userFacade.logout(authentication, deviceType, clientId);
+
+        return RestResponse.onSuccess();
+    }
+
+    @PostMapping("/refresh")
+    public RestResponse refresh(
+        @Auth Authentication authentication,
+        @RequestHeader("X-Device-Type") String deviceType,
+        @RequestHeader("X-Client-Id") String clientId,
+        @RequestHeader("Authorization") String accessToken,
+        @RequestBody RefreshRequest request) {
+        return ApiResponse.onSuccess(
+            userFacade.refresh(authentication, accessToken, deviceType, clientId, request));
+    }
+
+    @PostMapping("/push-token")
+    public RestResponse registerDevice(
+        @Auth Authentication authentication,
+        @RequestBody DeviceRequest deviceRequest
+    ) {
+        userFacade.registerDevice(authentication.getName(), deviceRequest);
+        return RestResponse.noContent();
     }
 
     @GetMapping("/check/username")

@@ -38,4 +38,22 @@ public class UserRequest {
         private String username;
         private String password;
     }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class RefreshRequest {
+
+        private String refreshToken;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DeviceRequest {
+
+        private String type;
+        private String pushToken;
+        private String deviceId;
+    }
 }

@@ -30,7 +30,6 @@ public class UsernamePasswordAuthenticationFilter extends OncePerRequestFilter {
                 loginInfo.getUsername(),
                 loginInfo.getPassword()
             ));
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         filterChain.doFilter(request, response);

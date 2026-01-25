@@ -3,10 +3,11 @@ package com.hymin.webtoon_review.chat.service;
 import com.hymin.webtoon_review.chat.entity.ChatRoom;
 import com.hymin.webtoon_review.chat.entity.UserChatRoom;
 import com.hymin.webtoon_review.chat.exception.ChatRoomNotFoundException;
-import com.hymin.webtoon_review.chat.mapper.ChatMapper;
 import com.hymin.webtoon_review.chat.repository.ChatRoomRepository;
 import com.hymin.webtoon_review.chat.repository.UserChatRoomRepository;
-import com.hymin.webtoon_review.user.entity.User;
+import com.hymin.webtoon_review.chat.repository.projection.ChatRoomGroup;
+import com.hymin.webtoon_review.chat.repository.projection.ChatRoomStatistics;
+import com.hymin.webtoon_review.chat.repository.projection.LastReadMessageSequenceGroup;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +21,6 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final UserChatRoomRepository userChatRoomRepository;
 
-    public List<UserChatRoom> getUserChatRooms(Long roomId) {
-        return userChatRoomRepository.findByChatRoomId(roomId);
-    }
-
-    public List<User> getConnectedUsers(Long roomId) {
-        return userChatRoomRepository.findConnectedUserByRoomId(roomId);
-    }
-
     public ChatRoom get(Long roomId) {
         return chatRoomRepository.findById(roomId).orElseThrow(ChatRoomNotFoundException::new);
     }
@@ -36,8 +29,20 @@ public class ChatService {
         return chatRoomRepository.findByWebtoonId(webtoonId);
     }
 
-    public void joinChatRoom(User user, ChatRoom chatRoom) {
-        userChatRoomRepository.save(ChatMapper.toUserChatRoom(user, chatRoom));
+    public List<ChatRoomGroup> getChatRoomGroups(Long userId) {
+        return chatRoomRepository.findChatRoomGroups(userId);
+    }
+
+    public ChatRoomStatistics getChatRoomStatistics(Long roomId) {
+        return userChatRoomRepository.findRoomStatistics(roomId);
+    }
+
+    public List<LastReadMessageSequenceGroup> getLastReadMessageSequenceGroup(Long roomId) {
+        return userChatRoomRepository.findLastReadSequenceGroups(roomId);
+    }
+
+    public void joinChatRoom(UserChatRoom userChatRoom) {
+        userChatRoomRepository.save(userChatRoom);
     }
 
     public Boolean existsRoomByUsername(Long roomId, String username) {
@@ -45,14 +50,14 @@ public class ChatService {
     }
 
     @Transactional
-    public void connect(String nickname, Long chatRoomId) {
-        userChatRoomRepository.findByUserNicknameAndChatRoomId(nickname, chatRoomId)
+    public void connect(Long userId, Long chatRoomId) {
+        userChatRoomRepository.findByUserIdAndChatRoomId(userId, chatRoomId)
             .connect();
     }
 
     @Transactional
-    public void disconnect(String nickname, Long chatRoomId) {
-        userChatRoomRepository.findByUserNicknameAndChatRoomId(nickname, chatRoomId)
+    public void disconnect(Long userId, Long chatRoomId) {
+        userChatRoomRepository.findByUserIdAndChatRoomId(userId, chatRoomId)
             .disconnect();
     }
 

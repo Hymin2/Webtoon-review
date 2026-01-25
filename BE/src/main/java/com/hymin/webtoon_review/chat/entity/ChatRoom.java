@@ -1,6 +1,7 @@
 package com.hymin.webtoon_review.chat.entity;
 
 import com.hymin.webtoon_review.webtoon.entity.Webtoon;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,7 +26,14 @@ public class ChatRoom {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column
     private String name;
+
+    @Column
+    private String lastMessage;
+
+    @Column
+    private String lastMessageCreatedAt;
 
     @OneToOne
     @JoinColumn(name = "webtoon_id")

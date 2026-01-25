@@ -1,20 +1,11 @@
 package com.hymin.webtoon_review.chat.controller;
 
-import com.hymin.webtoon_review.chat.dto.ChatRequest.AckMessage;
-import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessage;
+import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessageRequest;
 import com.hymin.webtoon_review.chat.facade.ChatFacade;
-import com.hymin.webtoon_review.global.annotation.Auth;
-import com.hymin.webtoon_review.global.response.ApiResponse;
-import com.hymin.webtoon_review.global.response.RestResponse;
-import java.security.Principal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -23,54 +14,14 @@ public class ChatController {
 
     private final ChatFacade chatFacade;
 
-    @MessageMapping(value = "/chat/massages")
+    @MessageMapping(value = "/chat/messages")
     public void sendMessage(
-        @RequestBody ChatMessage chatMessage,
-        SimpMessageHeaderAccessor headerAccessor
+        @RequestBody ChatMessageRequest request,
+        SimpMessageHeaderAccessor accessor
     ) {
-        chatFacade.sendMessage(headerAccessor, chatMessage);
-    }
+        Long userId = (Long) accessor.getSessionAttributes().get("userId");
+        String nickname = (String) accessor.getSessionAttributes().get("nickname");
 
-    @MessageMapping(value = "/chat/messages/connect")
-    public void sendConnectMessage(
-        @RequestBody ChatMessage chatMessage,
-        SimpMessageHeaderAccessor headerAccessor
-    ) {
-        chatFacade.sendMessage(headerAccessor, chatMessage);
-    }
-
-    @MessageMapping(value = "/chat/messages/disconnect")
-    public void sendDisconnectMessage(
-        @RequestBody ChatMessage chatMessage,
-        SimpMessageHeaderAccessor headerAccessor
-    ) {
-        chatFacade.sendMessage(headerAccessor, chatMessage);
-    }
-
-    @MessageMapping(value = "/chat/messages/ack")
-    public void receiveAck(
-        @RequestBody AckMessage ackMessage,
-        Principal principal
-    ) {
-        chatFacade.receiveAck(principal.getName(), ackMessage);
-    }
-
-    @GetMapping("/chat/room/info")
-    public RestResponse getRoomInfoPrevConnect(
-        @RequestParam("webtoonId") Long webtoonId,
-        @Auth Authentication authentication
-    ) {
-        return ApiResponse.onSuccess(
-            chatFacade.getRoomInfoPrevConnect(webtoonId, authentication.getName()));
-    }
-
-    @PostMapping("/chat/room")
-    public RestResponse joinChatRoom(
-        @RequestParam("webtoonId") Long webtoonId,
-        @Auth Authentication authentication
-    ) {
-        chatFacade.joinChatRoom(webtoonId, authentication.getName());
-
-        return RestResponse.onCreated();
+        chatFacade.sendMessage(request, userId, nickname);
     }
 }

@@ -1,15 +1,20 @@
 package com.hymin.webtoon_review.chat.mapper;
 
-import static java.util.stream.Collectors.counting;
-import static java.util.stream.Collectors.groupingBy;
-
-import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomInfo;
+import com.hymin.webtoon_review.chat.dto.ChatMessageDto;
+import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessageRequest;
+import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatMessageResponse;
+import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomListResponse;
+import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomResponse;
+import com.hymin.webtoon_review.chat.entity.ChatMessage;
 import com.hymin.webtoon_review.chat.entity.ChatRoom;
 import com.hymin.webtoon_review.chat.entity.UserChatRoom;
+import com.hymin.webtoon_review.chat.repository.projection.ChatRoomGroup;
+import com.hymin.webtoon_review.chat.repository.projection.ChatRoomStatistics;
+import com.hymin.webtoon_review.chat.repository.projection.LastReadMessageSequenceGroup;
 import com.hymin.webtoon_review.user.entity.User;
 import java.util.List;
-import java.util.TreeMap;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ChatMapper {
 
@@ -21,23 +26,74 @@ public class ChatMapper {
             .build();
     }
 
-    public static ChatRoomInfo toChatRoomInfo(
-        Long roomId,
-        List<UserChatRoom> userChatRooms
+    public static ChatMessageResponse toChatMessageResponse(
+        ChatMessageDto chatMessageDto,
+        Long messageSequence,
+        String createdAt
     ) {
-        return ChatRoomInfo.builder()
-            .roomId(roomId)
-            .userCount(userChatRooms.size())
-            .connectedUserCount(
-                (int) userChatRooms.stream()
-                    .filter(UserChatRoom::getIsConnected)
-                    .count())
-            .readCountMap(
-                userChatRooms.stream()
-                    .filter((item) -> !item.getIsConnected())
-                    .collect(groupingBy(UserChatRoom::getLastReadMessageCreatedAt, TreeMap::new,
-                        counting())))
-            .personalUUID(UUID.randomUUID().toString())
+        return ChatMessageResponse.builder()
+            .roomId(chatMessageDto.getRoomId())
+            .personalUUID(chatMessageDto.getPersonalUUID())
+            .messageUUID(chatMessageDto.getMessageUUID())
+            .messageBlocks(chatMessageDto.getMessageBlocks())
+            .messageSequence(messageSequence)
+            .createdAt(createdAt)
+            .sender(chatMessageDto.getSenderNickname())
+            .build();
+    }
+
+    public static ChatRoomResponse toChatRoomInfo(
+        ChatRoom chatRoom,
+        ChatRoomStatistics chatRoomStatistics,
+        List<LastReadMessageSequenceGroup> lastReadMessageSequenceGroups
+    ) {
+        return ChatRoomResponse.builder()
+            .roomId(chatRoom.getId())
+            .roomName(chatRoom.getName())
+            .totalCount(chatRoomStatistics.getTotalCount())
+            .onlineCount(chatRoomStatistics.getOnlineCount())
+            .lastReadCountMap(
+                lastReadMessageSequenceGroups.stream()
+                    .collect(Collectors.toMap(
+                        LastReadMessageSequenceGroup::getLastReadMessageSequence,
+                        LastReadMessageSequenceGroup::getCount
+                    ))
+            ).build();
+    }
+
+    public static List<ChatRoomListResponse> toChatRoomList(List<ChatRoomGroup> chatRoomGroups) {
+        return chatRoomGroups.stream()
+            .map(c -> ChatRoomListResponse.builder()
+                .roomId(c.getRoomId())
+                .roomName(c.getRoomName())
+                .lastChatMessage(c.getLastMessage())
+                .lastChatMessageCreatedAt(c.getLastMessageCreatedAt())
+                .build()
+            ).toList();
+    }
+
+    public static ChatMessage toChatMessage(ChatMessageResponse chatMessageResponse) {
+        return ChatMessage.builder()
+            .roomId(chatMessageResponse.getRoomId())
+            .messageBlocks(chatMessageResponse.getMessageBlocks())
+            .messageSequence(chatMessageResponse.getMessageSequence())
+            .messageUUID(chatMessageResponse.getMessageUUID())
+            .createdAt(chatMessageResponse.getCreatedAt())
+            .build();
+    }
+
+    public static ChatMessageDto toChatMessageDto(
+        ChatMessageRequest chatMessageRequest,
+        Long userId,
+        String nickname
+    ) {
+        return ChatMessageDto.builder()
+            .roomId(chatMessageRequest.getRoomId())
+            .messageBlocks(chatMessageRequest.getMessageBlocks())
+            .personalUUID(chatMessageRequest.getPersonalUUID())
+            .messageUUID(UUID.randomUUID().toString())
+            .senderId(userId)
+            .senderNickname(nickname)
             .build();
     }
 }

@@ -1,7 +1,9 @@
 package com.hymin.webtoon_review.chat.repository;
 
 import com.hymin.webtoon_review.chat.entity.UserChatRoom;
-import com.hymin.webtoon_review.user.entity.User;
+import com.hymin.webtoon_review.chat.repository.projection.ChatRoomParticipantGroups;
+import com.hymin.webtoon_review.chat.repository.projection.ChatRoomStatistics;
+import com.hymin.webtoon_review.chat.repository.projection.LastReadMessageSequenceGroup;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,10 +15,22 @@ public interface UserChatRoomRepository extends JpaRepository<UserChatRoom, Long
 
     Boolean existsByChatRoomIdAndUserUsername(Long roomId, String username);
 
-    List<UserChatRoom> findByChatRoomId(Long chatRoomId);
+    UserChatRoom findByUserIdAndChatRoomId(Long userId, Long chatRoomId);
 
-    @Query(value = "select u from UserChatRoom uc join fetch User u on uc.user = u where uc.chatRoom.id =:roomId and uc.isConnected = true")
-    List<User> findConnectedUserByRoomId(@Param("roomId") Long roomId);
+    @Query("SELECT COUNT(u) AS totalCount, " +
+        "COALESCE(SUM(CASE WHEN u.isConnected = true THEN 1 ELSE 0 END), 0) AS onlineCount " +
+        "FROM UserChatRoom u " +
+        "WHERE u.chatRoom.id = :roomId")
+    ChatRoomStatistics findRoomStatistics(@Param("roomId") Long roomId);
 
-    UserChatRoom findByUserNicknameAndChatRoomId(String userNickname, Long chatRoomId);
+    @Query("SELECT u.lastReadMessageSequence AS lastReadMessageSequence, COUNT(u) AS count " +
+        "FROM UserChatRoom u " +
+        "WHERE u.chatRoom.id = :roomId AND u.isConnected = false " +
+        "GROUP BY u.lastReadMessageSequence")
+    List<LastReadMessageSequenceGroup> findLastReadSequenceGroups(@Param("roomId") Long roomId);
+
+    @Query("SELECT u.user.id AS userId "
+        + "FROM UserChatRoom u "
+        + "WHERE u.chatRoom.id =:roomId")
+    List<ChatRoomParticipantGroups> findParticipantsByChatRoomId(@Param("roomId") Long roomId);
 }

@@ -82,12 +82,6 @@ public class Webtoon extends BaseEntity {
 
     @Column(name = "genres")
     private String genres;
-    
-    @Column(name = "bits_genre", columnDefinition = "INT UNSIGNED")
-    private Integer bitsGenre;
-
-    @Column(name = "bits_day_of_week", columnDefinition = "INT UNSIGNED")
-    private Integer bitsDayOfWeek;
 
     @JoinColumn(name = "platform_id")
     @ManyToOne(fetch = FetchType.LAZY)

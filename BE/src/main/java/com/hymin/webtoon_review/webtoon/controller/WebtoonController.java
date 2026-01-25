@@ -4,6 +4,7 @@ import com.hymin.webtoon_review.global.annotation.Auth;
 import com.hymin.webtoon_review.global.response.ApiResponse;
 import com.hymin.webtoon_review.global.response.RestResponse;
 import com.hymin.webtoon_review.global.response.SliceResponse;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonListResponseDto;
 import com.hymin.webtoon_review.webtoon.facade.WebtoonFacade;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -27,14 +28,21 @@ public class WebtoonController {
 
     @GetMapping
     public RestResponse getWebtoons(
-        @PageableDefault(size = 20, sort = "인기순", direction = Direction.DESC) Pageable pageable,
-        @RequestParam(name = "lastValue", required = false) String lastValue,
+        @PageableDefault(size = 21, sort = "인기순", direction = Direction.DESC) Pageable pageable,
+        @RequestParam(name = "value", required = false) String value,
         @RequestParam(name = "dayOfWeek", required = false) String dayOfWeek,
-        @RequestParam(name = "genre", required = false) String genre,
-        @RequestParam(name = "updatedAt", required = false) String updatedAt) {
+        @RequestParam(name = "genre", required = false) String genre) {
+        WebtoonListResponseDto dto = webtoonFacade.getWentoonList(
+            pageable,
+            value,
+            dayOfWeek,
+            genre
+        );
         return SliceResponse.onSuccess(
-            webtoonFacade.getWentoonList(pageable, lastValue, dayOfWeek, genre, updatedAt),
-            pageable.getPageSize());
+            dto.getWebtoonListResponse(),
+            pageable.getPageSize(),
+            dto.getNext()
+        );
     }
 
     @GetMapping("/{id}")

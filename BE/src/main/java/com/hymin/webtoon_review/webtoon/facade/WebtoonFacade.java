@@ -1,15 +1,13 @@
 package com.hymin.webtoon_review.webtoon.facade;
 
-import com.hymin.webtoon_review.global.queue.Job;
-import com.hymin.webtoon_review.global.queue.QueueTemplate;
-import com.hymin.webtoon_review.global.queue.TopicNames;
 import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.user.entity.User;
 import com.hymin.webtoon_review.user.entity.WebtoonRecommend;
 import com.hymin.webtoon_review.user.service.UserService;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonListResponseDto;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.Category;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.HotWebtoonListResponse;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonDetails;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonSimple;
 import com.hymin.webtoon_review.webtoon.entity.Webtoon;
 import com.hymin.webtoon_review.webtoon.exception.InvalidWebtoonRecommendException;
 import com.hymin.webtoon_review.webtoon.mapper.WebtoonMapper;
@@ -19,6 +17,7 @@ import com.hymin.webtoon_review.webtoon.service.WebtoonService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
@@ -29,36 +28,34 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class WebtoonFacade {
 
-    private final QueueTemplate queueTemplate;
+    @Value("${domain.thumbnail}")
+    private String domainThumbnail;
+
     private final UserService userService;
     private final WebtoonService webtoonService;
     private final WebtoonRecommendService webtoonRecommendService;
 
     @Transactional(readOnly = true)
-    public List<WebtoonSimple> getWentoonList(Pageable pageable, String lastValue,
-        String daysOfWeek, String genre, String updatedAt) {
-        return webtoonService.getWebtoonList(
-            pageable,
-            lastValue,
-            webtoonService.getDayOfWeek(daysOfWeek),
-            webtoonService.getGenre(genre),
-            updatedAt
-        );
+    public WebtoonListResponseDto getWentoonList(Pageable pageable, String lastValue,
+        String daysOfWeek, String genre) {
+        return WebtoonMapper.toWebtoonListResponseDto(
+            webtoonService.getWebtoonList(
+                pageable,
+                lastValue,
+                webtoonService.getDayOfWeek(daysOfWeek),
+                webtoonService.getGenre(genre)
+            ), domainThumbnail, pageable);
     }
 
     @Transactional(readOnly = true)
-    public List<WebtoonSimple> getHotWebtoonList() {
-        return webtoonService.getHotWebtoonList();
+    public List<HotWebtoonListResponse> getHotWebtoonList() {
+        return WebtoonMapper.toHotWebtoonListResponse(webtoonService.getHotWebtoonList(),
+            domainThumbnail);
     }
 
     @Transactional(readOnly = true)
     public WebtoonDetails getWebtoonDetails(Authentication authentication, Long id) {
-        WebtoonDetails webtoonDetails = webtoonService.get(authentication.getName(), id);
-        queueTemplate.add(TopicNames.view.name(), Job.of(id));
-        queueTemplate.add(TopicNames.popularity.name(),
-            Job.of(WebtoonMapper.toWebtoonPopularityScore(id, 1)));
-
-        return webtoonDetails;
+        return webtoonService.get(authentication.getName(), id);
     }
 
     @Transactional(readOnly = true)
@@ -75,8 +72,6 @@ public class WebtoonFacade {
 
         webtoonRecommendService.save(WebtoonRecommendMapper.toWebtoonRecommend(user, webtoon));
         webtoonService.increaseRecommendCount(webtoonId);
-        queueTemplate.add(TopicNames.popularity.name(),
-            Job.of(WebtoonMapper.toWebtoonPopularityScore(webtoonId, 1)));
     }
 
     @Transactional
@@ -91,8 +86,6 @@ public class WebtoonFacade {
 
         webtoonRecommendService.delete(webtoonRecommend);
         webtoonService.decreaseRecommendCount(webtoonId);
-        queueTemplate.add(TopicNames.popularity.name(),
-            Job.of(WebtoonMapper.toWebtoonPopularityScore(webtoonId, -1)));
     }
 
     private boolean isInvalidWebtoonRecommend(User user, Webtoon webtoon,

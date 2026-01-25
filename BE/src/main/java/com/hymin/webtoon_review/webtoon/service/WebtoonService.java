@@ -2,7 +2,6 @@ package com.hymin.webtoon_review.webtoon.service;
 
 import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonDetails;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonSimple;
 import com.hymin.webtoon_review.webtoon.entity.DayOfWeek;
 import com.hymin.webtoon_review.webtoon.entity.Genre;
 import com.hymin.webtoon_review.webtoon.entity.Webtoon;
@@ -29,17 +28,20 @@ public class WebtoonService {
     private final DayOfWeekRepository dayOfWeekRepository;
     private final GenreRepository genreRepository;
 
-    public List<WebtoonSimple> getWebtoonList(Pageable pageable,
-        String lastValue, Optional<DayOfWeek> daysOfWeek, Optional<Genre> genre, String updatedAt) {
+    public List<Webtoon> getWebtoonList(
+        Pageable pageable,
+        String lastValue,
+        Optional<DayOfWeek> daysOfWeek,
+        Optional<Genre> genre
+    ) {
         return webtoonRepository.getWebtoonList(
             pageable,
             lastValue,
             daysOfWeek,
-            genre,
-            updatedAt);
+            genre);
     }
 
-    public List<WebtoonSimple> getHotWebtoonList() {
+    public List<Webtoon> getHotWebtoonList() {
         return webtoonRepository.getHotWebtoonList();
     }
 

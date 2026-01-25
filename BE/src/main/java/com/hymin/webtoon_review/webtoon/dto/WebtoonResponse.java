@@ -11,20 +11,26 @@ public class WebtoonResponse {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class WebtoonSimple {
+    public static class WebtoonListResponse {
 
         private Long id;
         private String name;
         private String thumbnail;
-        private Integer recommendationCount;
-        private Integer starScore;
-        private Integer totalPopularityScore;
-        private Integer manPopularityScore;
-        private Integer femalePopularityScore;
-        private String updatedAt;
         private String authorName;
         private String dayOfWeek;
+        private Integer starScore;
         private String genre;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class HotWebtoonListResponse {
+
+        private Long id;
+        private String name;
+        private String thumbnail;
     }
 
     @Getter

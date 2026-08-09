@@ -59,7 +59,8 @@ public class JwtAuthenticationProvider implements AuthenticationProvider {
             .toList();
 
         JwtAuthentication jwtAuthentication = new JwtAuthentication(username, "", authorities);
-        jwtAuthentication.setDetails(claims.get("id"));
+        Number userId = (Number) claims.get("id");
+        jwtAuthentication.setDetails(userId.longValue());
 
         return jwtAuthentication;
     }

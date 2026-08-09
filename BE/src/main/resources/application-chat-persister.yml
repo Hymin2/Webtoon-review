@@ -1,0 +1,6 @@
+chat:
+  role: chat-persister
+
+server:
+  instance:
+    name: ${CHAT_INSTANCE_NAME:chat-persister-${random.uuid}}

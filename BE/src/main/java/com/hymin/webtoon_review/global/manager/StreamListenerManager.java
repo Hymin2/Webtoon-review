@@ -9,6 +9,7 @@ import io.lettuce.core.protocol.CommandType;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ReadOffset;
@@ -20,6 +21,7 @@ import org.springframework.data.redis.stream.Subscription;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("chat-worker")
 @RequiredArgsConstructor
 public class StreamListenerManager {
 

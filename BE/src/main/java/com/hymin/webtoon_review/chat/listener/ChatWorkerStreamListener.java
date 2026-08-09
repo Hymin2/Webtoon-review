@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@Profile("chat-worker")
 @RequiredArgsConstructor
 public class ChatWorkerStreamListener implements
         StreamListener<String, MapRecord<String, String, String>> {

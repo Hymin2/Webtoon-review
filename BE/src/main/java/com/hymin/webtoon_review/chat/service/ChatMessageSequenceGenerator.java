@@ -2,10 +2,12 @@ package com.hymin.webtoon_review.chat.service;
 
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
+@Profile("chat-worker")
 @RequiredArgsConstructor
 public class ChatMessageSequenceGenerator {
 

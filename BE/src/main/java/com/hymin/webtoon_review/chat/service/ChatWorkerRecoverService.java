@@ -13,6 +13,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
@@ -31,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@Profile("chat-worker")
 @RequiredArgsConstructor
 public class ChatWorkerRecoverService {
 

@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@Profile("chat-worker")
 @RequiredArgsConstructor
 public class ChatWorkerServerNodeInitializer {
 

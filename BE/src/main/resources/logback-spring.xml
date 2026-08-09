@@ -11,14 +11,20 @@
 
   <springProperty scope="context" name="INSTANCE_NAME" source="server.instance.name"
     defaultValue="unknown-server"/>
+  <springProperty scope="context" name="APPLICATION_NAME" source="spring.application.name"
+    defaultValue="webtoon-review"/>
+  <springProperty scope="context" name="SERVICE_ROLE" source="chat.role"
+    defaultValue="api"/>
+  <springProperty scope="context" name="LOKI_URL" source="logging.loki.url"
+    defaultValue="http://localhost:3100/loki/api/v1/push"/>
 
   <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
     <http>
-      <url>http://localhost:3100/loki/api/v1/push</url>
+      <url>${LOKI_URL}</url>
     </http>
     <format>
       <label>
-        <pattern>app=chat-service,instance=${INSTANCE_NAME:-unknown}</pattern>
+        <pattern>app=${APPLICATION_NAME},role=${SERVICE_ROLE},instance=${INSTANCE_NAME}</pattern>
       </label>
       <message class="com.github.loki4j.logback.JsonLayout">
         <includeTimestamp>true</includeTimestamp>

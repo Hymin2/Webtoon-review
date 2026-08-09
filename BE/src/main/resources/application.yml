@@ -65,12 +65,30 @@ management:
     web:
       exposure:
         include: prometheus, health, info
+  metrics:
+    tags:
+      service.name: ${spring.application.name}
+      service.role: ${chat.role:api}
+      service.instance.id: ${server.instance.name:${HOSTNAME:local}}
+  opentelemetry:
+    resource-attributes:
+      service.name: ${spring.application.name}
+      service.role: ${chat.role:api}
+      service.instance.id: ${server.instance.name:${HOSTNAME:local}}
   otlp:
+    metrics:
+      export:
+        url: ${OTEL_EXPORTER_OTLP_METRICS_ENDPOINT:http://localhost:4318/v1/metrics}
+        step: 5s
     tracing:
-      endpoint: http://localhost:4318/v1/traces
+      endpoint: ${OTEL_EXPORTER_OTLP_TRACES_ENDPOINT:http://localhost:4318/v1/traces}
   tracing:
     sampling:
       probability: 1.0
+
+logging:
+  loki:
+    url: ${LOKI_URL:http://localhost:3100/loki/api/v1/push}
 
 firebase:
   config:

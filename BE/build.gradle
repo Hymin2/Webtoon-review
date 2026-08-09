@@ -43,6 +43,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
 
     implementation 'io.micrometer:micrometer-tracing-bridge-otel'
+    implementation 'io.micrometer:micrometer-registry-otlp'
     implementation 'io.opentelemetry:opentelemetry-exporter-otlp'
     implementation 'com.github.loki4j:loki-logback-appender:1.5.0'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'

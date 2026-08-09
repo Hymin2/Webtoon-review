@@ -5,6 +5,7 @@ import com.hymin.webtoon_review.chat.dto.ChatMessageDto;
 import com.hymin.webtoon_review.chat.route.ChatWorkerLocalHashRing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.stream.ObjectRecord;
 import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@Profile("chat")
 @RequiredArgsConstructor
 public class ChatMessageRoutingService {
 

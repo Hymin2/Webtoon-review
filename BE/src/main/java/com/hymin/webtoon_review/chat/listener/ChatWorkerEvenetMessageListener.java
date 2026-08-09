@@ -3,12 +3,14 @@ package com.hymin.webtoon_review.chat.listener;
 import com.hymin.webtoon_review.chat.route.ChatWorkerLocalHashRing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@Profile("chat")
 @RequiredArgsConstructor
 public class ChatWorkerEvenetMessageListener implements MessageListener {
 

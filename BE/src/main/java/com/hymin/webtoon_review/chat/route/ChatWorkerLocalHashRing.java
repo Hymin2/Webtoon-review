@@ -5,12 +5,14 @@ import com.hymin.webtoon_review.global.constant.RedisKeys;
 import java.util.Set;
 import java.util.TreeMap;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.stereotype.Component;
 
 @Component
+@Profile("chat")
 @RequiredArgsConstructor
 public class ChatWorkerLocalHashRing {
 

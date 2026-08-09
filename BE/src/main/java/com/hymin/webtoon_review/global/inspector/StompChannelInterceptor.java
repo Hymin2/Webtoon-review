@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.EventListener;
+import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -21,6 +22,7 @@ import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 @Slf4j
 @Component
+@Profile("chat")
 @RequiredArgsConstructor
 public class StompChannelInterceptor implements ChannelInterceptor {
 

@@ -3,12 +3,14 @@ package com.hymin.webtoon_review.chat.controller;
 import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessageRequest;
 import com.hymin.webtoon_review.chat.facade.ChatFacade;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Profile("chat")
 @RequiredArgsConstructor
 public class ChatController {
 

@@ -1,0 +1,10 @@
+.git
+.gradle
+build
+.idea
+.env
+logs
+*.log
+
+src/main/generated
+src/main/resources/firebase.json

@@ -17,17 +17,6 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
-    chatTestImplementation.extendsFrom testImplementation
-    chatTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
-
-sourceSets {
-    chatTest {
-        java.srcDir 'src/chatTest/java'
-        resources.srcDir 'src/chatTest/resources'
-        compileClasspath += sourceSets.main.output
-        runtimeClasspath += sourceSets.main.output
-    }
 }
 
 repositories {
@@ -84,13 +73,4 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-}
-
-tasks.register('chatTest', Test) {
-    description = '실행 중인 채팅 환경을 대상으로 E2E 시나리오를 수행합니다.'
-    group = 'verification'
-    testClassesDirs = sourceSets.chatTest.output.classesDirs
-    classpath = sourceSets.chatTest.runtimeClasspath
-    useJUnitPlatform()
-    shouldRunAfter tasks.named('test')
 }

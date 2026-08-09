@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.support;
+package com.hymin.chattest.support;
 
 import java.net.URI;
 import java.time.Duration;

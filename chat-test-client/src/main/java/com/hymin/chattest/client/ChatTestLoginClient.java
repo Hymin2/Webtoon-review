@@ -1,6 +1,6 @@
-package com.hymin.webtoon_review.chat.client;
+package com.hymin.chattest.client;
 
-import com.hymin.webtoon_review.chat.support.ChatTestProperties;
+import com.hymin.chattest.support.ChatTestProperties;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 

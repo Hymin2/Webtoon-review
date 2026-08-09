@@ -114,20 +114,23 @@ public class StompChannelInterceptor implements ChannelInterceptor {
     }
 
     @EventListener
-    private void handleDisconnect(SessionDisconnectEvent event) {
+    void handleDisconnect(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
 
         Long userId = getSessionAttribute(accessor, "userId", Long.class);
         String clientId = getSessionAttribute(accessor, "clientId", String.class);
+        Map<String, Long> subscriptionMap = getSubscriptionMap(accessor);
         log.info("[채팅] 연결 해제 시도: userId={}", userId);
 
-        if (getSubscriptionMap(accessor).isEmpty()) {
+        if (userId == null || clientId == null) {
             return;
         }
 
-        getSubscriptionMap(accessor).forEach((subId, roomId) ->
-            chatSessionService.removeChatRoomOnlineMember(roomId, userId, clientId)
-        );
+        if (subscriptionMap != null) {
+            subscriptionMap.forEach((subId, roomId) ->
+                chatSessionService.removeChatRoomOnlineMember(roomId, userId, clientId)
+            );
+        }
 
         chatSessionService.removeUserChatSession(userId, clientId);
         chatSessionService.removeServerConnectedUser(userId, clientId, serverName);
@@ -148,7 +151,10 @@ public class StompChannelInterceptor implements ChannelInterceptor {
     }
 
     private Map<String, Long> getSubscriptionMap(StompHeaderAccessor accessor) {
-        return (Map<String, Long>) accessor.getSessionAttributes().get("subscriptionMap");
+        Map<String, Object> attributes = accessor.getSessionAttributes();
+        return attributes == null
+            ? null
+            : (Map<String, Long>) attributes.get("subscriptionMap");
     }
 
     private void updateSubscriptionMap(StompHeaderAccessor accessor, String subId, Long roomId) {

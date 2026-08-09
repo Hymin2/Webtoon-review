@@ -3,11 +3,13 @@ package com.hymin.chattest.scenario;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.hymin.chattest.client.ChatTestClient;
-import com.hymin.chattest.client.ChatTestLoginClient;
 import com.hymin.chattest.contract.ChatMessageRequest;
 import com.hymin.chattest.contract.ChatMessageResponse;
 import com.hymin.chattest.contract.MessageBlock;
 import com.hymin.chattest.contract.MessageBlockType;
+import com.hymin.chattest.fixture.ChatTestContext;
+import com.hymin.chattest.fixture.ChatTestFixture;
+import com.hymin.chattest.fixture.WebtoonFixtureProperties;
 import com.hymin.chattest.support.ChatTestProperties;
 import java.util.List;
 import java.util.Map;
@@ -19,20 +21,22 @@ import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 @Tag("chat-basic")
 @EnabledIfEnvironmentVariable(named = "CHAT_TEST_USERNAME", matches = ".+")
 @EnabledIfEnvironmentVariable(named = "CHAT_TEST_PASSWORD", matches = ".+")
-@EnabledIfEnvironmentVariable(named = "CHAT_TEST_ROOM_ID", matches = "[1-9][0-9]*")
 class ChatSendReceiveScenarioTest {
 
     @Test
     void 전송한_메시지를_같은_채팅방에서_수신한다() {
         ChatTestProperties properties = ChatTestProperties.fromEnvironment();
-        String accessToken = new ChatTestLoginClient(properties).login();
+        ChatTestContext context = new ChatTestFixture(
+            properties,
+            WebtoonFixtureProperties.fromEnvironment()
+        ).prepareChatRoom();
         String personalUUID = UUID.randomUUID().toString();
         String testMessage = "chat-test-" + UUID.randomUUID();
 
         try (ChatTestClient client = new ChatTestClient(properties)) {
-            client.connect(accessToken);
-            client.subscribe(properties.roomId());
-            client.send(createRequest(properties.roomId(), personalUUID, testMessage));
+            client.connect(context.accessToken());
+            client.subscribe(context.roomId());
+            client.send(createRequest(context.roomId(), personalUUID, testMessage));
 
             ChatMessageResponse receivedMessage = client.awaitMessage(
                 message -> hasContent(message, testMessage),
@@ -40,7 +44,7 @@ class ChatSendReceiveScenarioTest {
             );
 
             assertThat(receivedMessage).isNotNull();
-            assertThat(receivedMessage.roomId()).isEqualTo(properties.roomId());
+            assertThat(receivedMessage.roomId()).isEqualTo(context.roomId());
             assertThat(receivedMessage.personalUUID()).isEqualTo(personalUUID);
             assertThat(receivedMessage.messageUUID()).isNotBlank();
             assertThat(receivedMessage.messageSequence()).isPositive();

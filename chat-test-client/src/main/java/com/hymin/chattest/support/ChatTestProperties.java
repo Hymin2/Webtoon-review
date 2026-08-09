@@ -10,7 +10,6 @@ public record ChatTestProperties(
     String password,
     String clientId,
     String deviceType,
-    long roomId,
     Duration timeout
 ) {
 
@@ -25,9 +24,6 @@ public record ChatTestProperties(
         if (timeout.isZero() || timeout.isNegative()) {
             throw new IllegalArgumentException("timeout은 0보다 커야 합니다.");
         }
-        if (roomId <= 0) {
-            throw new IllegalArgumentException("CHAT_TEST_ROOM_ID는 0보다 커야 합니다.");
-        }
     }
 
     public static ChatTestProperties fromEnvironment() {
@@ -38,7 +34,6 @@ public record ChatTestProperties(
             System.getenv("CHAT_TEST_PASSWORD"),
             environmentOrDefault("CHAT_TEST_CLIENT_ID", "chat-test-client"),
             environmentOrDefault("CHAT_TEST_DEVICE_TYPE", "CHAT_TEST"),
-            Long.parseLong(System.getenv("CHAT_TEST_ROOM_ID")),
             Duration.ofSeconds(Long.parseLong(
                 environmentOrDefault("CHAT_TEST_TIMEOUT_SECONDS", "10")))
         );

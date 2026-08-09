@@ -40,7 +40,7 @@ public class ChatTestClient implements AutoCloseable {
 
     public void connect(String accessToken) {
         StompHeaders connectHeaders = new StompHeaders();
-        connectHeaders.add("Authorization", "Bearer " + accessToken);
+        connectHeaders.add("Authorization", authorizationHeader(accessToken));
         connectHeaders.add("X-Client-Id", properties.clientId());
 
         try {
@@ -147,6 +147,10 @@ public class ChatTestClient implements AutoCloseable {
         if (!isConnected()) {
             throw new IllegalStateException("STOMP 세션이 연결되어 있지 않습니다.");
         }
+    }
+
+    private String authorizationHeader(String accessToken) {
+        return accessToken.startsWith("Bearer ") ? accessToken : "Bearer " + accessToken;
     }
 
     private void recordFailure(Throwable exception) {

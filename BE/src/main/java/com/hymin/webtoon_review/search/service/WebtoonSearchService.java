@@ -2,7 +2,6 @@ package com.hymin.webtoon_review.search.service;
 
 import com.hymin.webtoon_review.search.dto.WebtoonSearchResponse;
 import com.hymin.webtoon_review.search.repository.WebtoonSearchJpaRepository;
-import com.hymin.webtoon_review.search.repository.projection.WebtoonSearchResult;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -13,7 +12,7 @@ public class WebtoonSearchService {
 
     private final WebtoonSearchJpaRepository webtoonSearchRepository;
 
-    public List<WebtoonSearchResult> search(String query, Integer page, Integer size) {
+    public List<WebtoonSearchResponse> search(String query, Integer page, Integer size) {
         List<Long> ids = webtoonSearchRepository.findWebtoonIds(query, page, size);
 
         return webtoonSearchRepository.findWebtoonSearchResult(ids).stream().map(

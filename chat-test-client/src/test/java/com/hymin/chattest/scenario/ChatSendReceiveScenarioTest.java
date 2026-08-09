@@ -1,0 +1,67 @@
+package com.hymin.chattest.scenario;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.hymin.chattest.client.ChatTestClient;
+import com.hymin.chattest.client.ChatTestLoginClient;
+import com.hymin.chattest.contract.ChatMessageRequest;
+import com.hymin.chattest.contract.ChatMessageResponse;
+import com.hymin.chattest.contract.MessageBlock;
+import com.hymin.chattest.contract.MessageBlockType;
+import com.hymin.chattest.support.ChatTestProperties;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+
+@Tag("chat-basic")
+@EnabledIfEnvironmentVariable(named = "CHAT_TEST_USERNAME", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "CHAT_TEST_PASSWORD", matches = ".+")
+@EnabledIfEnvironmentVariable(named = "CHAT_TEST_ROOM_ID", matches = "[1-9][0-9]*")
+class ChatSendReceiveScenarioTest {
+
+    @Test
+    void 전송한_메시지를_같은_채팅방에서_수신한다() {
+        ChatTestProperties properties = ChatTestProperties.fromEnvironment();
+        String accessToken = new ChatTestLoginClient(properties).login();
+        String personalUUID = UUID.randomUUID().toString();
+        String testMessage = "chat-test-" + UUID.randomUUID();
+
+        try (ChatTestClient client = new ChatTestClient(properties)) {
+            client.connect(accessToken);
+            client.subscribe(properties.roomId());
+            client.send(createRequest(properties.roomId(), personalUUID, testMessage));
+
+            ChatMessageResponse receivedMessage = client.awaitMessage(
+                message -> hasContent(message, testMessage),
+                properties.timeout()
+            );
+
+            assertThat(receivedMessage).isNotNull();
+            assertThat(receivedMessage.roomId()).isEqualTo(properties.roomId());
+            assertThat(receivedMessage.personalUUID()).isEqualTo(personalUUID);
+            assertThat(receivedMessage.messageUUID()).isNotBlank();
+            assertThat(receivedMessage.messageSequence()).isPositive();
+        }
+    }
+
+    private ChatMessageRequest createRequest(
+        long roomId,
+        String personalUUID,
+        String content
+    ) {
+        MessageBlock messageBlock = new MessageBlock(
+            MessageBlockType.TEXT,
+            content,
+            Map.of("source", "chat-test-client")
+        );
+        return new ChatMessageRequest(roomId, personalUUID, List.of(messageBlock));
+    }
+
+    private boolean hasContent(ChatMessageResponse message, String expectedContent) {
+        return message.messageBlocks() != null && message.messageBlocks().stream()
+            .anyMatch(block -> expectedContent.equals(block.content()));
+    }
+}

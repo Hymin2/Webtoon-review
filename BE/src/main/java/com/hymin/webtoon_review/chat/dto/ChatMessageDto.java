@@ -18,6 +18,7 @@ public class ChatMessageDto {
     private Long roomId;
     private Long senderId;
     private List<MessageBlock> messageBlocks;
+    private String traceId;
     private String personalUUID;
     private String messageUUID;
     private String senderNickname;

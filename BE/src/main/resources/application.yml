@@ -47,8 +47,6 @@ spring:
       password: ${REDIS_PASSWORD}
     mongodb:
       auto-index-creation: true
-  
-  
   application:
     name: webtoon-review
 
@@ -66,7 +64,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: prometheus
+        include: prometheus, health, info
+  otlp:
+    tracing:
+      endpoint: http://localhost:4318/v1/traces
+  tracing:
+    sampling:
+      probability: 1.0
 
 firebase:
   config:

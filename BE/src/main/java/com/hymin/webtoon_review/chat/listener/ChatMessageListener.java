@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hymin.webtoon_review.chat.dto.ChatMessageDispatchDto;
 import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatMessageResponse;
+import com.hymin.webtoon_review.global.manager.TraceContextManager;
+import com.hymin.webtoon_review.global.manager.TraceContextManager.TraceScope;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -18,23 +20,33 @@ import org.springframework.stereotype.Service;
 public class ChatMessageListener implements MessageListener {
 
     private final ObjectMapper objectMapper;
+    private final TraceContextManager traceContextManager;
     private final RedisTemplate<String, String> redisTemplate;
     private final SimpMessagingTemplate simpMessagingTemplate;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
-        ChatMessageDispatchDto chatMessageDispatchDto = parseMessage(message);
-        String messageUUID = chatMessageDispatchDto.getChatMessageResponse().getMessageUUID();
-        log.info("[채팅 서버 Listener 1/2] 전파된 메시지 수신 완료, {}", messageUUID);
-        sendMessage(chatMessageDispatchDto);
-        log.info("[채팅 서버 Listener 2/2] 메시지 최종 전달, {}", messageUUID);
+        ChatMessageDispatchDto dto = parseMessage(message);
+        try (TraceScope scope = traceContextManager.setExternalTraceId(dto.getTraceId(),
+                "chat-message-send")) {
+            traceContextManager.putChatMDC(
+                    dto.getChatMessageResponse().getRoomId(),
+                    dto.getSenderId()
+            );
+
+            log.info("[채팅 서버 Listener 1/2] 전파된 메시지 수신 완료");
+            sendMessage(dto);
+            log.info("[채팅 서버 Listener 2/2] 메시지 최종 전달");
+        } finally {
+            traceContextManager.removeChatMDC();
+        }
     }
 
     private ChatMessageDispatchDto parseMessage(Message message) {
         try {
             return objectMapper.readValue(
-                redisTemplate.getStringSerializer().deserialize(message.getBody()),
-                ChatMessageDispatchDto.class
+                    redisTemplate.getStringSerializer().deserialize(message.getBody()),
+                    ChatMessageDispatchDto.class
             );
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -46,8 +58,8 @@ public class ChatMessageListener implements MessageListener {
         String destination = "/queue/room/" + chatMessageResponse.getRoomId();
 
         chatMessageDispatchDto.getUserIds().forEach(
-            userId -> simpMessagingTemplate.convertAndSendToUser(userId, destination,
-                chatMessageResponse)
+                userId -> simpMessagingTemplate.convertAndSendToUser(userId, destination,
+                        chatMessageResponse)
         );
     }
 }

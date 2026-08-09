@@ -8,10 +8,13 @@ import com.hymin.webtoon_review.chat.exception.InvalidChatRoomAccessException;
 import com.hymin.webtoon_review.chat.mapper.ChatMapper;
 import com.hymin.webtoon_review.chat.service.ChatMessageRoutingService;
 import com.hymin.webtoon_review.chat.service.ChatService;
+import com.hymin.webtoon_review.global.manager.TraceContextManager;
+import com.hymin.webtoon_review.global.manager.TraceContextManager.TraceScope;
 import com.hymin.webtoon_review.user.entity.User;
 import com.hymin.webtoon_review.user.service.UserService;
 import com.hymin.webtoon_review.webtoon.entity.Webtoon;
 import com.hymin.webtoon_review.webtoon.service.WebtoonService;
+import io.micrometer.tracing.Tracer;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
@@ -24,21 +27,31 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ChatFacade {
 
+    private final Tracer tracer;
+    private final TraceContextManager traceManager;
+
     private final UserService userService;
     private final ChatService chatService;
     private final ChatMessageRoutingService chatMessageRoutingService;
     private final WebtoonService webtoonService;
 
     public void sendMessage(ChatMessageRequest chatMessage, Long userId, String nickname) {
-        log.info("[채팅] 채팅 메시지 수신 완료, {}", chatMessage.toString());
+        try (TraceScope scope = traceManager.startNewSpan("chat-message-receive")) {
+            String traceId = scope.span().context().traceId();
+            traceManager.putChatMDC(chatMessage.getRoomId(), userId);
+            log.info("[채팅] 채팅 메시지 수신 완료");
 
-        chatMessageRoutingService.route(
-            ChatMapper.toChatMessageDto(
-                chatMessage,
-                userId,
-                nickname
-            )
-        );
+            chatMessageRoutingService.route(
+                    ChatMapper.toChatMessageDto(
+                            chatMessage,
+                            userId,
+                            nickname,
+                            traceId
+                    )
+            );
+        } finally {
+            traceManager.removeChatMDC();
+        }
     }
 
     @Transactional(readOnly = true)
@@ -55,9 +68,9 @@ public class ChatFacade {
         }
 
         return ChatMapper.toChatRoomInfo(
-            chatRoom,
-            chatService.getChatRoomStatistics(chatRoom.getId()),
-            chatService.getLastReadMessageSequenceGroup(chatRoom.getId())
+                chatRoom,
+                chatService.getChatRoomStatistics(chatRoom.getId()),
+                chatService.getLastReadMessageSequenceGroup(chatRoom.getId())
         );
     }
 
@@ -69,9 +82,9 @@ public class ChatFacade {
         if (chatRoom.isEmpty()) {
             Webtoon webtoon = webtoonService.get(webtoonId);
             ChatRoom newChatRoom = ChatRoom.builder()
-                .webtoon(webtoon)
-                .name(webtoon.getName())
-                .build();
+                    .webtoon(webtoon)
+                    .name(webtoon.getName())
+                    .build();
 
             chatService.save(newChatRoom);
             chatService.joinChatRoom(ChatMapper.toUserChatRoom(user, newChatRoom));

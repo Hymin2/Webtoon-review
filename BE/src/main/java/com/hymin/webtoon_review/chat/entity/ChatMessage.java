@@ -22,9 +22,11 @@ public class ChatMessage {
     @Id
     private String id;
     private Long roomId;
+    private Long senderId;
     private Long messageSequence;
     @Indexed(unique = true)
     private String messageUUID;
+    private String traceId;
     private String sender;
     private String createdAt;
     private List<MessageBlock> messageBlocks;

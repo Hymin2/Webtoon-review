@@ -15,6 +15,8 @@ import lombok.ToString;
 @AllArgsConstructor
 public class ChatMessageDispatchDto {
 
-    ChatMessageResponse chatMessageResponse;
-    List<String> userIds;
+    private Long senderId;
+    private String traceId;
+    private ChatMessageResponse chatMessageResponse;
+    private List<String> userIds;
 }

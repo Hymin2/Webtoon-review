@@ -14,6 +14,8 @@ import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;
 import com.hymin.webtoon_review.global.constant.RedisTopicNames;
+import com.hymin.webtoon_review.global.manager.TraceContextManager;
+import com.hymin.webtoon_review.global.manager.TraceContextManager.TraceScope;
 import com.hymin.webtoon_review.util.Time;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -37,11 +39,12 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class ChatWorkerStreamListener implements
-    StreamListener<String, MapRecord<String, String, String>> {
+        StreamListener<String, MapRecord<String, String, String>> {
 
     @Value("${server.instance.name:default}")
     private String serverName;
 
+    private final TraceContextManager traceContextManager;
     private final RedisTemplate<String, Long> longRedisTemplate;
     private final RedisTemplate<String, Object> objectRedisTemplate;
     private final RedisTemplate<String, String> stringRedisTemplate;
@@ -56,23 +59,32 @@ public class ChatWorkerStreamListener implements
     public void onMessage(MapRecord<String, String, String> message) {
         ChatMessageDto chatMessageDto = parseMessage(message);
         Long timestamp = message.getId().getTimestamp();
-        ChatMessageResponse response = createChatMessageResponse(chatMessageDto, timestamp);
-
-        cacheChatMessage(response, timestamp);
-        log.info("[채팅 워커 서버 Listener 1/3] 채팅 메시지 캐싱 성공, {}", response.getMessageUUID());
-        dispatchToServers(response);
-        log.info("[채팅 워커 서버 Listener 2/3] Redis pub/sub을 통해 메시지 전파, {}", response.getMessageUUID());
-        sendMessageToBatch(response);
-        log.info("[채팅 워커 서버 Listener 3/4] 메시지 Batch 저장 서버에 메시지 발행, {}", response.getMessageUUID());
-        acknowledgeMessage(message);
-        log.info("[채팅 워커 서버 Listener 4/4] 메시지 ACK, {}", response.getMessageUUID());
+        ChatMessageResponse response = createChatMessageResponse(
+                chatMessageDto,
+                timestamp
+        );
+        try (TraceScope scope = traceContextManager.setExternalTraceId(chatMessageDto.getTraceId(),
+                "chat-worker")) {
+            traceContextManager.putChatMDC(chatMessageDto.getRoomId(),
+                    chatMessageDto.getSenderId());
+            cacheChatMessage(response, timestamp);
+            log.info("[채팅 워커 서버 Listener 1/3] 채팅 메시지 캐싱 성공");
+            dispatchToServers(response, chatMessageDto.getSenderId(), chatMessageDto.getTraceId());
+            log.info("[채팅 워커 서버 Listener 2/3] Redis pub/sub을 통해 메시지 전파");
+            sendMessageToBatch(response, chatMessageDto.getSenderId(), chatMessageDto.getTraceId());
+            log.info("[채팅 워커 서버 Listener 3/4] 메시지 Batch 저장 서버에 메시지 발행");
+            acknowledgeMessage(message);
+            log.info("[채팅 워커 서버 Listener 4/4] 메시지 ACK");
+        } finally {
+            traceContextManager.removeChatMDC();
+        }
     }
 
     private ChatMessageDto parseMessage(MapRecord<String, String, String> message) {
         try {
             return objectMapper.readValue(
-                message.getValue().get("payload"),
-                ChatMessageDto.class
+                    message.getValue().get("payload"),
+                    ChatMessageDto.class
             );
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
@@ -80,16 +92,16 @@ public class ChatWorkerStreamListener implements
     }
 
     private ChatMessageResponse createChatMessageResponse(
-        ChatMessageDto chatMessageDto,
-        long timestamp
+            ChatMessageDto chatMessageDto,
+            long timestamp
     ) {
         Long messageSeq = chatMessageSequenceGenerator.generate(chatMessageDto.getRoomId());
         String createdAt = Time.toString(timestamp);
 
         return ChatMapper.toChatMessageResponse(
-            chatMessageDto,
-            messageSeq,
-            createdAt
+                chatMessageDto,
+                messageSeq,
+                createdAt
         );
     }
 
@@ -105,7 +117,7 @@ public class ChatWorkerStreamListener implements
         }
     }
 
-    private void dispatchToServers(ChatMessageResponse response) {
+    private void dispatchToServers(ChatMessageResponse response, Long senderId, String traceId) {
         Long roomId = response.getRoomId();
 
         Set<Long> participants = getParticipants(response.getRoomId());
@@ -123,7 +135,7 @@ public class ChatWorkerStreamListener implements
 
             offlineMembers.remove(userId);
             sessionKeys.add(
-                chatSessionService.getUserChatSessionKey(userId, clientId)
+                    chatSessionService.getUserChatSessionKey(userId, clientId)
             );
         });
 
@@ -144,20 +156,23 @@ public class ChatWorkerStreamListener implements
 
         serverNames.forEach(serverName -> {
             ChatMessageDispatchDto chatMessageDispatchDto = ChatMessageDispatchDto.builder()
-                .chatMessageResponse(response)
-                .userIds(userServerMap.get(serverName))
-                .build();
+                    .chatMessageResponse(response)
+                    .userIds(userServerMap.get(serverName))
+                    .senderId(senderId)
+                    .traceId(traceId)
+                    .build();
 
             String topicName = getTopicName(serverName);
             objectRedisTemplate.convertAndSend(topicName, chatMessageDispatchDto);
         });
     }
 
-    private void sendMessageToBatch(ChatMessageResponse response) {
+    private void sendMessageToBatch(ChatMessageResponse response, Long senderId, String traceId) {
         try {
             ObjectRecord<String, String> record = StreamRecords.newRecord()
-                .in(RedisStreamKeys.CHAT_MESSAGE_BATCH)
-                .ofObject(objectMapper.writeValueAsString(ChatMapper.toChatMessage(response)));
+                    .in(RedisStreamKeys.CHAT_MESSAGE_BATCH)
+                    .ofObject(objectMapper.writeValueAsString(
+                            ChatMapper.toChatMessage(response, senderId, traceId)));
 
             stringRedisTemplate.opsForStream().add(record);
         } catch (JsonProcessingException e) {
@@ -177,8 +192,8 @@ public class ChatWorkerStreamListener implements
 
         if (!longRedisTemplate.hasKey(key)) {
             Set<Long> participants = userChatRoomRepository.findParticipantsByChatRoomId(roomId)
-                .stream().map(ChatRoomParticipantGroups::getUserId)
-                .collect(Collectors.toSet());
+                    .stream().map(ChatRoomParticipantGroups::getUserId)
+                    .collect(Collectors.toSet());
             longRedisTemplate.opsForSet().add(key, participants.toArray(new Long[0]));
             longRedisTemplate.expire(key, Duration.ofHours(2L));
 
@@ -190,7 +205,7 @@ public class ChatWorkerStreamListener implements
 
     private String getTopicName(String serverName) {
         return RedisTopicNames.CHAT_MESSAGE_PREFIX + serverName
-            + RedisTopicNames.CHAT_MESSAGE_POSTFIX;
+                + RedisTopicNames.CHAT_MESSAGE_POSTFIX;
     }
 
     private String getRecentMessagesKey(Long roomId) {

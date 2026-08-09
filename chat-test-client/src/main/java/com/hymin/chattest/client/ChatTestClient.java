@@ -6,7 +6,6 @@ import com.hymin.chattest.support.ChatTestProperties;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,7 +36,6 @@ public class ChatTestClient implements AutoCloseable {
         this.properties = properties;
         this.stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         this.stompClient.setMessageConverter(new MappingJackson2MessageConverter());
-        this.stompClient.setReceiptTimeLimit(properties.timeout().toMillis());
     }
 
     public void connect(String accessToken) {
@@ -52,7 +50,6 @@ public class ChatTestClient implements AutoCloseable {
                     connectHeaders,
                     new ConnectionHandler())
                 .get(properties.timeout().toMillis(), TimeUnit.MILLISECONDS);
-            session.setAutoReceipt(true);
         } catch (Exception exception) {
             throw new IllegalStateException("STOMP 연결에 실패했습니다.", exception);
         }
@@ -60,22 +57,10 @@ public class ChatTestClient implements AutoCloseable {
 
     public StompSession.Subscription subscribe(long roomId) {
         requireConnected();
-        StompSession.Subscription subscription = session.subscribe(
+        return session.subscribe(
             "/user/queue/room/" + roomId,
             new MessageHandler()
         );
-        CompletableFuture<Void> receipt = new CompletableFuture<>();
-        subscription.addReceiptTask(() -> receipt.complete(null));
-        subscription.addReceiptLostTask(() -> receipt.completeExceptionally(
-            new IllegalStateException("채팅방 구독 RECEIPT를 받지 못했습니다.")));
-
-        try {
-            receipt.get(properties.timeout().toMillis(), TimeUnit.MILLISECONDS);
-            return subscription;
-        } catch (Exception exception) {
-            subscription.unsubscribe();
-            throw new IllegalStateException("채팅방 구독 확인에 실패했습니다.", exception);
-        }
     }
 
     public void send(ChatMessageRequest request) {

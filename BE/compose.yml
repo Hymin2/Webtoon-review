@@ -30,6 +30,19 @@ x-backend-common: &backend-common
     mongodb:
       condition: service_healthy
 
+x-chat-environment: &chat-environment
+  <<: *backend-environment
+  SPRING_PROFILES_ACTIVE: chat
+
+x-chat-common: &chat-common
+  <<: *backend-common
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+    interval: 10s
+    timeout: 5s
+    retries: 10
+    start_period: 30s
+
 services:
   mysql:
     image: mysql:8.4.10
@@ -77,22 +90,38 @@ services:
       timeout: 5s
       retries: 10
 
-  chat:
-    <<: *backend-common
+  chat-1:
+    <<: *chat-common
     environment:
-      <<: *backend-environment
-      SPRING_PROFILES_ACTIVE: chat
+      <<: *chat-environment
       CHAT_INSTANCE_NAME: chat-1
     volumes:
       - chat-logs:/app/logs
+
+  chat-2:
+    <<: *chat-common
+    environment:
+      <<: *chat-environment
+      CHAT_INSTANCE_NAME: chat-2
+    volumes:
+      - chat-2-logs:/app/logs
+
+  chat-lb:
+    image: nginx:1.27.5-alpine
+    volumes:
+      - ./nginx/chat.conf:/etc/nginx/nginx.conf:ro
     ports:
       - "${CHAT_PORT:-18080}:8080"
+    depends_on:
+      chat-1:
+        condition: service_healthy
+      chat-2:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/lb-health | grep -q UP"]
       interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
+      timeout: 3s
+      retries: 5
 
   chat-worker:
     <<: *backend-common
@@ -182,5 +211,6 @@ volumes:
   tempo-data:
   grafana-data:
   chat-logs:
+  chat-2-logs:
   chat-worker-logs:
   chat-persister-logs:

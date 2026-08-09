@@ -8,7 +8,6 @@ import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
@@ -21,12 +20,12 @@ import org.springframework.stereotype.Component;
 public class QueueLoader {
 
     private final JobQueue jobQueue;
+    private final QueueLogPathResolver queueLogPathResolver;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @PostConstruct
     public void load() {
-        Path topicPath = Paths.get(FileName.TOPIC_FILE_NAME.getDirectory(),
-            FileName.TOPIC_FILE_NAME.getName());
+        Path topicPath = queueLogPathResolver.resolve(FileName.TOPIC_FILE_NAME);
 
         if (!Files.exists(topicPath)) {
             return;
@@ -39,8 +38,10 @@ public class QueueLoader {
                     return;
                 }
 
-                Path dataPath = Paths.get(FileName.QUEUE_DATE_FILE_NAME.getDirectory(),
-                    FileName.QUEUE_DATE_FILE_NAME.getName(topic));
+                Path dataPath = queueLogPathResolver.resolve(
+                    FileName.QUEUE_DATE_FILE_NAME,
+                    topic
+                );
 
                 if (!Files.exists(dataPath)) {
                     return;

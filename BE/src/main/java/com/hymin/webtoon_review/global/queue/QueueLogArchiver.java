@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -16,14 +15,12 @@ import org.springframework.stereotype.Component;
 public class QueueLogArchiver {
 
     private final QueueLogLockManager queueLogLockManager;
+    private final QueueLogPathResolver queueLogPathResolver;
 
     public void archive(String topic, int size) {
-        Path logPath = Paths.get(FileName.QUEUE_DATE_FILE_NAME.getDirectory(),
-            FileName.QUEUE_DATE_FILE_NAME.getName(topic));
-        Path tempLogPath = Paths.get(FileName.TEMP_DATA_FILE_NAME.getDirectory(),
-            FileName.TEMP_DATA_FILE_NAME.getName(topic));
-        Path offlineLogPath = Paths.get(FileName.OFFLINE_LOG_FILE_NAME.getDirectory(),
-            FileName.OFFLINE_LOG_FILE_NAME.getName(topic));
+        Path logPath = queueLogPathResolver.resolve(FileName.QUEUE_DATE_FILE_NAME, topic);
+        Path tempLogPath = queueLogPathResolver.resolve(FileName.TEMP_DATA_FILE_NAME, topic);
+        Path offlineLogPath = queueLogPathResolver.resolve(FileName.OFFLINE_LOG_FILE_NAME, topic);
 
         File tempParent = tempLogPath.getParent().toFile();
         File offlineParent = offlineLogPath.getParent().toFile();

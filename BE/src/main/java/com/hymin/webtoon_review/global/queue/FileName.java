@@ -5,11 +5,11 @@ import lombok.Getter;
 
 @AllArgsConstructor
 public enum FileName {
-    OFFLINE_LOG_FILE_NAME("_offline.log", "/logs/offline"),
-    TOPIC_FILE_NAME("topics.txt", "/logs"),
-    QUEUE_DATE_FILE_NAME("_queue_data.log", "/logs"),
-    TEMP_DATA_FILE_NAME("_temp_data.log", "/logs"),
-    ERROR_LOG_FILE_NAME("_error_data.log", "/logs/error"),
+    OFFLINE_LOG_FILE_NAME("_offline.log", "offline"),
+    TOPIC_FILE_NAME("topics.txt", ""),
+    QUEUE_DATE_FILE_NAME("_queue_data.log", ""),
+    TEMP_DATA_FILE_NAME("_temp_data.log", ""),
+    ERROR_LOG_FILE_NAME("_error_data.log", "error"),
     ;
 
     private final String name;

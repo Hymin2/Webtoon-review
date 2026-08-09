@@ -3,12 +3,10 @@ package com.hymin.webtoon_review.global.queue;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,6 +20,7 @@ public class QueueLogWriter {
 
     private final JobQueue jobQueue;
     private final QueueLogLockManager queueLogLockManager;
+    private final QueueLogPathResolver queueLogPathResolver;
     private final ObjectMapper mapper = new ObjectMapper();
     private final Map<String, StringBuffer> logBuffer = new ConcurrentHashMap<>();
     private final Map<String, StringBuffer> errorLogBuffer = new ConcurrentHashMap<>();
@@ -29,10 +28,7 @@ public class QueueLogWriter {
     @PostConstruct
     public void init() {
         try {
-            Path path = Paths.get(FileName.QUEUE_DATE_FILE_NAME.getDirectory());
-            if (Files.notExists(path)) {
-                Files.createDirectory(path);
-            }
+            Files.createDirectories(queueLogPathResolver.rootDirectory());
 
             saveTopicName();
         } catch (IOException e) {
@@ -71,8 +67,7 @@ public class QueueLogWriter {
             data.append(topic).append("\n");
         });
 
-        save(FileName.TOPIC_FILE_NAME.getDirectory(),
-            FileName.TOPIC_FILE_NAME.getName(),
+        save(queueLogPathResolver.resolve(FileName.TOPIC_FILE_NAME),
             data.toString(),
             StandardOpenOption.CREATE,
             StandardOpenOption.TRUNCATE_EXISTING
@@ -83,16 +78,14 @@ public class QueueLogWriter {
     private void saveLog() {
         jobQueue.getAllTopic().forEach(topic -> {
             if (queueLogLockManager.acquireLock(topic)) {
-                save(FileName.QUEUE_DATE_FILE_NAME.getDirectory(),
-                    FileName.QUEUE_DATE_FILE_NAME.getName(topic),
+                save(queueLogPathResolver.resolve(FileName.QUEUE_DATE_FILE_NAME, topic),
                     logBuffer.get(topic).toString(),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND
                 );
                 logBuffer.get(topic).setLength(0);
 
-                save(FileName.ERROR_LOG_FILE_NAME.getDirectory(),
-                    FileName.ERROR_LOG_FILE_NAME.getName(topic),
+                save(queueLogPathResolver.resolve(FileName.ERROR_LOG_FILE_NAME, topic),
                     errorLogBuffer.get(topic).toString(),
                     StandardOpenOption.CREATE,
                     StandardOpenOption.APPEND);
@@ -102,15 +95,9 @@ public class QueueLogWriter {
         });
     }
 
-    private void save(String directory, String fileName, String data, OpenOption... options) {
-        Path path = Paths.get(directory, fileName);
-        File parent = path.getParent().toFile();
-
-        if (!parent.exists()) {
-            parent.mkdirs();
-        }
-        
+    private void save(Path path, String data, OpenOption... options) {
         try {
+            Files.createDirectories(path.getParent());
             Files.write(path, data.getBytes(), options);
         } catch (IOException e) {
             throw new RuntimeException(e);

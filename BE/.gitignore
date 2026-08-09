@@ -181,5 +181,6 @@ replay_pid*
 
 # Local environment variables
 .env
+/logs/
 
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij

@@ -90,6 +90,10 @@ logging:
   loki:
     url: ${LOKI_URL:http://localhost:3100/loki/api/v1/push}
 
+queue:
+  log:
+    directory: ${QUEUE_LOG_DIRECTORY:./logs}
+
 firebase:
   config:
     path: classpath:firebase/firebase.json

@@ -1,76 +1,52 @@
 package com.hymin.webtoon_review.webtoon.mapper;
 
-import com.hymin.webtoon_review.webtoon.dto.WebtoonListResponseDto;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonPopularityScore;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonListResultDto;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.Category;
-import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.HotWebtoonListResponse;
+import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonListElement;
 import com.hymin.webtoon_review.webtoon.dto.WebtoonResponse.WebtoonListResponse;
 import com.hymin.webtoon_review.webtoon.entity.Genre;
-import com.hymin.webtoon_review.webtoon.entity.Webtoon;
-import com.hymin.webtoon_review.webtoon.repository.enums.SortColumn;
 import java.util.List;
-import org.springframework.data.domain.Pageable;
 
 public class WebtoonMapper {
 
     public static List<Category> toWebtoonCategoryList(List<Genre> genres) {
         return genres.stream()
-            .map((g) -> Category.builder()
-                .id(g.getId())
-                .name(g.getName())
-                .updatedAt(g.getUpdatedAt().toString())
-                .build())
-            .toList();
+                .map((g) -> Category.builder()
+                        .id(g.getId())
+                        .name(g.getName())
+                        .updatedAt(g.getUpdatedAt().toString())
+                        .build())
+                .toList();
     }
 
-    public static WebtoonPopularityScore toWebtoonPopularityScore(Long id, Integer score) {
-        return WebtoonPopularityScore.builder()
-            .id(id)
-            .score(score)
-            .build();
-    }
-
-    public static WebtoonListResponseDto toWebtoonListResponseDto(
-        List<Webtoon> webtoonList,
-        String domainThumbnail,
-        Pageable pageable
+    public static WebtoonListResponse toWebtoonListResponse(
+            List<WebtoonListResultDto> webtoonList,
+            String order
     ) {
-        return WebtoonListResponseDto.builder()
-            .webtoonListResponse(toWebtoonListResponse(webtoonList, domainThumbnail))
-            .next(
-                pageable.getSort().stream()
-                    .findFirst()
-                    .map(o -> SortColumn.fromProperty(o.getProperty()))
-                    .orElse(SortColumn.TOTAL_POPULAR)
-                    .extractScore(webtoonList.get(webtoonList.size() - 1)))
-            .build();
+        return WebtoonListResponse.builder()
+                .webtoonListElements(
+                        webtoonList.stream()
+                                .map(w -> WebtoonListElement.builder()
+                                        .id(w.getId())
+                                        .authorName(w.getAuthorName())
+                                        .genre(w.getGenre())
+                                        .thumbnail(w.getThumbnail())
+                                        .starRating(w.getStarRating())
+                                        .dayOfWeek(w.getDayOfWeek())
+                                        .name(w.getName())
+                                        .build())
+                                .toList())
+                .next(findNext(webtoonList.get(webtoonList.size() - 1), order))
+                .build();
     }
 
-    public static List<WebtoonListResponse> toWebtoonListResponse(
-        List<Webtoon> webtoonList,
-        String domainThumbnail
-    ) {
-        return webtoonList.stream()
-            .map(w -> WebtoonListResponse.builder()
-                .id(w.getId())
-                .name(w.getName())
-                .thumbnail(domainThumbnail + w.getThumbnail())
-                .authorName(w.getAuthors())
-                .dayOfWeek(w.getDayOfWeeks())
-                .genre(w.getGenres())
-                .starScore(w.getTotalStarScore())
-                .build()
-            ).toList();
-    }
+    private static String findNext(WebtoonListResultDto webtoon, String order) {
+        if (order.equals("인기순")) {
+            return webtoon.getPopularityScore().toString();
+        } else if (order.equals("별점순")) {
+            return webtoon.getStarRating().toString();
+        }
 
-    public static List<HotWebtoonListResponse> toHotWebtoonListResponse(List<Webtoon> webtoonList,
-        String domainThumbnail) {
-        return webtoonList.stream()
-            .map(w -> HotWebtoonListResponse.builder()
-                .id(w.getId())
-                .name(w.getName())
-                .thumbnail(domainThumbnail + w.getThumbnail())
-                .build()
-            ).toList();
+        return webtoon.getPopularityScore().toString();
     }
 }

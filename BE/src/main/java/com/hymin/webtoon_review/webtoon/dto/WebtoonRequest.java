@@ -11,18 +11,9 @@ public class WebtoonRequest {
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
-    public static class CommentInfo {
+    public static class ReviewRequest {
 
         private String content;
-        private Double score;
-    }
-
-    @Getter
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ReplyInfo {
-
-        private String content;
+        private Integer starRating;
     }
 }

@@ -9,8 +9,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class WebtoonPopularityScore {
+public class WebtoonFilterSubResultDto {
 
-    private Long id;
-    private Integer score;
+    private Long webtoonId;
+    private Integer starRating;
+    private Integer popularityScore;
 }

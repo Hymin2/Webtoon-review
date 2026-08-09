@@ -1,5 +1,6 @@
 package com.hymin.webtoon_review.webtoon.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,17 +13,23 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Table
 @Entity
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "webtoon_filter")
 public class WebtoonFilter {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "popularity_score")
+    private Integer popularityScore;
+
+    @Column(name = "star_rating")
+    private Integer starRating;
 
     @ManyToOne
     @JoinColumn(name = "webtoon_id")
@@ -35,4 +42,8 @@ public class WebtoonFilter {
     @ManyToOne
     @JoinColumn(name = "genre_id")
     private Genre genre;
+
+    @ManyToOne
+    @JoinColumn(name = "platform_id")
+    private Platform platform;
 }

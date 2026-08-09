@@ -30,5 +30,5 @@ public class Genre extends BaseEntity {
     private String name;
 
     @OneToMany(mappedBy = "genre")
-    private List<WebtoonGenre> webtoonGenres;
+    private List<WebtoonFilter> webtoonFilters;
 }

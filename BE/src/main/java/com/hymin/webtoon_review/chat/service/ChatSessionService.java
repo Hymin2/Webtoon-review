@@ -23,8 +23,8 @@ public class ChatSessionService {
         redisTemplate.opsForValue().set(key, serverName);
     }
 
-    public void removeUserChatSession(Long userId, String clintId) {
-        String key = getUserChatSessionKey(userId, clintId);
+    public void removeUserChatSession(Long userId, String clientId) {
+        String key = getUserChatSessionKey(userId, clientId);
         redisTemplate.delete(key);
     }
 

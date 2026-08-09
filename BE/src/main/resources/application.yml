@@ -5,22 +5,22 @@ spring:
       jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
       username: ${MYSQL_USERNAME}
       password: ${MYSQL_PASSWORD}
-      hikari:
-        maximum-pool-size: 7
+      maximum-pool-size: 7
+      minimum-idle: 1
     write:
       driver-class-name: com.mysql.cj.jdbc.Driver
       jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&rewriteBatchedStatement=true&allowPublicKeyRetrieval=true
       username: ${MYSQL_USERNAME}
       password: ${MYSQL_PASSWORD}
-      hikari:
-        maximum-pool-size: 2
+      maximum-pool-size: 2
+      minimum-idle: 1
     async-write:
       driver-class-name: com.mysql.cj.jdbc.Driver
       jdbc-url: jdbc:mysql://${MYSQL_DATABASE_HOST}:${MYSQL_DATABASE_PORT}/${MYSQL_DATABASE_NAME}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&rewriteBatchedStatement=true&allowPublicKeyRetrieval=true
       username: ${MYSQL_USERNAME}
       password: ${MYSQL_PASSWORD}
-      hikari:
-        maximum-pool-size: 1
+      maximum-pool-size: 1
+      minimum-idle: 1
 
   jpa:
     generate-ddl: true

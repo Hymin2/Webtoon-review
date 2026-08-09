@@ -3,6 +3,7 @@ package com.hymin.webtoon_review.chat.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hymin.webtoon_review.chat.entity.ChatMessage;
+import com.hymin.webtoon_review.chat.metrics.ChatMessageMetrics;
 import com.hymin.webtoon_review.chat.repository.ChatMessageRepository;
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;
@@ -42,6 +43,7 @@ public class ChatMessageService {
     private final MongoTemplate mongoTemplate;
     private final RedisTemplate<String, String> redisTemplate;
     private final ChatMessageRepository chatMessageRepository;
+    private final ChatMessageMetrics chatMessageMetrics;
 
     public Long getMaxMessageSequence(Long roomId) {
         return chatMessageRepository.findFirstByRoomIdOrderByMessageSequenceDesc(roomId)
@@ -134,7 +136,19 @@ public class ChatMessageService {
     }
 
     private List<Integer> insertBatch(List<MapRecord<String, String, String>> records) {
-        return saveBatch(records.stream().map(this::parseMessage).toList());
+        try {
+            List<Integer> errorIndexes = saveBatch(
+                records.stream().map(this::parseMessage).toList()
+            );
+            chatMessageMetrics.persisted(
+                records.size() - errorIndexes.size(),
+                errorIndexes.size()
+            );
+            return errorIndexes;
+        } catch (RuntimeException e) {
+            chatMessageMetrics.persisted(0, records.size());
+            throw e;
+        }
     }
 
     private void acknowledgeMessage(

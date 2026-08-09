@@ -6,6 +6,7 @@ import com.hymin.webtoon_review.chat.dto.ChatMessageDispatchDto;
 import com.hymin.webtoon_review.chat.dto.ChatMessageDto;
 import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatMessageResponse;
 import com.hymin.webtoon_review.chat.mapper.ChatMapper;
+import com.hymin.webtoon_review.chat.metrics.ChatMessageMetrics;
 import com.hymin.webtoon_review.chat.repository.UserChatRoomRepository;
 import com.hymin.webtoon_review.chat.repository.projection.ChatRoomParticipantGroups;
 import com.hymin.webtoon_review.chat.service.ChatMessageSequenceGenerator;
@@ -56,9 +57,20 @@ public class ChatWorkerStreamListener implements
     private final ChatMessageSequenceGenerator chatMessageSequenceGenerator;
 
     private final ChatSessionService chatSessionService;
+    private final ChatMessageMetrics chatMessageMetrics;
 
     @Override
     public void onMessage(MapRecord<String, String, String> message) {
+        try {
+            processMessage(message);
+            chatMessageMetrics.workerSuccess();
+        } catch (RuntimeException e) {
+            chatMessageMetrics.workerFailure();
+            throw e;
+        }
+    }
+
+    private void processMessage(MapRecord<String, String, String> message) {
         ChatMessageDto chatMessageDto = parseMessage(message);
         Long timestamp = message.getId().getTimestamp();
         ChatMessageResponse response = createChatMessageResponse(

@@ -2,6 +2,7 @@ package com.hymin.webtoon_review.chat.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hymin.webtoon_review.chat.dto.ChatMessageDto;
+import com.hymin.webtoon_review.chat.metrics.ChatMessageMetrics;
 import com.hymin.webtoon_review.chat.route.ChatWorkerLocalHashRing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class ChatMessageRoutingService {
     private final ObjectMapper objectMapper;
     private final ChatWorkerLocalHashRing chatWorkerLocalHashRing;
     private final RedisTemplate<String, String> redisTemplate;
+    private final ChatMessageMetrics chatMessageMetrics;
 
     public void route(ChatMessageDto chatMessageDto) {
         try {
@@ -28,8 +30,10 @@ public class ChatMessageRoutingService {
                 .ofObject(objectMapper.writeValueAsString(chatMessageDto));
 
             redisTemplate.opsForStream().add(record);
+            chatMessageMetrics.receivedSuccess();
             log.info("[채팅] 채팅 메시지를 Redis Stream에 발행, {}", chatMessageDto.getMessageUUID());
         } catch (Exception e) {
+            chatMessageMetrics.receivedFailure();
             throw new RuntimeException(e);
         }
     }

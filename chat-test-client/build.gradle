@@ -17,6 +17,7 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket:3.3.1'
+    runtimeOnly 'com.mysql:mysql-connector-j:8.4.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.3.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
@@ -24,4 +25,11 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
+}
+
+tasks.register('prepareWebtoonFixture', JavaExec) {
+    description = '채팅 E2E 테스트에 필요한 웹툰 데이터를 준비합니다.'
+    group = 'verification'
+    classpath = sourceSets.main.runtimeClasspath
+    mainClass = 'com.hymin.chattest.fixture.PrepareWebtoonFixture'
 }

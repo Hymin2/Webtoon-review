@@ -1,5 +1,35 @@
 name: webtoon-review
 
+x-backend-environment: &backend-environment
+  MYSQL_DATABASE_HOST: mysql
+  MYSQL_DATABASE_PORT: 3306
+  MYSQL_DATABASE_NAME: ${MYSQL_DATABASE_NAME}
+  MYSQL_USERNAME: ${MYSQL_USERNAME}
+  MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+  REDIS_HOST: redis
+  REDIS_PORT: 6379
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+  MONGODB_HOST: mongodb
+  MONGODB_PORT: 27017
+  JWT_KEY: ${JWT_KEY}
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
+  OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: http://otel-collector:4318/v1/metrics
+  LOKI_URL: http://loki:3100/loki/api/v1/push
+  QUEUE_LOG_DIRECTORY: /app/logs
+
+x-backend-common: &backend-common
+  build:
+    context: .
+  image: webtoon-review-backend:local
+  restart: unless-stopped
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    mongodb:
+      condition: service_healthy
+
 services:
   mysql:
     image: mysql:8.4.10
@@ -46,6 +76,41 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
+  chat:
+    <<: *backend-common
+    environment:
+      <<: *backend-environment
+      SPRING_PROFILES_ACTIVE: chat
+      CHAT_INSTANCE_NAME: chat-1
+    volumes:
+      - chat-logs:/app/logs
+    ports:
+      - "${CHAT_PORT:-18080}:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  chat-worker:
+    <<: *backend-common
+    environment:
+      <<: *backend-environment
+      SPRING_PROFILES_ACTIVE: chat-worker
+      CHAT_INSTANCE_NAME: chat-worker-1
+    volumes:
+      - chat-worker-logs:/app/logs
+
+  chat-persister:
+    <<: *backend-common
+    environment:
+      <<: *backend-environment
+      SPRING_PROFILES_ACTIVE: chat-persister
+      CHAT_INSTANCE_NAME: chat-persister-1
+    volumes:
+      - chat-persister-logs:/app/logs
 
   otel-collector:
     image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector-contrib:0.153.0
@@ -116,3 +181,6 @@ volumes:
   loki-data:
   tempo-data:
   grafana-data:
+  chat-logs:
+  chat-worker-logs:
+  chat-persister-logs:

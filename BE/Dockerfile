@@ -13,8 +13,8 @@ RUN ./gradlew bootJar --no-daemon \
 FROM eclipse-temurin:17-jre-alpine
 
 RUN addgroup -S app && adduser -S app -G app \
-    && mkdir -p /app \
-    && chown app:app /app
+    && mkdir -p /app/logs \
+    && chown -R app:app /app
 
 WORKDIR /app
 

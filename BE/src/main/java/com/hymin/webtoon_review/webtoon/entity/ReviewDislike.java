@@ -1,16 +1,13 @@
 package com.hymin.webtoon_review.webtoon.entity;
 
 import com.hymin.webtoon_review.user.entity.User;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -22,17 +19,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Reply {
+public class ReviewDislike {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(name = "content", nullable = false)
-    private String content;
-
-    @Column(name = "status", nullable = false)
-    private Boolean status;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -40,12 +31,5 @@ public class Reply {
 
     @ManyToOne
     @JoinColumn(name = "comment_id")
-    private Comment comment;
-
-    @OneToMany(mappedBy = "reply")
-    private List<ReplyRecommend> recommends;
-    
-    public void delete() {
-        status = Boolean.FALSE;
-    }
+    private Review review;
 }

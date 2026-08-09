@@ -1,6 +1,8 @@
 package com.hymin.webtoon_review.webtoon.entity;
 
+import com.hymin.webtoon_review.global.BaseEntity;
 import com.hymin.webtoon_review.user.entity.User;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,17 +21,23 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReplyRecommend {
+public class Review extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "content", nullable = false)
+    private String content;
+
+    @Column(name = "score", nullable = false)
+    private Integer score;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "reply_id")
-    private Reply reply;
+    @JoinColumn(name = "webtoon_id")
+    private Webtoon webtoon;
 }

@@ -25,6 +25,7 @@ public class AsyncConfig {
     }
 
     @Bean(name = "messagesBatchExecutor")
+    @Profile("chat-persister")
     public Executor messagesBatchExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
 

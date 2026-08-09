@@ -1,0 +1,6 @@
+chat:
+  role: chat
+
+server:
+  instance:
+    name: ${CHAT_INSTANCE_NAME:chat-${random.uuid}}

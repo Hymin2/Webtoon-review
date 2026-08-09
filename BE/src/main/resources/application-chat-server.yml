@@ -1,6 +1,0 @@
-chat:
-  role: chat-server
-
-server:
-  instance:
-    name: ${CHAT_INSTANCE_NAME:chat-server-${random.uuid}}

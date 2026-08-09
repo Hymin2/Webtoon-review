@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import com.hymin.webtoon_review.global.security.JwtService;
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
+import com.hymin.webtoon_review.user.dto.UserResponse.TokenResponse;
 import com.hymin.webtoon_review.user.exception.AlreadyUserExistsException;
 import com.hymin.webtoon_review.user.exception.UserNotFoundException;
 import com.hymin.webtoon_review.user.facade.UserFacade;
@@ -144,9 +145,9 @@ class UserServiceTest {
             List.of(new SimpleGrantedAuthority("USER")));
 
         // then
-        String jwt = userFacade.login(authentication);
+        TokenResponse token = userFacade.login(authentication, "android", "client-id");
 
-        assertEquals(true, jwt.contains("Bearer "));
+        assertEquals(true, token.getAccessToken().contains("Bearer "));
     }
 
     @Test
@@ -157,7 +158,7 @@ class UserServiceTest {
 
         // then
         assertThrows(UserNotFoundException.class, () -> {
-            userFacade.login(authentication);
+            userFacade.login(authentication, "android", "client-id");
         });
     }
 }

@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.global.security.authentication.UsernamePasswordAuthentication;
 import com.hymin.webtoon_review.user.dto.UserRequest.RegisterInfo;
+import com.hymin.webtoon_review.user.dto.UserResponse.TokenResponse;
 import com.hymin.webtoon_review.user.exception.AlreadyUserExistsException;
 import com.hymin.webtoon_review.user.exception.UserNotFoundException;
 import com.hymin.webtoon_review.user.facade.UserFacade;
@@ -152,15 +153,19 @@ class UserControllerTest {
     @DisplayName("로그인 성공")
     public void successLogin() throws Exception {
         // given
+        String deviceType = "android";
+        String clientId = "client-id";
         Authentication authentication = new UsernamePasswordAuthentication("username",
             "credentials", List.of(new SimpleGrantedAuthority("ROLE_USER")));
 
         // when
-        when(userFacade.login(authentication))
-            .thenReturn("Bearer ");
+        when(userFacade.login(authentication, deviceType, clientId))
+            .thenReturn(TokenResponse.builder().accessToken("Bearer token").build());
 
         // then
-        mockMvc.perform(post("/users/login"))
+        mockMvc.perform(post("/users/login")
+                .header("X-Device-Type", deviceType)
+                .header("X-Client-Id", clientId))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value(200));
     }
@@ -169,15 +174,19 @@ class UserControllerTest {
     @DisplayName("로그인 실패")
     public void failedLogin() throws Exception {
         // given
+        String deviceType = "android";
+        String clientId = "client-id";
         Authentication authentication = new UsernamePasswordAuthentication("username",
             "credentials");
 
         // when
-        when(userFacade.login(authentication))
+        when(userFacade.login(authentication, deviceType, clientId))
             .thenThrow(UserNotFoundException.class);
 
         // then
-        mockMvc.perform(post("/users/login"))
+        mockMvc.perform(post("/users/login")
+                .header("X-Device-Type", deviceType)
+                .header("X-Client-Id", clientId))
             .andExpect(status().isUnauthorized())
             .andExpect(jsonPath("$.status").value(401));
     }

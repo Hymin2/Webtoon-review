@@ -30,7 +30,7 @@ public class UserChatRoom extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, updatable = false, length = 36)
+    @Column(nullable = false, unique = true, updatable = false, length = 36)
     private String roomMemberId;
 
     private Long lastReadMessageSequence;

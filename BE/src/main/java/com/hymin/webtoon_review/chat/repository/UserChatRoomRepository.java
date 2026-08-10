@@ -6,7 +6,6 @@ import com.hymin.webtoon_review.chat.repository.projection.ChatRoomStatistics;
 import com.hymin.webtoon_review.chat.repository.projection.LastReadMessageSequenceGroup;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -17,12 +16,6 @@ public interface UserChatRoomRepository extends JpaRepository<UserChatRoom, Long
     Boolean existsByChatRoomIdAndUserUsername(Long roomId, String username);
 
     UserChatRoom findByUserIdAndChatRoomId(Long userId, Long chatRoomId);
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query(value = "UPDATE user_chat_room "
-        + "SET room_member_id = UUID() "
-        + "WHERE room_member_id IS NULL", nativeQuery = true)
-    int assignMissingRoomMemberIds();
 
     @Query("SELECT COUNT(u) AS totalCount, " +
         "COALESCE(SUM(CASE WHEN u.isConnected = true THEN 1 ELSE 0 END), 0) AS onlineCount " +

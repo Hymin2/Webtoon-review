@@ -2,6 +2,7 @@ package com.hymin.webtoon_review.chat.entity;
 
 import com.hymin.webtoon_review.global.BaseEntity;
 import com.hymin.webtoon_review.user.entity.User;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -9,7 +10,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,6 +30,9 @@ public class UserChatRoom extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, updatable = false, length = 36)
+    private String roomMemberId;
+
     private Long lastReadMessageSequence;
     private Boolean isConnected;
 
@@ -37,6 +43,13 @@ public class UserChatRoom extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_room_id", nullable = false)
     private ChatRoom chatRoom;
+
+    @PrePersist
+    void assignRoomMemberId() {
+        if (roomMemberId == null) {
+            roomMemberId = UUID.randomUUID().toString();
+        }
+    }
 
     public void connect() {
         isConnected = true;

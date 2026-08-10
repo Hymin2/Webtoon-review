@@ -30,15 +30,13 @@ class ChatSendReceiveScenarioTest {
             properties,
             WebtoonFixtureProperties.fromEnvironment()
         ).prepareChatRoom();
-        String personalUUID = UUID.randomUUID().toString();
         String clientMessageId = UUID.randomUUID().toString();
         String testMessage = "chat-test-" + UUID.randomUUID();
 
         try (ChatTestClient client = new ChatTestClient(properties)) {
             client.connect(context.accessToken());
             client.subscribe(context.roomId());
-            client.send(createRequest(
-                context.roomId(), personalUUID, clientMessageId, testMessage));
+            client.send(createRequest(context.roomId(), clientMessageId, testMessage));
 
             ChatMessageResponse receivedMessage = client.awaitMessage(
                 message -> hasContent(message, testMessage),
@@ -47,7 +45,7 @@ class ChatSendReceiveScenarioTest {
 
             assertThat(receivedMessage).isNotNull();
             assertThat(receivedMessage.roomId()).isEqualTo(context.roomId());
-            assertThat(receivedMessage.personalUUID()).isEqualTo(personalUUID);
+            assertThat(receivedMessage.roomMemberId()).isNotBlank();
             assertThat(receivedMessage.clientMessageId()).isEqualTo(clientMessageId);
             assertThat(receivedMessage.messageSequence()).isPositive();
         }
@@ -55,7 +53,6 @@ class ChatSendReceiveScenarioTest {
 
     private ChatMessageRequest createRequest(
         long roomId,
-        String personalUUID,
         String clientMessageId,
         String content
     ) {
@@ -65,7 +62,7 @@ class ChatSendReceiveScenarioTest {
             Map.of("source", "chat-test-client")
         );
         return new ChatMessageRequest(
-            roomId, personalUUID, clientMessageId, List.of(messageBlock));
+            roomId, clientMessageId, List.of(messageBlock));
     }
 
     private boolean hasContent(ChatMessageResponse message, String expectedContent) {

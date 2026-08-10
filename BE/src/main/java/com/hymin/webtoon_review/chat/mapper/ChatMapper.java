@@ -32,7 +32,7 @@ public class ChatMapper {
     ) {
         return ChatMessageResponse.builder()
                 .roomId(chatMessageDto.getRoomId())
-                .personalUUID(chatMessageDto.getPersonalUUID())
+                .roomMemberId(chatMessageDto.getRoomMemberId())
                 .clientMessageId(chatMessageDto.getClientMessageId())
                 .messageBlocks(chatMessageDto.getMessageBlocks())
                 .messageSequence(messageSequence)
@@ -88,12 +88,13 @@ public class ChatMapper {
             ChatMessageRequest chatMessageRequest,
             Long userId,
             String nickname,
+            String roomMemberId,
             String traceId
     ) {
         return ChatMessageDto.builder()
                 .roomId(chatMessageRequest.getRoomId())
                 .messageBlocks(chatMessageRequest.getMessageBlocks())
-                .personalUUID(chatMessageRequest.getPersonalUUID())
+                .roomMemberId(roomMemberId)
                 .clientMessageId(chatMessageRequest.getClientMessageId())
                 .traceId(traceId)
                 .senderId(userId)

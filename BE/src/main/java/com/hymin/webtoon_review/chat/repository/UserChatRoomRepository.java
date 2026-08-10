@@ -5,6 +5,7 @@ import com.hymin.webtoon_review.chat.repository.projection.ChatRoomParticipantGr
 import com.hymin.webtoon_review.chat.repository.projection.ChatRoomStatistics;
 import com.hymin.webtoon_review.chat.repository.projection.LastReadMessageSequenceGroup;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +17,14 @@ public interface UserChatRoomRepository extends JpaRepository<UserChatRoom, Long
     Boolean existsByChatRoomIdAndUserUsername(Long roomId, String username);
 
     UserChatRoom findByUserIdAndChatRoomId(Long userId, Long chatRoomId);
+
+    @Query("SELECT u.roomMemberId "
+        + "FROM UserChatRoom u "
+        + "WHERE u.user.id = :userId AND u.chatRoom.id = :roomId")
+    Optional<String> findRoomMemberId(
+        @Param("userId") Long userId,
+        @Param("roomId") Long roomId
+    );
 
     @Query("SELECT COUNT(u) AS totalCount, " +
         "COALESCE(SUM(CASE WHEN u.isConnected = true THEN 1 ELSE 0 END), 0) AS onlineCount " +

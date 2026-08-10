@@ -6,7 +6,7 @@ public record ChatMessageResponse(
     Long roomId,
     Long messageSequence,
     List<MessageBlock> messageBlocks,
-    String personalUUID,
+    String roomMemberId,
     String clientMessageId,
     String sender,
     String createdAt

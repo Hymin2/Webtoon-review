@@ -14,7 +14,7 @@ class ChatMessageRequestTest {
 
     @Test
     void clientMessageId는_필수이다() {
-        ChatMessageRequest request = new ChatMessageRequest(1L, "personal-id", null, List.of());
+        ChatMessageRequest request = new ChatMessageRequest(1L, null, List.of());
 
         assertThat(validator.validate(request))
             .anyMatch(violation -> violation.getPropertyPath().toString()
@@ -24,7 +24,7 @@ class ChatMessageRequestTest {
     @Test
     void clientMessageId는_UUID_길이를_초과할_수_없다() {
         ChatMessageRequest request = new ChatMessageRequest(
-            1L, "personal-id", "a".repeat(37), List.of());
+            1L, "a".repeat(37), List.of());
 
         assertThat(validator.validate(request))
             .anyMatch(violation -> violation.getPropertyPath().toString()

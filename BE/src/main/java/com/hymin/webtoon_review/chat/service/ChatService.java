@@ -3,6 +3,7 @@ package com.hymin.webtoon_review.chat.service;
 import com.hymin.webtoon_review.chat.entity.ChatRoom;
 import com.hymin.webtoon_review.chat.entity.UserChatRoom;
 import com.hymin.webtoon_review.chat.exception.ChatRoomNotFoundException;
+import com.hymin.webtoon_review.chat.exception.InvalidChatRoomAccessException;
 import com.hymin.webtoon_review.chat.repository.ChatRoomRepository;
 import com.hymin.webtoon_review.chat.repository.UserChatRoomRepository;
 import com.hymin.webtoon_review.chat.repository.projection.ChatRoomGroup;
@@ -47,6 +48,11 @@ public class ChatService {
 
     public Boolean existsRoomByUsername(Long roomId, String username) {
         return userChatRoomRepository.existsByChatRoomIdAndUserUsername(roomId, username);
+    }
+
+    public String getRoomMemberId(Long userId, Long roomId) {
+        return userChatRoomRepository.findRoomMemberId(userId, roomId)
+            .orElseThrow(InvalidChatRoomAccessException::new);
     }
 
     @Transactional

@@ -43,11 +43,15 @@ public class ChatFacade {
             traceManager.putChatMDC(chatMessage.getRoomId(), userId);
             log.info("[채팅] 채팅 메시지 수신 완료");
 
+            String roomMemberId = chatService.getRoomMemberId(
+                userId, chatMessage.getRoomId());
+
             chatMessageRoutingService.route(
                     ChatMapper.toChatMessageDto(
                             chatMessage,
                             userId,
                             nickname,
+                            roomMemberId,
                             traceId
                     )
             );

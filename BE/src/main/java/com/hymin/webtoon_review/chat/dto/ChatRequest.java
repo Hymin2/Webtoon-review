@@ -18,7 +18,6 @@ public class ChatRequest {
     public static class ChatMessageRequest {
 
         private Long roomId;
-        private String personalUUID;
         @NotBlank
         @Size(max = 36)
         private String clientMessageId;

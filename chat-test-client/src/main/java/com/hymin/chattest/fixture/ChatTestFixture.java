@@ -33,13 +33,16 @@ public class ChatTestFixture {
     public ChatTestContext prepareChatRoom() {
         long webtoonId = new WebtoonFixture(webtoonProperties).ensureWebtoon();
         String accessToken = prepareUser();
+        ChatRoom joinedRoom = joinChatRoom(accessToken, webtoonId);
         ChatRoom room = findRoom(accessToken);
 
-        if (room == null) {
-            room = joinChatRoom(accessToken, webtoonId);
-        }
         if (room == null || room.roomMemberId() == null) {
             throw new IllegalStateException("테스트 채팅방 ID를 확인할 수 없습니다.");
+        }
+        if (joinedRoom == null
+            || !joinedRoom.roomId().equals(room.roomId())
+            || !joinedRoom.roomMemberId().equals(room.roomMemberId())) {
+            throw new IllegalStateException("채팅방 가입 응답과 목록 응답이 일치하지 않습니다.");
         }
         return new ChatTestContext(accessToken, room.roomId(), room.roomMemberId());
     }

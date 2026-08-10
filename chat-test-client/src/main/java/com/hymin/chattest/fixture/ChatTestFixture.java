@@ -33,16 +33,15 @@ public class ChatTestFixture {
     public ChatTestContext prepareChatRoom() {
         long webtoonId = new WebtoonFixture(webtoonProperties).ensureWebtoon();
         String accessToken = prepareUser();
-        Long roomId = findRoomId(accessToken);
+        ChatRoom room = findRoom(accessToken);
 
-        if (roomId == null) {
-            joinChatRoom(accessToken, webtoonId);
-            roomId = findRoomId(accessToken);
+        if (room == null) {
+            room = joinChatRoom(accessToken, webtoonId);
         }
-        if (roomId == null) {
+        if (room == null || room.roomMemberId() == null) {
             throw new IllegalStateException("테스트 채팅방 ID를 확인할 수 없습니다.");
         }
-        return new ChatTestContext(accessToken, roomId);
+        return new ChatTestContext(accessToken, room.roomId(), room.roomMemberId());
     }
 
     private boolean userExists() {
@@ -71,7 +70,7 @@ public class ChatTestFixture {
             .toBodilessEntity();
     }
 
-    private Long findRoomId(String accessToken) {
+    private ChatRoom findRoom(String accessToken) {
         ChatRoomListResponse response = restClient.get()
             .uri("/chat/room")
             .header("Authorization", authorizationHeader(accessToken))
@@ -83,20 +82,20 @@ public class ChatTestFixture {
         }
         return Arrays.stream(response.data())
             .filter(room -> webtoonProperties.webtoonName().equals(room.roomName()))
-            .map(ChatRoom::roomId)
             .findFirst()
             .orElse(null);
     }
 
-    private void joinChatRoom(String accessToken, long webtoonId) {
-        restClient.post()
+    private ChatRoom joinChatRoom(String accessToken, long webtoonId) {
+        ChatRoomJoinResponse response = restClient.post()
             .uri(uriBuilder -> uriBuilder
                 .path("/chat/room")
                 .queryParam("webtoonId", webtoonId)
                 .build())
             .header("Authorization", authorizationHeader(accessToken))
             .retrieve()
-            .toBodilessEntity();
+            .body(ChatRoomJoinResponse.class);
+        return response == null ? null : response.data();
     }
 
     private String authorizationHeader(String accessToken) {
@@ -117,6 +116,9 @@ public class ChatTestFixture {
     private record ChatRoomListResponse(ChatRoom[] data) {
     }
 
-    private record ChatRoom(Long roomId, String roomName) {
+    private record ChatRoomJoinResponse(ChatRoom data) {
+    }
+
+    private record ChatRoom(Long roomId, String roomName, String roomMemberId) {
     }
 }

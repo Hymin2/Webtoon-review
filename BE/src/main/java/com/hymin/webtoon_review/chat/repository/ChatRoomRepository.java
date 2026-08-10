@@ -14,7 +14,8 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
 
     Optional<ChatRoom> findByWebtoonId(Long webtoonId);
 
-    @Query("SELECT cr.id AS roomId, cr.name AS roomName, cr.lastMessage, cr.lastMessageCreatedAt "
+    @Query("SELECT cr.id AS roomId, cr.name AS roomName, ucr.roomMemberId AS roomMemberId, "
+        + "cr.lastMessage AS lastMessage, cr.lastMessageCreatedAt AS lastMessageCreatedAt "
         + "FROM ChatRoom cr "
         + "JOIN UserChatRoom ucr "
         + "ON cr.id = ucr.chatRoom.id "

@@ -42,8 +42,8 @@ public class ChatService {
         return userChatRoomRepository.findLastReadSequenceGroups(roomId);
     }
 
-    public void joinChatRoom(UserChatRoom userChatRoom) {
-        userChatRoomRepository.save(userChatRoom);
+    public UserChatRoom joinChatRoom(UserChatRoom userChatRoom) {
+        return userChatRoomRepository.save(userChatRoom);
     }
 
     public Boolean existsRoomByUsername(Long roomId, String username) {
@@ -53,6 +53,15 @@ public class ChatService {
     public String getRoomMemberId(Long userId, Long roomId) {
         return userChatRoomRepository.findRoomMemberId(userId, roomId)
             .orElseThrow(InvalidChatRoomAccessException::new);
+    }
+
+    public UserChatRoom getUserChatRoom(Long userId, Long roomId) {
+        UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(
+            userId, roomId);
+        if (userChatRoom == null) {
+            throw new InvalidChatRoomAccessException();
+        }
+        return userChatRoom;
     }
 
     @Transactional

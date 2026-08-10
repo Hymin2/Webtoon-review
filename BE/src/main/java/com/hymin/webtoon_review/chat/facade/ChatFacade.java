@@ -2,8 +2,10 @@ package com.hymin.webtoon_review.chat.facade;
 
 import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessageRequest;
 import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomListResponse;
+import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomJoinResponse;
 import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomResponse;
 import com.hymin.webtoon_review.chat.entity.ChatRoom;
+import com.hymin.webtoon_review.chat.entity.UserChatRoom;
 import com.hymin.webtoon_review.chat.exception.InvalidChatRoomAccessException;
 import com.hymin.webtoon_review.chat.mapper.ChatMapper;
 import com.hymin.webtoon_review.chat.service.ChatMessageRoutingService;
@@ -81,9 +83,10 @@ public class ChatFacade {
     }
 
     @Transactional
-    public void joinChatRoom(Long webtoonId, String username) {
+    public ChatRoomJoinResponse joinChatRoom(Long webtoonId, String username) {
         User user = userService.get(username);
         Optional<ChatRoom> chatRoom = chatService.getByWebtoonId(webtoonId);
+        UserChatRoom userChatRoom;
 
         if (chatRoom.isEmpty()) {
             Webtoon webtoon = webtoonService.get(webtoonId);
@@ -93,11 +96,15 @@ public class ChatFacade {
                     .build();
 
             chatService.save(newChatRoom);
-            chatService.joinChatRoom(ChatMapper.toUserChatRoom(user, newChatRoom));
+            userChatRoom = chatService.joinChatRoom(
+                ChatMapper.toUserChatRoom(user, newChatRoom));
         } else if (!chatService.existsRoomByUsername(chatRoom.get().getId(), user.getUsername())) {
-            chatService.joinChatRoom(ChatMapper.toUserChatRoom(user, chatRoom.get()));
+            userChatRoom = chatService.joinChatRoom(
+                ChatMapper.toUserChatRoom(user, chatRoom.get()));
         } else {
-            throw new InvalidChatRoomAccessException();
+            userChatRoom = chatService.getUserChatRoom(user.getId(), chatRoom.get().getId());
         }
+
+        return ChatMapper.toChatRoomJoinResponse(userChatRoom);
     }
 }

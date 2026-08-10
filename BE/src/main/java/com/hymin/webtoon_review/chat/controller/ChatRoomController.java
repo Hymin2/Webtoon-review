@@ -3,6 +3,7 @@ package com.hymin.webtoon_review.chat.controller;
 import com.hymin.webtoon_review.chat.facade.ChatFacade;
 import com.hymin.webtoon_review.global.annotation.Auth;
 import com.hymin.webtoon_review.global.response.ApiResponse;
+import com.hymin.webtoon_review.global.response.ResponseStatus;
 import com.hymin.webtoon_review.global.response.RestResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -44,7 +45,9 @@ public class ChatRoomController {
         @RequestParam("webtoonId") Long webtoonId,
         @Auth Authentication authentication
     ) {
-        chatFacade.joinChatRoom(webtoonId, authentication.getName());
-        return RestResponse.onCreated();
+        return ApiResponse.of(
+            ResponseStatus.CREATED,
+            chatFacade.joinChatRoom(webtoonId, authentication.getName())
+        );
     }
 }

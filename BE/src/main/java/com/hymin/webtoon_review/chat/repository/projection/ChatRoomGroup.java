@@ -6,6 +6,8 @@ public interface ChatRoomGroup {
 
     String getRoomName();
 
+    String getRoomMemberId();
+
     String getLastMessage();
 
     String getLastMessageCreatedAt();

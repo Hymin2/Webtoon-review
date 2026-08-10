@@ -19,9 +19,20 @@ public class ChatResponse {
 
         private Long roomId;
         private String roomName;
+        private String roomMemberId;
         private String lastChatMessage;
         private String lastChatMessageCreatedAt;
         private Integer unreadCount;
+    }
+
+    @Getter
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ChatRoomJoinResponse {
+
+        private Long roomId;
+        private String roomMemberId;
     }
 
     @Getter

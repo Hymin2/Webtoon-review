@@ -3,6 +3,7 @@ package com.hymin.webtoon_review.chat.mapper;
 import com.hymin.webtoon_review.chat.dto.ChatMessageDto;
 import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessageRequest;
 import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatMessageResponse;
+import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomJoinResponse;
 import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomListResponse;
 import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatRoomResponse;
 import com.hymin.webtoon_review.chat.entity.ChatMessage;
@@ -23,6 +24,13 @@ public class ChatMapper {
                 .chatRoom(chatRoom)
                 .isConnected(false)
                 .build();
+    }
+
+    public static ChatRoomJoinResponse toChatRoomJoinResponse(UserChatRoom userChatRoom) {
+        return ChatRoomJoinResponse.builder()
+            .roomId(userChatRoom.getChatRoom().getId())
+            .roomMemberId(userChatRoom.getRoomMemberId())
+            .build();
     }
 
     public static ChatMessageResponse toChatMessageResponse(
@@ -65,6 +73,7 @@ public class ChatMapper {
                 .map(c -> ChatRoomListResponse.builder()
                         .roomId(c.getRoomId())
                         .roomName(c.getRoomName())
+                        .roomMemberId(c.getRoomMemberId())
                         .lastChatMessage(c.getLastMessage())
                         .lastChatMessageCreatedAt(c.getLastMessageCreatedAt())
                         .build()

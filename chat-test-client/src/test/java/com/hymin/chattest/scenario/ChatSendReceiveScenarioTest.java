@@ -45,7 +45,7 @@ class ChatSendReceiveScenarioTest {
 
             assertThat(receivedMessage).isNotNull();
             assertThat(receivedMessage.roomId()).isEqualTo(context.roomId());
-            assertThat(receivedMessage.roomMemberId()).isNotBlank();
+            assertThat(receivedMessage.roomMemberId()).isEqualTo(context.roomMemberId());
             assertThat(receivedMessage.clientMessageId()).isEqualTo(clientMessageId);
             assertThat(receivedMessage.messageSequence()).isPositive();
         }

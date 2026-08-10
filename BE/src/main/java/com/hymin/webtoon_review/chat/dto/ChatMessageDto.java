@@ -20,6 +20,6 @@ public class ChatMessageDto {
     private List<MessageBlock> messageBlocks;
     private String traceId;
     private String personalUUID;
-    private String messageUUID;
+    private String clientMessageId;
     private String senderNickname;
 }

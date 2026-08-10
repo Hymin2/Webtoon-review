@@ -48,7 +48,7 @@ public class ChatResponse {
         private Long messageSequence;
         private List<MessageBlock> messageBlocks;
         private String personalUUID;
-        private String messageUUID;
+        private String clientMessageId;
         private String sender;
         private String createdAt;
     }

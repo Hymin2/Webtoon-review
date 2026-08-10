@@ -13,7 +13,6 @@ import com.hymin.webtoon_review.chat.repository.projection.ChatRoomStatistics;
 import com.hymin.webtoon_review.chat.repository.projection.LastReadMessageSequenceGroup;
 import com.hymin.webtoon_review.user.entity.User;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ChatMapper {
@@ -34,7 +33,7 @@ public class ChatMapper {
         return ChatMessageResponse.builder()
                 .roomId(chatMessageDto.getRoomId())
                 .personalUUID(chatMessageDto.getPersonalUUID())
-                .messageUUID(chatMessageDto.getMessageUUID())
+                .clientMessageId(chatMessageDto.getClientMessageId())
                 .messageBlocks(chatMessageDto.getMessageBlocks())
                 .messageSequence(messageSequence)
                 .createdAt(createdAt)
@@ -79,7 +78,7 @@ public class ChatMapper {
                 .senderId(senderId)
                 .messageBlocks(chatMessageResponse.getMessageBlocks())
                 .messageSequence(chatMessageResponse.getMessageSequence())
-                .messageUUID(chatMessageResponse.getMessageUUID())
+                .clientMessageId(chatMessageResponse.getClientMessageId())
                 .traceId(traceId)
                 .createdAt(chatMessageResponse.getCreatedAt())
                 .build();
@@ -95,7 +94,7 @@ public class ChatMapper {
                 .roomId(chatMessageRequest.getRoomId())
                 .messageBlocks(chatMessageRequest.getMessageBlocks())
                 .personalUUID(chatMessageRequest.getPersonalUUID())
-                .messageUUID(UUID.randomUUID().toString())
+                .clientMessageId(chatMessageRequest.getClientMessageId())
                 .traceId(traceId)
                 .senderId(userId)
                 .senderNickname(nickname)

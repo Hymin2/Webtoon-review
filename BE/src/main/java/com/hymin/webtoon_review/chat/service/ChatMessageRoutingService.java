@@ -31,7 +31,8 @@ public class ChatMessageRoutingService {
 
             redisTemplate.opsForStream().add(record);
             chatMessageMetrics.receivedSuccess();
-            log.info("[채팅] 채팅 메시지를 Redis Stream에 발행, {}", chatMessageDto.getMessageUUID());
+            log.info("[채팅] 채팅 메시지를 Redis Stream에 발행, {}",
+                chatMessageDto.getClientMessageId());
         } catch (Exception e) {
             chatMessageMetrics.receivedFailure();
             throw new RuntimeException(e);

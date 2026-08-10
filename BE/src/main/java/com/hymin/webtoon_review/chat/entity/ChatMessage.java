@@ -25,7 +25,7 @@ public class ChatMessage {
     private Long senderId;
     private Long messageSequence;
     @Indexed(unique = true)
-    private String messageUUID;
+    private String clientMessageId;
     private String traceId;
     private String sender;
     private String createdAt;

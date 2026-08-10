@@ -45,7 +45,7 @@ class ChatMessageRoutingServiceTest {
         );
         chatMessage = ChatMessageDto.builder()
                 .roomId(1L)
-                .messageUUID("message-uuid")
+                .clientMessageId("client-message-id")
                 .build();
     }
 

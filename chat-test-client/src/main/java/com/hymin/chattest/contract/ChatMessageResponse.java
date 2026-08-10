@@ -7,7 +7,7 @@ public record ChatMessageResponse(
     Long messageSequence,
     List<MessageBlock> messageBlocks,
     String personalUUID,
-    String messageUUID,
+    String clientMessageId,
     String sender,
     String createdAt
 ) {

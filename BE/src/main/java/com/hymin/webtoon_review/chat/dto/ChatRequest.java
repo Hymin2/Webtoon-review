@@ -1,6 +1,8 @@
 package com.hymin.webtoon_review.chat.dto;
 
 import com.hymin.webtoon_review.chat.entity.vo.MessageBlock;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +19,9 @@ public class ChatRequest {
 
         private Long roomId;
         private String personalUUID;
+        @NotBlank
+        @Size(max = 36)
+        private String clientMessageId;
         private List<MessageBlock> messageBlocks;
     }
 }

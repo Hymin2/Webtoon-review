@@ -2,6 +2,7 @@ package com.hymin.webtoon_review.chat.controller;
 
 import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessageRequest;
 import com.hymin.webtoon_review.chat.facade.ChatFacade;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -18,7 +19,7 @@ public class ChatController {
 
     @MessageMapping(value = "/chat/messages")
     public void sendMessage(
-        @RequestBody ChatMessageRequest request,
+        @Valid @RequestBody ChatMessageRequest request,
         SimpMessageHeaderAccessor accessor
     ) {
         Long userId = (Long) accessor.getSessionAttributes().get("userId");

@@ -13,6 +13,10 @@ public record ChatTestProperties(
     Duration timeout
 ) {
 
+    private static final URI DEFAULT_HTTP_URL = URI.create("http://localhost:18080");
+    private static final String DEFAULT_DEVICE_TYPE = "CHAT_TEST";
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
+
     public ChatTestProperties {
         requireText(username, "CHAT_TEST_USERNAME");
         requireText(password, "CHAT_TEST_PASSWORD");
@@ -24,6 +28,23 @@ public record ChatTestProperties(
         if (timeout.isZero() || timeout.isNegative()) {
             throw new IllegalArgumentException("timeout은 0보다 커야 합니다.");
         }
+    }
+
+    public ChatTestProperties(
+        String username,
+        String password,
+        String clientId,
+        URI webSocketUrl
+    ) {
+        this(
+            DEFAULT_HTTP_URL,
+            webSocketUrl,
+            username,
+            password,
+            clientId,
+            DEFAULT_DEVICE_TYPE,
+            DEFAULT_TIMEOUT
+        );
     }
 
     public static ChatTestProperties fromEnvironment() {

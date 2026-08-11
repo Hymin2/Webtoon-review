@@ -23,6 +23,11 @@ import org.junit.jupiter.api.Test;
 @Tag("chat-cross-server")
 class ChatCrossServerSendReceiveScenarioTest {
 
+    private static final String USER_A_SERVER = "chat-1";
+    private static final String USER_B_SERVER = "chat-2";
+    private static final String MESSAGE_FROM_A = "A가 보낸 테스트 메시지";
+    private static final String MESSAGE_FROM_B = "B가 보낸 테스트 메시지";
+
     private static final ChatTestProperties USER_A = new ChatTestProperties(
         "chat_cross_user_a",
         "ChatCrossA2026",
@@ -55,16 +60,16 @@ class ChatCrossServerSendReceiveScenarioTest {
             awaitOwnSubscription(clientA, contextA, timeout);
             clientB.subscribe(contextB.roomId());
 
-            verifyDelivery(clientB, clientA, contextB, "B-to-A", timeout);
-            verifyDelivery(clientA, clientB, contextA, "A-to-B", timeout);
+            ChatMessageResponse receivedByA = verifyDelivery(
+                clientB, clientA, contextB, MESSAGE_FROM_B, timeout);
+            ChatMessageResponse receivedByB = verifyDelivery(
+                clientA, clientB, contextA, MESSAGE_FROM_A, timeout);
 
             assertThat(clientA.connectionFailure()).isNull();
             assertThat(clientB.connectionFailure()).isNull();
-        }
 
-        System.out.println("[교차 서버 메시지 송수신 결과]");
-        System.out.println("A → B: 성공");
-        System.out.println("B → A: 성공");
+            printResult(receivedByA, receivedByB);
+        }
     }
 
     private ChatTestContext prepareChatRoom(ChatTestProperties properties) {
@@ -85,7 +90,7 @@ class ChatCrossServerSendReceiveScenarioTest {
         assertThat(awaitMessage(client, clientMessageId, context, timeout)).isNotNull();
     }
 
-    private void verifyDelivery(
+    private ChatMessageResponse verifyDelivery(
         ChatTestClient sender,
         ChatTestClient receiver,
         ChatTestContext senderContext,
@@ -104,6 +109,24 @@ class ChatCrossServerSendReceiveScenarioTest {
         assertThat(receiverMessage).isNotNull();
         assertThat(receiverMessage.messageSequence())
             .isEqualTo(senderMessage.messageSequence());
+        return receiverMessage;
+    }
+
+    private void printResult(
+        ChatMessageResponse receivedByA,
+        ChatMessageResponse receivedByB
+    ) {
+        System.out.println("[교차 서버 메시지 송수신 결과]");
+        System.out.println("A가 연결된 서버: " + USER_A_SERVER);
+        System.out.println("B가 연결된 서버: " + USER_B_SERVER);
+        System.out.println("A가 보낸 메시지: " + MESSAGE_FROM_A);
+        System.out.println("B가 보낸 메시지: " + MESSAGE_FROM_B);
+        System.out.println("A가 받은 메시지: " + messageContent(receivedByA));
+        System.out.println("B가 받은 메시지: " + messageContent(receivedByB));
+    }
+
+    private String messageContent(ChatMessageResponse message) {
+        return message.messageBlocks().get(0).content();
     }
 
     private ChatMessageResponse awaitMessage(

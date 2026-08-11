@@ -117,8 +117,8 @@ class ChatCrossServerSendReceiveScenarioTest {
         ChatMessageResponse receivedByB
     ) {
         System.out.println("[교차 서버 메시지 송수신 결과]");
-        System.out.println("A가 연결된 서버: " + USER_A_SERVER);
-        System.out.println("B가 연결된 서버: " + USER_B_SERVER);
+        System.out.printf("A가 연결된 서버: %s (%s)%n", USER_A_SERVER, USER_A.webSocketUrl());
+        System.out.printf("B가 연결된 서버: %s (%s)%n", USER_B_SERVER, USER_B.webSocketUrl());
         System.out.println("A가 보낸 메시지: " + MESSAGE_FROM_A);
         System.out.println("B가 보낸 메시지: " + MESSAGE_FROM_B);
         System.out.println("A가 받은 메시지: " + messageContent(receivedByA));

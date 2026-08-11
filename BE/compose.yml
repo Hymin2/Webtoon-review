@@ -97,6 +97,8 @@ services:
       CHAT_INSTANCE_NAME: chat-1
     volumes:
       - chat-logs:/app/logs
+    ports:
+      - "${CHAT_1_PORT:-18081}:8080"
 
   chat-2:
     <<: *chat-common
@@ -105,6 +107,8 @@ services:
       CHAT_INSTANCE_NAME: chat-2
     volumes:
       - chat-2-logs:/app/logs
+    ports:
+      - "${CHAT_2_PORT:-18082}:8080"
 
   chat-lb:
     image: nginx:1.27.5-alpine

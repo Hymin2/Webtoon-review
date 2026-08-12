@@ -26,6 +26,15 @@ public record WebtoonFixtureProperties(
         );
     }
 
+    public WebtoonFixtureProperties withWebtoonName(String newWebtoonName) {
+        return new WebtoonFixtureProperties(
+            databaseUrl,
+            databaseUsername,
+            databasePassword,
+            newWebtoonName
+        );
+    }
+
     private static String environmentOrDefault(String name, String defaultValue) {
         String value = System.getenv(name);
         return value == null || value.isBlank() ? defaultValue : value;

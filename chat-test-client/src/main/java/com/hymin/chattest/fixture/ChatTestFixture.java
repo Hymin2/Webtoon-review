@@ -2,7 +2,9 @@ package com.hymin.chattest.fixture;
 
 import com.hymin.chattest.client.ChatTestLoginClient;
 import com.hymin.chattest.support.ChatTestProperties;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
@@ -45,6 +47,37 @@ public class ChatTestFixture {
             throw new IllegalStateException("채팅방 가입 응답과 목록 응답이 일치하지 않습니다.");
         }
         return new ChatTestContext(accessToken, room.roomId(), room.roomMemberId());
+    }
+
+    public List<ChatTestContext> prepareChatRooms(int roomCount) {
+        if (roomCount <= 0) {
+            throw new IllegalArgumentException("roomCount는 0보다 커야 합니다.");
+        }
+
+        String accessToken = prepareUser();
+        List<ChatTestContext> contexts = new ArrayList<>();
+
+        for (int index = 1; index <= roomCount; index++) {
+            WebtoonFixtureProperties roomProperties = webtoonProperties.withWebtoonName(
+                webtoonProperties.webtoonName() + "-다중워커-" + index
+            );
+            long webtoonId = new WebtoonFixture(roomProperties).ensureWebtoon();
+            ChatRoom joinedRoom = joinChatRoom(accessToken, webtoonId);
+
+            if (joinedRoom == null
+                || joinedRoom.roomId() == null
+                || joinedRoom.roomMemberId() == null) {
+                throw new IllegalStateException(
+                    "다중 워커 테스트 채팅방 준비에 실패했습니다: index=" + index
+                );
+            }
+            contexts.add(new ChatTestContext(
+                accessToken,
+                joinedRoom.roomId(),
+                joinedRoom.roomMemberId()
+            ));
+        }
+        return List.copyOf(contexts);
     }
 
     private boolean userExists() {

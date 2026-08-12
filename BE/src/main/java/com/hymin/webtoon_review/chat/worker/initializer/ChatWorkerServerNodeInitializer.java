@@ -1,7 +1,7 @@
-package com.hymin.webtoon_review;
+package com.hymin.webtoon_review.chat.worker.initializer;
 
 import com.google.common.hash.Hashing;
-import com.hymin.webtoon_review.chat.listener.ChatWorkerStreamListener;
+import com.hymin.webtoon_review.chat.worker.listener.ChatWorkerStreamListener;
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;

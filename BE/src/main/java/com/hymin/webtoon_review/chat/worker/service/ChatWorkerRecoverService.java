@@ -1,6 +1,6 @@
-package com.hymin.webtoon_review.chat.service;
+package com.hymin.webtoon_review.chat.worker.service;
 
-import com.hymin.webtoon_review.chat.listener.ChatWorkerStreamListener;
+import com.hymin.webtoon_review.chat.worker.listener.ChatWorkerStreamListener;
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;

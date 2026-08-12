@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.scheduler;
+package com.hymin.webtoon_review.chat.worker.scheduler;
 
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import java.time.Instant;

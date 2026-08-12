@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.listener;
+package com.hymin.webtoon_review.chat.worker.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,8 +9,8 @@ import com.hymin.webtoon_review.chat.mapper.ChatMapper;
 import com.hymin.webtoon_review.chat.metrics.ChatMessageMetrics;
 import com.hymin.webtoon_review.chat.repository.UserChatRoomRepository;
 import com.hymin.webtoon_review.chat.repository.projection.ChatRoomParticipantGroups;
-import com.hymin.webtoon_review.chat.service.ChatMessageSequenceGenerator;
 import com.hymin.webtoon_review.chat.service.ChatSessionService;
+import com.hymin.webtoon_review.chat.worker.service.ChatMessageSequenceGenerator;
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;

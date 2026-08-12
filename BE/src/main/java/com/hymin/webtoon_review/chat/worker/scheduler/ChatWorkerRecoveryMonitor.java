@@ -1,6 +1,6 @@
-package com.hymin.webtoon_review.chat.scheduler;
+package com.hymin.webtoon_review.chat.worker.scheduler;
 
-import com.hymin.webtoon_review.chat.service.ChatWorkerRecoverService;
+import com.hymin.webtoon_review.chat.worker.service.ChatWorkerRecoverService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;

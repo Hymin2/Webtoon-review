@@ -89,6 +89,12 @@ public class ChatWorkerStreamListener implements
             log.info("[채팅 워커 서버 Listener 3/4] 메시지 Batch 저장 서버에 메시지 발행");
             acknowledgeMessage(message);
             log.info("[채팅 워커 서버 Listener 4/4] 메시지 ACK");
+            log.info(
+                "[채팅 워커 처리 완료] worker={}, roomId={}, clientMessageId={}",
+                serverName,
+                chatMessageDto.getRoomId(),
+                chatMessageDto.getClientMessageId()
+            );
         } finally {
             traceContextManager.removeChatMDC();
         }

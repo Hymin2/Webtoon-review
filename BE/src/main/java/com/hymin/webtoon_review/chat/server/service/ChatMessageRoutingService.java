@@ -25,14 +25,21 @@ public class ChatMessageRoutingService {
 
     public void route(ChatMessageDto chatMessageDto) {
         try {
+            String targetStreamKey = chatWorkerLocalHashRing.getTargetServerStreamKey(
+                chatMessageDto.getRoomId()
+            );
             ObjectRecord<String, String> record = StreamRecords.newRecord()
-                .in(chatWorkerLocalHashRing.getTargetServerStreamKey(chatMessageDto.getRoomId()))
+                .in(targetStreamKey)
                 .ofObject(objectMapper.writeValueAsString(chatMessageDto));
 
             redisTemplate.opsForStream().add(record);
             chatMessageMetrics.receivedSuccess();
-            log.info("[채팅] 채팅 메시지를 Redis Stream에 발행, {}",
-                chatMessageDto.getClientMessageId());
+            log.info(
+                "[채팅 메시지 라우팅 완료] roomId={}, clientMessageId={}, targetStream={}",
+                chatMessageDto.getRoomId(),
+                chatMessageDto.getClientMessageId(),
+                targetStreamKey
+            );
         } catch (Exception e) {
             chatMessageMetrics.receivedFailure();
             throw new RuntimeException(e);

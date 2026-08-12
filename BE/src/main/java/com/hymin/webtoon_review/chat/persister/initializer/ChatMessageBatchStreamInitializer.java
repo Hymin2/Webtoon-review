@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.initializer;
+package com.hymin.webtoon_review.chat.persister.initializer;
 
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;

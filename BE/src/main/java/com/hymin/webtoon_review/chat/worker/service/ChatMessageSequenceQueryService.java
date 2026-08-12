@@ -1,7 +1,7 @@
 package com.hymin.webtoon_review.chat.worker.service;
 
-import com.hymin.webtoon_review.chat.common.ChatMessage;
-import com.hymin.webtoon_review.chat.common.ChatMessageRepository;
+import com.hymin.webtoon_review.chat.common.entity.ChatMessage;
+import com.hymin.webtoon_review.chat.common.repository.ChatMessageRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;

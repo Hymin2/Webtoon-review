@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.entity;
 
 import com.hymin.webtoon_review.global.BaseEntity;
 import com.hymin.webtoon_review.user.entity.User;

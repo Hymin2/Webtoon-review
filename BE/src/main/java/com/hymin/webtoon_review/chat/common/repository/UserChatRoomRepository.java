@@ -1,5 +1,9 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.repository;
 
+import com.hymin.webtoon_review.chat.common.entity.UserChatRoom;
+import com.hymin.webtoon_review.chat.common.repository.projection.ChatRoomParticipantGroups;
+import com.hymin.webtoon_review.chat.common.repository.projection.ChatRoomStatistics;
+import com.hymin.webtoon_review.chat.common.repository.projection.LastReadMessageSequenceGroup;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;

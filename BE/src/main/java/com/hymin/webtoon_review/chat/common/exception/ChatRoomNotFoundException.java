@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.exception;
 
 import com.hymin.webtoon_review.global.exception.GeneralException;
 import com.hymin.webtoon_review.global.response.ResponseStatus;

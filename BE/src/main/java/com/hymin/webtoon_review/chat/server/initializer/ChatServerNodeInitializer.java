@@ -3,7 +3,7 @@ package com.hymin.webtoon_review.chat.server.initializer;
 import com.hymin.webtoon_review.chat.server.listener.ChatMessageListener;
 import com.hymin.webtoon_review.chat.server.listener.ChatWorkerEvenetMessageListener;
 import com.hymin.webtoon_review.chat.server.route.ChatWorkerLocalHashRing;
-import com.hymin.webtoon_review.chat.common.ChatSessionService;
+import com.hymin.webtoon_review.chat.common.service.ChatSessionService;
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import com.hymin.webtoon_review.global.constant.RedisTopicNames;
 import com.hymin.webtoon_review.global.manager.MessageListenerManager;

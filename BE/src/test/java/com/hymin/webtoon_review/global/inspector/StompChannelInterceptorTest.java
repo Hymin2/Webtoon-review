@@ -6,7 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
-import com.hymin.webtoon_review.chat.common.ChatSessionService;
+import com.hymin.webtoon_review.chat.common.service.ChatSessionService;
 import com.hymin.webtoon_review.global.security.JwtService;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;

@@ -7,8 +7,8 @@ import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hymin.webtoon_review.chat.common.ChatMessageDto;
-import com.hymin.webtoon_review.chat.common.ChatMessageMetrics;
+import com.hymin.webtoon_review.chat.common.dto.ChatMessageDto;
+import com.hymin.webtoon_review.chat.common.metrics.ChatMessageMetrics;
 import com.hymin.webtoon_review.chat.server.route.ChatWorkerLocalHashRing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

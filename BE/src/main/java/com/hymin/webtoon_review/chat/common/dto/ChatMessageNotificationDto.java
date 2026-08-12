@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.dto;
 
 import java.util.List;
 import lombok.AllArgsConstructor;

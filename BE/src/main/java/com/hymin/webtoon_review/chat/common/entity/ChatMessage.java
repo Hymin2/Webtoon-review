@@ -1,5 +1,6 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.entity;
 
+import com.hymin.webtoon_review.chat.common.entity.vo.MessageBlock;
 import jakarta.persistence.Id;
 import java.util.List;
 import lombok.AllArgsConstructor;

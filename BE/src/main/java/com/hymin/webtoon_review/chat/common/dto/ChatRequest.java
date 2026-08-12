@@ -1,5 +1,6 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.dto;
 
+import com.hymin.webtoon_review.chat.common.entity.vo.MessageBlock;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.List;

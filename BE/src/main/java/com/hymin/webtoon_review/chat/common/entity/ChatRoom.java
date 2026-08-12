@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.entity;
 
 import com.hymin.webtoon_review.webtoon.entity.Webtoon;
 import jakarta.persistence.Column;

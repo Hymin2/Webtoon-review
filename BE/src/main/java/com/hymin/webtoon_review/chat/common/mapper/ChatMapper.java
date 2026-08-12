@@ -1,10 +1,17 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.mapper;
 
-import com.hymin.webtoon_review.chat.common.ChatRequest.ChatMessageRequest;
-import com.hymin.webtoon_review.chat.common.ChatResponse.ChatMessageResponse;
-import com.hymin.webtoon_review.chat.common.ChatResponse.ChatRoomJoinResponse;
-import com.hymin.webtoon_review.chat.common.ChatResponse.ChatRoomListResponse;
-import com.hymin.webtoon_review.chat.common.ChatResponse.ChatRoomResponse;
+import com.hymin.webtoon_review.chat.common.dto.ChatMessageDto;
+import com.hymin.webtoon_review.chat.common.dto.ChatRequest.ChatMessageRequest;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatMessageResponse;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomJoinResponse;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomListResponse;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomResponse;
+import com.hymin.webtoon_review.chat.common.entity.ChatMessage;
+import com.hymin.webtoon_review.chat.common.entity.ChatRoom;
+import com.hymin.webtoon_review.chat.common.entity.UserChatRoom;
+import com.hymin.webtoon_review.chat.common.repository.projection.ChatRoomGroup;
+import com.hymin.webtoon_review.chat.common.repository.projection.ChatRoomStatistics;
+import com.hymin.webtoon_review.chat.common.repository.projection.LastReadMessageSequenceGroup;
 import com.hymin.webtoon_review.user.entity.User;
 import java.util.List;
 import java.util.stream.Collectors;

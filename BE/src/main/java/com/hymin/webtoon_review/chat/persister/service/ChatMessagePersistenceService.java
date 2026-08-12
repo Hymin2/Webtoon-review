@@ -2,8 +2,8 @@ package com.hymin.webtoon_review.chat.persister.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hymin.webtoon_review.chat.common.ChatMessage;
-import com.hymin.webtoon_review.chat.common.ChatMessageMetrics;
+import com.hymin.webtoon_review.chat.common.entity.ChatMessage;
+import com.hymin.webtoon_review.chat.common.metrics.ChatMessageMetrics;
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;
 import com.mongodb.bulk.BulkWriteResult;

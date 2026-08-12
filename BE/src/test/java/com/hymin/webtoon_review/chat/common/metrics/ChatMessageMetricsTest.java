@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.metrics;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

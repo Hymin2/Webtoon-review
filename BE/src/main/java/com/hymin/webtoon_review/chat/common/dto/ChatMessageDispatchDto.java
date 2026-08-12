@@ -1,6 +1,6 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.dto;
 
-import com.hymin.webtoon_review.chat.common.ChatResponse.ChatMessageResponse;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatMessageResponse;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

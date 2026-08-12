@@ -1,13 +1,13 @@
 package com.hymin.webtoon_review.chat.server.facade;
 
-import com.hymin.webtoon_review.chat.common.ChatMapper;
-import com.hymin.webtoon_review.chat.common.ChatRequest.ChatMessageRequest;
-import com.hymin.webtoon_review.chat.common.ChatResponse.ChatRoomJoinResponse;
-import com.hymin.webtoon_review.chat.common.ChatResponse.ChatRoomListResponse;
-import com.hymin.webtoon_review.chat.common.ChatResponse.ChatRoomResponse;
-import com.hymin.webtoon_review.chat.common.ChatRoom;
-import com.hymin.webtoon_review.chat.common.InvalidChatRoomAccessException;
-import com.hymin.webtoon_review.chat.common.UserChatRoom;
+import com.hymin.webtoon_review.chat.common.dto.ChatRequest.ChatMessageRequest;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomJoinResponse;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomListResponse;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomResponse;
+import com.hymin.webtoon_review.chat.common.entity.ChatRoom;
+import com.hymin.webtoon_review.chat.common.entity.UserChatRoom;
+import com.hymin.webtoon_review.chat.common.exception.InvalidChatRoomAccessException;
+import com.hymin.webtoon_review.chat.common.mapper.ChatMapper;
 import com.hymin.webtoon_review.chat.server.service.ChatMessageRoutingService;
 import com.hymin.webtoon_review.chat.server.service.ChatService;
 import com.hymin.webtoon_review.global.manager.TraceContextManager;

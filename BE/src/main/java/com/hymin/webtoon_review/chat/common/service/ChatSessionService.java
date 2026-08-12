@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.service;
 
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import java.util.ArrayList;

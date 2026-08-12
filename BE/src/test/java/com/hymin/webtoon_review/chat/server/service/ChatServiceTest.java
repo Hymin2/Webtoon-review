@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
-import com.hymin.webtoon_review.chat.common.ChatRoomRepository;
-import com.hymin.webtoon_review.chat.common.InvalidChatRoomAccessException;
-import com.hymin.webtoon_review.chat.common.UserChatRoomRepository;
+import com.hymin.webtoon_review.chat.common.exception.InvalidChatRoomAccessException;
+import com.hymin.webtoon_review.chat.common.repository.ChatRoomRepository;
+import com.hymin.webtoon_review.chat.common.repository.UserChatRoomRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

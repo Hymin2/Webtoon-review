@@ -1,5 +1,6 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.dto;
 
+import com.hymin.webtoon_review.chat.common.entity.vo.MessageBlock;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;

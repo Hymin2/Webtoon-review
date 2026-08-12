@@ -1,8 +1,8 @@
-package com.hymin.webtoon_review.chat.common;
+package com.hymin.webtoon_review.chat.common.dto;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.hymin.webtoon_review.chat.common.ChatRequest.ChatMessageRequest;
+import com.hymin.webtoon_review.chat.common.dto.ChatRequest.ChatMessageRequest;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import java.util.List;

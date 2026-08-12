@@ -1,10 +1,9 @@
-package com.hymin.webtoon_review.chat.service;
+package com.hymin.webtoon_review.chat.persister.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hymin.webtoon_review.chat.entity.ChatMessage;
 import com.hymin.webtoon_review.chat.metrics.ChatMessageMetrics;
-import com.hymin.webtoon_review.chat.repository.ChatMessageRepository;
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;
 import com.mongodb.bulk.BulkWriteResult;
@@ -14,6 +13,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Range;
 import org.springframework.data.mongodb.BulkOperationException;
 import org.springframework.data.mongodb.core.BulkOperations;
@@ -33,8 +33,9 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@Profile("chat-persister")
 @RequiredArgsConstructor
-public class ChatMessageService {
+public class ChatMessagePersistenceService {
 
     @Value("${server.instance.name:default}")
     private String serverName;
@@ -42,14 +43,7 @@ public class ChatMessageService {
     private final ObjectMapper objectMapper;
     private final MongoTemplate mongoTemplate;
     private final RedisTemplate<String, String> redisTemplate;
-    private final ChatMessageRepository chatMessageRepository;
     private final ChatMessageMetrics chatMessageMetrics;
-
-    public Long getMaxMessageSequence(Long roomId) {
-        return chatMessageRepository.findFirstByRoomIdOrderByMessageSequenceDesc(roomId)
-            .map(ChatMessage::getMessageSequence)
-            .orElse(0L);
-    }
 
     @Async("messagesBatchExecutor")
     public void processMessagesBatch() {

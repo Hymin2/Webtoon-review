@@ -1,6 +1,5 @@
 package com.hymin.webtoon_review.chat.worker.service;
 
-import com.hymin.webtoon_review.chat.service.ChatMessageService;
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -13,7 +12,7 @@ import org.springframework.stereotype.Service;
 public class ChatMessageSequenceGenerator {
 
     private final RedisTemplate<String, Long> redisTemplate;
-    private final ChatMessageService chatMessageService;
+    private final ChatMessageSequenceQueryService chatMessageSequenceQueryService;
 
     public Long generate(Long roomId) {
         String key = RedisKeys.CHAT_ROOM_PREFIX + roomId
@@ -21,7 +20,7 @@ public class ChatMessageSequenceGenerator {
         Long nextSeq = redisTemplate.opsForValue().increment(key);
 
         if (nextSeq == null || nextSeq == 1) {
-            Long maxSeq = chatMessageService.getMaxMessageSequence(roomId);
+            Long maxSeq = chatMessageSequenceQueryService.getMaxMessageSequence(roomId);
 
             if (maxSeq > 0) {
                 Boolean isSet = redisTemplate.opsForValue()

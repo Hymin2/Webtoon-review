@@ -136,6 +136,24 @@ services:
     volumes:
       - chat-worker-logs:/app/logs
 
+  chat-worker-2:
+    <<: *backend-common
+    environment:
+      <<: *backend-environment
+      SPRING_PROFILES_ACTIVE: chat-worker
+      CHAT_INSTANCE_NAME: chat-worker-2
+    volumes:
+      - chat-worker-2-logs:/app/logs
+
+  chat-worker-3:
+    <<: *backend-common
+    environment:
+      <<: *backend-environment
+      SPRING_PROFILES_ACTIVE: chat-worker
+      CHAT_INSTANCE_NAME: chat-worker-3
+    volumes:
+      - chat-worker-3-logs:/app/logs
+
   chat-persister:
     <<: *backend-common
     environment:
@@ -217,4 +235,6 @@ volumes:
   chat-logs:
   chat-2-logs:
   chat-worker-logs:
+  chat-worker-2-logs:
+  chat-worker-3-logs:
   chat-persister-logs:

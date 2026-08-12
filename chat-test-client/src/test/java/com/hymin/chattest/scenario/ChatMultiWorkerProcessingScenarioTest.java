@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 @Tag("chat-multi-worker")
 class ChatMultiWorkerProcessingScenarioTest {
 
-    private static final int ROOM_COUNT = 30;
+    private static final int ROOM_COUNT = 100;
     private static final ChatTestProperties TEST_USER = new ChatTestProperties(
         URI.create("http://localhost:18080"),
         URI.create("ws://localhost:18080/stomp-chat"),

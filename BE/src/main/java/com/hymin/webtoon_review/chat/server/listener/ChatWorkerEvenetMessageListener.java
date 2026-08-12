@@ -1,6 +1,6 @@
-package com.hymin.webtoon_review.chat.listener;
+package com.hymin.webtoon_review.chat.server.listener;
 
-import com.hymin.webtoon_review.chat.route.ChatWorkerLocalHashRing;
+import com.hymin.webtoon_review.chat.server.route.ChatWorkerLocalHashRing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;

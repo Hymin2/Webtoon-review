@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.route;
+package com.hymin.webtoon_review.chat.server.route;
 
 import com.google.common.hash.Hashing;
 import com.hymin.webtoon_review.global.constant.RedisKeys;

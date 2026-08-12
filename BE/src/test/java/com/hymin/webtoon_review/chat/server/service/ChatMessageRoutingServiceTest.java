@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.service;
+package com.hymin.webtoon_review.chat.server.service;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.never;
@@ -9,7 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hymin.webtoon_review.chat.dto.ChatMessageDto;
 import com.hymin.webtoon_review.chat.metrics.ChatMessageMetrics;
-import com.hymin.webtoon_review.chat.route.ChatWorkerLocalHashRing;
+import com.hymin.webtoon_review.chat.server.route.ChatWorkerLocalHashRing;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

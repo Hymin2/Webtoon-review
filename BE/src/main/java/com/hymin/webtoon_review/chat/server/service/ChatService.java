@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.service;
+package com.hymin.webtoon_review.chat.server.service;
 
 import com.hymin.webtoon_review.chat.entity.ChatRoom;
 import com.hymin.webtoon_review.chat.entity.UserChatRoom;

@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.service;
+package com.hymin.webtoon_review.chat.server.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

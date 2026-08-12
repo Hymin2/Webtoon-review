@@ -1,9 +1,9 @@
-package com.hymin.webtoon_review.chat.service;
+package com.hymin.webtoon_review.chat.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hymin.webtoon_review.chat.dto.ChatMessageDto;
 import com.hymin.webtoon_review.chat.metrics.ChatMessageMetrics;
-import com.hymin.webtoon_review.chat.route.ChatWorkerLocalHashRing;
+import com.hymin.webtoon_review.chat.server.route.ChatWorkerLocalHashRing;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;

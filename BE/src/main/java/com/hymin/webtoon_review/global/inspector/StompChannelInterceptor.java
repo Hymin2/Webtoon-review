@@ -1,6 +1,6 @@
 package com.hymin.webtoon_review.global.inspector;
 
-import com.hymin.webtoon_review.chat.service.ChatSessionService;
+import com.hymin.webtoon_review.chat.common.ChatSessionService;
 import com.hymin.webtoon_review.global.security.JwtService;
 import io.jsonwebtoken.Claims;
 import java.security.Principal;

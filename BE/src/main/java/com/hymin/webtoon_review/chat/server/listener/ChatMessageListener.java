@@ -2,8 +2,8 @@ package com.hymin.webtoon_review.chat.server.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hymin.webtoon_review.chat.dto.ChatMessageDispatchDto;
-import com.hymin.webtoon_review.chat.dto.ChatResponse.ChatMessageResponse;
+import com.hymin.webtoon_review.chat.common.ChatMessageDispatchDto;
+import com.hymin.webtoon_review.chat.common.ChatResponse.ChatMessageResponse;
 import com.hymin.webtoon_review.global.manager.TraceContextManager;
 import com.hymin.webtoon_review.global.manager.TraceContextManager.TraceScope;
 import lombok.RequiredArgsConstructor;

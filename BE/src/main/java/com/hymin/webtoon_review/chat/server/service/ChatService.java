@@ -1,14 +1,14 @@
 package com.hymin.webtoon_review.chat.server.service;
 
-import com.hymin.webtoon_review.chat.entity.ChatRoom;
-import com.hymin.webtoon_review.chat.entity.UserChatRoom;
-import com.hymin.webtoon_review.chat.exception.ChatRoomNotFoundException;
-import com.hymin.webtoon_review.chat.exception.InvalidChatRoomAccessException;
-import com.hymin.webtoon_review.chat.repository.ChatRoomRepository;
-import com.hymin.webtoon_review.chat.repository.UserChatRoomRepository;
-import com.hymin.webtoon_review.chat.repository.projection.ChatRoomGroup;
-import com.hymin.webtoon_review.chat.repository.projection.ChatRoomStatistics;
-import com.hymin.webtoon_review.chat.repository.projection.LastReadMessageSequenceGroup;
+import com.hymin.webtoon_review.chat.common.ChatRoom;
+import com.hymin.webtoon_review.chat.common.ChatRoomGroup;
+import com.hymin.webtoon_review.chat.common.ChatRoomNotFoundException;
+import com.hymin.webtoon_review.chat.common.ChatRoomRepository;
+import com.hymin.webtoon_review.chat.common.ChatRoomStatistics;
+import com.hymin.webtoon_review.chat.common.InvalidChatRoomAccessException;
+import com.hymin.webtoon_review.chat.common.LastReadMessageSequenceGroup;
+import com.hymin.webtoon_review.chat.common.UserChatRoom;
+import com.hymin.webtoon_review.chat.common.UserChatRoomRepository;
 import java.util.List;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;

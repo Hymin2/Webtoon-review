@@ -1,6 +1,6 @@
 package com.hymin.webtoon_review.chat.server.controller;
 
-import com.hymin.webtoon_review.chat.dto.ChatRequest.ChatMessageRequest;
+import com.hymin.webtoon_review.chat.common.ChatRequest.ChatMessageRequest;
 import com.hymin.webtoon_review.chat.server.facade.ChatFacade;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

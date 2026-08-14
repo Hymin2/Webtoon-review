@@ -6,6 +6,8 @@ import com.hymin.webtoon_review.chat.common.entity.ChatMessage;
 import com.hymin.webtoon_review.chat.common.metrics.ChatMessageMetrics;
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisStreamKeys;
+import com.mongodb.ErrorCategory;
+import com.mongodb.bulk.BulkWriteError;
 import com.mongodb.bulk.BulkWriteResult;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -66,11 +68,15 @@ public class ChatMessagePersistenceService {
             }
 
             log.info("[채팅 메시지 저장 서버] 채팅 메시지 {}건 저장 시도", records.size());
-            List<Integer> errorIndexes = insertBatch(records);
-            acknowledgeMessage(records, errorIndexes);
+            BatchSaveResult result = insertBatch(records);
+            acknowledgeMessage(records, result.retryableErrorIndexes());
             count++;
-            log.info("[채팅 메시지 저장 서버] 채팅 메시지 {}건 저장 완료, {}건 에러 발생", records.size(),
-                errorIndexes.size());
+            log.info(
+                "[채팅 메시지 저장 서버] 채팅 메시지 {}건 저장 완료, {}건 중복, {}건 에러 발생",
+                records.size(),
+                result.duplicateIndexes().size(),
+                result.retryableErrorIndexes().size()
+            );
         }
     }
 
@@ -124,23 +130,24 @@ public class ChatMessagePersistenceService {
                 pendingMessageIds.toArray(new RecordId[0])
             );
 
-            List<Integer> errorIndexes = insertBatch(records);
-            acknowledgeMessage(records, errorIndexes);
+            BatchSaveResult result = insertBatch(records);
+            acknowledgeMessage(records, result.retryableErrorIndexes());
         }
     }
 
-    private List<Integer> insertBatch(List<MapRecord<String, String, String>> records) {
+    private BatchSaveResult insertBatch(List<MapRecord<String, String, String>> records) {
         try {
-            List<Integer> errorIndexes = saveBatch(
+            BatchSaveResult result = saveBatch(
                 records.stream().map(this::parseMessage).toList()
             );
             chatMessageMetrics.persisted(
-                records.size() - errorIndexes.size(),
-                errorIndexes.size()
+                result.insertedCount(),
+                result.duplicateIndexes().size(),
+                result.retryableErrorIndexes().size()
             );
-            return errorIndexes;
+            return result;
         } catch (RuntimeException e) {
-            chatMessageMetrics.persisted(0, records.size());
+            chatMessageMetrics.persisted(0, 0, records.size());
             throw e;
         }
     }
@@ -184,8 +191,9 @@ public class ChatMessagePersistenceService {
         }
     }
 
-    private List<Integer> saveBatch(List<ChatMessage> messages) {
-        List<Integer> errorIndexes = new ArrayList<>();
+    private BatchSaveResult saveBatch(List<ChatMessage> messages) {
+        List<Integer> duplicateIndexes = new ArrayList<>();
+        List<Integer> retryableErrorIndexes = new ArrayList<>();
 
         try {
             BulkWriteResult result = mongoTemplate.bulkOps(
@@ -193,12 +201,34 @@ public class ChatMessagePersistenceService {
                     ChatMessage.class)
                 .insert(messages)
                 .execute();
+
+            return new BatchSaveResult(
+                result.getInsertedCount(),
+                duplicateIndexes,
+                retryableErrorIndexes
+            );
         } catch (BulkOperationException e) {
-            e.getErrors().forEach(error ->
-                errorIndexes.add(error.getIndex())
+            for (BulkWriteError error : e.getErrors()) {
+                if (ErrorCategory.fromErrorCode(error.getCode()) == ErrorCategory.DUPLICATE_KEY) {
+                    duplicateIndexes.add(error.getIndex());
+                    continue;
+                }
+
+                retryableErrorIndexes.add(error.getIndex());
+            }
+
+            return new BatchSaveResult(
+                e.getResult().getInsertedCount(),
+                duplicateIndexes,
+                retryableErrorIndexes
             );
         }
+    }
 
-        return errorIndexes;
+    private record BatchSaveResult(
+        int insertedCount,
+        List<Integer> duplicateIndexes,
+        List<Integer> retryableErrorIndexes
+    ) {
     }
 }

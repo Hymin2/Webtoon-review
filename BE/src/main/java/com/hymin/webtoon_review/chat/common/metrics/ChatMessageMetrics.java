@@ -14,6 +14,7 @@ public class ChatMessageMetrics {
     private final Counter workerSuccess;
     private final Counter workerFailure;
     private final Counter persistedSuccess;
+    private final Counter persistedDuplicate;
     private final Counter persistedFailure;
 
     public ChatMessageMetrics(MeterRegistry meterRegistry) {
@@ -22,6 +23,7 @@ public class ChatMessageMetrics {
         workerSuccess = counter(meterRegistry, "worker", "success");
         workerFailure = counter(meterRegistry, "worker", "failure");
         persistedSuccess = counter(meterRegistry, "persisted", "success");
+        persistedDuplicate = counter(meterRegistry, "persisted", "duplicate");
         persistedFailure = counter(meterRegistry, "persisted", "failure");
     }
 
@@ -41,8 +43,9 @@ public class ChatMessageMetrics {
         workerFailure.increment();
     }
 
-    public void persisted(int successCount, int failureCount) {
+    public void persisted(int successCount, int duplicateCount, int failureCount) {
         persistedSuccess.increment(successCount);
+        persistedDuplicate.increment(duplicateCount);
         persistedFailure.increment(failureCount);
     }
 

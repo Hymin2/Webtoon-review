@@ -21,7 +21,7 @@ class ChatMessageMetricsTest {
     void recordsSuccessfulMessagePipelineStages() {
         chatMessageMetrics.receivedSuccess();
         chatMessageMetrics.workerSuccess();
-        chatMessageMetrics.persisted(3, 0);
+        chatMessageMetrics.persisted(3, 0, 0);
 
         assertThat(count("received", "success")).isEqualTo(1);
         assertThat(count("worker", "success")).isEqualTo(1);
@@ -32,11 +32,18 @@ class ChatMessageMetricsTest {
     void recordsFailedMessagePipelineStages() {
         chatMessageMetrics.receivedFailure();
         chatMessageMetrics.workerFailure();
-        chatMessageMetrics.persisted(0, 2);
+        chatMessageMetrics.persisted(0, 0, 2);
 
         assertThat(count("received", "failure")).isEqualTo(1);
         assertThat(count("worker", "failure")).isEqualTo(1);
         assertThat(count("persisted", "failure")).isEqualTo(2);
+    }
+
+    @Test
+    void recordsDuplicatePersistenceAttempts() {
+        chatMessageMetrics.persisted(0, 2, 0);
+
+        assertThat(count("persisted", "duplicate")).isEqualTo(2);
     }
 
     private double count(String stage, String result) {

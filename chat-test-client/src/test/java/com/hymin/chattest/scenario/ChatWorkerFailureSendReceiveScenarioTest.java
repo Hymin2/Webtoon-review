@@ -44,7 +44,7 @@ class ChatWorkerFailureSendReceiveScenarioTest {
     );
 
     @Test
-    @DisplayName("워커 2개 중 1개가 종료되어도 전송한 메시지를 모두 수신한다")
+    @DisplayName("여러 워커 중 1개가 종료되어도 전송한 메시지를 모두 수신한다")
     void 워커_하나가_종료되어도_전송한_메시지를_모두_수신한다() {
         List<ChatTestContext> rooms = new ChatTestFixture(
             TEST_USER,
@@ -223,8 +223,6 @@ class ChatWorkerFailureSendReceiveScenarioTest {
     ) {
         System.out.println("[워커 장애 시 메시지 송수신 결과]");
         System.out.println("테스트 실행 ID: " + testRunId);
-        System.out.println("정상 워커: chat-worker-normal-test-1");
-        System.out.println("종료 워커: chat-worker-failure-test-1");
         System.out.println("채팅방 수: " + ROOM_COUNT + "개");
         System.out.println("시뮬레이션 시간: " + SEND_DURATION.toSeconds() + "초");
         System.out.println("종료 메시지 전송 시점: " + FAILURE_AT.toSeconds() + "초");

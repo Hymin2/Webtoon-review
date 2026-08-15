@@ -87,11 +87,26 @@ public class ChatMapper {
                 .id(chatMessageResponse.getMessageId())
                 .roomId(chatMessageResponse.getRoomId())
                 .senderId(senderId)
+                .roomMemberId(chatMessageResponse.getRoomMemberId())
                 .messageBlocks(chatMessageResponse.getMessageBlocks())
                 .messageSequence(chatMessageResponse.getMessageSequence())
                 .clientMessageId(chatMessageResponse.getClientMessageId())
                 .traceId(traceId)
+                .sender(chatMessageResponse.getSender())
                 .createdAt(chatMessageResponse.getCreatedAt())
+                .build();
+    }
+
+    public static ChatMessageResponse toChatMessageResponse(ChatMessage chatMessage) {
+        return ChatMessageResponse.builder()
+                .messageId(chatMessage.getId())
+                .roomId(chatMessage.getRoomId())
+                .messageSequence(chatMessage.getMessageSequence())
+                .messageBlocks(chatMessage.getMessageBlocks())
+                .roomMemberId(chatMessage.getRoomMemberId())
+                .clientMessageId(chatMessage.getClientMessageId())
+                .sender(chatMessage.getSender())
+                .createdAt(chatMessage.getCreatedAt())
                 .build();
     }
 

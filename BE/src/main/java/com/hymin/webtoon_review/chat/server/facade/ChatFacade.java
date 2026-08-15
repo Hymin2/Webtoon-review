@@ -1,6 +1,7 @@
 package com.hymin.webtoon_review.chat.server.facade;
 
 import com.hymin.webtoon_review.chat.common.dto.ChatRequest.ChatMessageRequest;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatMessageResponse;
 import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomJoinResponse;
 import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomListResponse;
 import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatRoomResponse;
@@ -9,6 +10,7 @@ import com.hymin.webtoon_review.chat.common.entity.UserChatRoom;
 import com.hymin.webtoon_review.chat.common.exception.InvalidChatRoomAccessException;
 import com.hymin.webtoon_review.chat.common.mapper.ChatMapper;
 import com.hymin.webtoon_review.chat.server.service.ChatMessageRoutingService;
+import com.hymin.webtoon_review.chat.server.service.ChatMessageQueryService;
 import com.hymin.webtoon_review.chat.server.service.ChatServerMessageIdService;
 import com.hymin.webtoon_review.chat.server.service.ChatService;
 import com.hymin.webtoon_review.global.manager.TraceContextManager;
@@ -38,6 +40,7 @@ public class ChatFacade {
     private final UserService userService;
     private final ChatService chatService;
     private final ChatMessageRoutingService chatMessageRoutingService;
+    private final ChatMessageQueryService chatMessageQueryService;
     private final ChatServerMessageIdService chatServerMessageIdService;
     private final WebtoonService webtoonService;
 
@@ -114,5 +117,14 @@ public class ChatFacade {
         }
 
         return ChatMapper.toChatRoomJoinResponse(userChatRoom);
+    }
+
+    public List<ChatMessageResponse> getMessagesAfter(
+        Long roomId,
+        Long messageSequence,
+        Long userId
+    ) {
+        chatService.getRoomMemberId(userId, roomId);
+        return chatMessageQueryService.getMessagesAfter(roomId, messageSequence);
     }
 }

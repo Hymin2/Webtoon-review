@@ -35,6 +35,7 @@ public class ChatMessage {
     private String id;
     private Long roomId;
     private Long senderId;
+    private String roomMemberId;
     private Long messageSequence;
     private String clientMessageId;
     private String traceId;

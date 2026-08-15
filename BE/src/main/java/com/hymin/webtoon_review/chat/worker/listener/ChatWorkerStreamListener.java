@@ -10,6 +10,7 @@ import com.hymin.webtoon_review.chat.common.metrics.ChatMessageMetrics;
 import com.hymin.webtoon_review.chat.common.repository.UserChatRoomRepository;
 import com.hymin.webtoon_review.chat.common.repository.projection.ChatRoomParticipantGroups;
 import com.hymin.webtoon_review.chat.common.service.ChatSessionService;
+import com.hymin.webtoon_review.chat.common.service.ChatRecentMessageCacheService;
 import com.hymin.webtoon_review.chat.worker.service.ChatMessageSequenceGenerator;
 import com.hymin.webtoon_review.global.constant.RedisGroupNames;
 import com.hymin.webtoon_review.global.constant.RedisKeys;
@@ -57,6 +58,7 @@ public class ChatWorkerStreamListener implements
     private final ChatMessageSequenceGenerator chatMessageSequenceGenerator;
 
     private final ChatSessionService chatSessionService;
+    private final ChatRecentMessageCacheService chatRecentMessageCacheService;
     private final ChatMessageMetrics chatMessageMetrics;
 
     @Override
@@ -81,7 +83,7 @@ public class ChatWorkerStreamListener implements
                 "chat-worker")) {
             traceContextManager.putChatMDC(chatMessageDto.getRoomId(),
                     chatMessageDto.getSenderId());
-            cacheChatMessage(response, timestamp);
+            cacheChatMessage(response);
             log.info("[채팅 워커 서버 Listener 1/3] 채팅 메시지 캐싱 성공");
             dispatchToServers(response, chatMessageDto.getSenderId(), chatMessageDto.getTraceId());
             log.info("[채팅 워커 서버 Listener 2/3] Redis pub/sub을 통해 메시지 전파");
@@ -125,16 +127,18 @@ public class ChatWorkerStreamListener implements
         );
     }
 
-    private void cacheChatMessage(ChatMessageResponse chatMessageResponse, Long timestamp) {
-        try {
-            Long roomId = chatMessageResponse.getRoomId();
-            String key = getRecentMessagesKey(roomId);
-            String value = objectMapper.writeValueAsString(chatMessageResponse);
-
-            stringRedisTemplate.opsForZSet().add(key, value, timestamp);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+    private void cacheChatMessage(ChatMessageResponse chatMessageResponse) {
+        Long messageSequence = chatMessageResponse.getMessageSequence();
+        if (messageSequence == null) {
+            log.debug(
+                "[채팅 메시지 캐싱 생략] roomId={}, messageId={}, messageSequence=null",
+                chatMessageResponse.getRoomId(),
+                chatMessageResponse.getMessageId()
+            );
+            return;
         }
+
+        chatRecentMessageCacheService.cache(chatMessageResponse);
     }
 
     private void dispatchToServers(ChatMessageResponse response, Long senderId, String traceId) {
@@ -226,10 +230,6 @@ public class ChatWorkerStreamListener implements
     private String getTopicName(String serverName) {
         return RedisTopicNames.CHAT_MESSAGE_PREFIX + serverName
                 + RedisTopicNames.CHAT_MESSAGE_POSTFIX;
-    }
-
-    private String getRecentMessagesKey(Long roomId) {
-        return RedisKeys.CHAT_ROOM_PREFIX + roomId + RedisKeys.CHAT_ROOM_RECENT_MESSAGES_POSTFIX;
     }
 
     private String getChatRoomMembersKey(Long roomId) {

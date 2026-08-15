@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 public class ChatServerMessageIdService {
 
     private static final Duration SERVER_MESSAGE_ID_TTL = Duration.ofHours(2L);
-    private static final int MAX_REGISTRATION_ATTEMPTS = 3;
 
     private final StringRedisTemplate redisTemplate;
 
@@ -25,21 +24,19 @@ public class ChatServerMessageIdService {
             return existingMessageId;
         }
 
-        for (int attempt = 0; attempt < MAX_REGISTRATION_ATTEMPTS; attempt++) {
-            String generatedMessageId = UUID.randomUUID().toString();
-            Boolean registered = redisTemplate.opsForValue().setIfAbsent(
-                key,
-                generatedMessageId,
-                SERVER_MESSAGE_ID_TTL
-            );
-            if (Boolean.TRUE.equals(registered)) {
-                return generatedMessageId;
-            }
+        String generatedMessageId = UUID.randomUUID().toString();
+        Boolean registered = redisTemplate.opsForValue().setIfAbsent(
+            key,
+            generatedMessageId,
+            SERVER_MESSAGE_ID_TTL
+        );
+        if (Boolean.TRUE.equals(registered)) {
+            return generatedMessageId;
+        }
 
-            existingMessageId = redisTemplate.opsForValue().get(key);
-            if (existingMessageId != null) {
-                return existingMessageId;
-            }
+        existingMessageId = redisTemplate.opsForValue().get(key);
+        if (existingMessageId != null) {
+            return existingMessageId;
         }
 
         throw new IllegalStateException("서버 메시지 ID를 Redis에 등록하지 못했습니다.");

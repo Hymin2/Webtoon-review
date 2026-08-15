@@ -55,6 +55,7 @@ public class ChatResponse {
     @AllArgsConstructor
     public static class ChatMessageResponse {
 
+        private String messageId;
         private Long roomId;
         private Long messageSequence;
         private List<MessageBlock> messageBlocks;

@@ -9,6 +9,7 @@ import com.hymin.webtoon_review.chat.common.entity.UserChatRoom;
 import com.hymin.webtoon_review.chat.common.exception.InvalidChatRoomAccessException;
 import com.hymin.webtoon_review.chat.common.mapper.ChatMapper;
 import com.hymin.webtoon_review.chat.server.service.ChatMessageRoutingService;
+import com.hymin.webtoon_review.chat.server.service.ChatServerMessageIdService;
 import com.hymin.webtoon_review.chat.server.service.ChatService;
 import com.hymin.webtoon_review.global.manager.TraceContextManager;
 import com.hymin.webtoon_review.global.manager.TraceContextManager.TraceScope;
@@ -37,6 +38,7 @@ public class ChatFacade {
     private final UserService userService;
     private final ChatService chatService;
     private final ChatMessageRoutingService chatMessageRoutingService;
+    private final ChatServerMessageIdService chatServerMessageIdService;
     private final WebtoonService webtoonService;
 
     public void sendMessage(ChatMessageRequest chatMessage, Long userId, String nickname) {
@@ -47,6 +49,11 @@ public class ChatFacade {
 
             String roomMemberId = chatService.getRoomMemberId(
                 userId, chatMessage.getRoomId());
+            String messageId = chatServerMessageIdService.getOrCreate(
+                chatMessage.getRoomId(),
+                userId,
+                chatMessage.getClientMessageId()
+            );
 
             chatMessageRoutingService.route(
                     ChatMapper.toChatMessageDto(
@@ -54,7 +61,8 @@ public class ChatFacade {
                             userId,
                             nickname,
                             roomMemberId,
-                            traceId
+                            traceId,
+                            messageId
                     )
             );
         } finally {

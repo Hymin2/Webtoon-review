@@ -39,6 +39,7 @@ public class ChatMapper {
             String createdAt
     ) {
         return ChatMessageResponse.builder()
+                .messageId(chatMessageDto.getMessageId())
                 .roomId(chatMessageDto.getRoomId())
                 .roomMemberId(chatMessageDto.getRoomMemberId())
                 .clientMessageId(chatMessageDto.getClientMessageId())
@@ -83,6 +84,7 @@ public class ChatMapper {
     public static ChatMessage toChatMessage(ChatMessageResponse chatMessageResponse, Long senderId,
                                             String traceId) {
         return ChatMessage.builder()
+                .id(chatMessageResponse.getMessageId())
                 .roomId(chatMessageResponse.getRoomId())
                 .senderId(senderId)
                 .messageBlocks(chatMessageResponse.getMessageBlocks())
@@ -98,9 +100,11 @@ public class ChatMapper {
             Long userId,
             String nickname,
             String roomMemberId,
-            String traceId
+            String traceId,
+            String messageId
     ) {
         return ChatMessageDto.builder()
+                .messageId(messageId)
                 .roomId(chatMessageRequest.getRoomId())
                 .messageBlocks(chatMessageRequest.getMessageBlocks())
                 .roomMemberId(roomMemberId)

@@ -3,6 +3,7 @@ package com.hymin.chattest.contract;
 import java.util.List;
 
 public record ChatMessageResponse(
+    String messageId,
     Long roomId,
     Long messageSequence,
     List<MessageBlock> messageBlocks,

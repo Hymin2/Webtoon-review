@@ -19,6 +19,8 @@ public class RedisKeys {
     public static final String CHAT_ROOM_ONLINE_MEMBERS_POSTFIX = ":online:members";
     public static final String CHAT_ROOM_RECENT_MESSAGES_POSTFIX = ":recent-messages";
 
+    public static final String CHAT_MESSAGE_SERVER_ID_PREFIX = "chat:message:server-id:";
+
     public static final String USER_PREFIX = "user:";
     public static final String USER_CHAT_SESSION_PREFIX = ":chat:session:";
     public static final String USER_CHAT_JOINED_ROOM_PREFIX = ":chat:joined-room:";

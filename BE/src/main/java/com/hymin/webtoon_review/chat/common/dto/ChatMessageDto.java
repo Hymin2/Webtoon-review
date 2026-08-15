@@ -15,6 +15,7 @@ import lombok.ToString;
 @AllArgsConstructor
 public class ChatMessageDto {
 
+    private String messageId;
     private Long roomId;
     private Long senderId;
     private List<MessageBlock> messageBlocks;

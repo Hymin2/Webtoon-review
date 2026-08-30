@@ -41,6 +41,22 @@ public class AsyncConfig {
         return executor;
     }
 
+    @Bean(name = "messagesBatchConsumerExecutor")
+    @Profile("chat-persister")
+    public Executor messagesBatchConsumerExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(0);
+        executor.setThreadNamePrefix("MessagesBatchConsumer-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(5);
+
+        executor.initialize();
+        return executor;
+    }
+
     @Bean(name = "chatWorkerRecoverExecutor")
     @Profile("chat-worker")
     public Executor chatWorkerRecoverExecutor() {

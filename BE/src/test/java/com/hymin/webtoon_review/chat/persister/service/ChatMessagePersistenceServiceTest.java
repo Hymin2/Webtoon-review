@@ -88,6 +88,17 @@ class ChatMessagePersistenceServiceTest {
 
         service.processMessagesBatch();
 
+        ArgumentCaptor<StreamReadOptions> readOptions = ArgumentCaptor.forClass(
+            StreamReadOptions.class
+        );
+        verify(streamOperations).read(
+            any(Consumer.class),
+            readOptions.capture(),
+            any(StreamOffset[].class)
+        );
+        assertThat(readOptions.getValue().getCount()).isEqualTo(1_000L);
+        assertThat(readOptions.getValue().getBlock()).isEqualTo(1_000L);
+
         ArgumentCaptor<String[]> acknowledgedIds = ArgumentCaptor.forClass(String[].class);
         verify(streamOperations).acknowledge(
             eq(RedisStreamKeys.CHAT_MESSAGE_BATCH),

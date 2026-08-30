@@ -39,6 +39,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChatMessagePersistenceService {
 
+    private static final long MESSAGE_BATCH_SIZE = 1_000L;
+
     @Value("${server.instance.name:default}")
     private String serverName;
 
@@ -47,37 +49,32 @@ public class ChatMessagePersistenceService {
     private final RedisTemplate<String, String> redisTemplate;
     private final ChatMessageMetrics chatMessageMetrics;
 
-    @Async("messagesBatchExecutor")
     public void processMessagesBatch() {
         String groupName = RedisGroupNames.CHAT_MESSAGE_BATCH;
         String consumerName = serverName;
         String streamKey = RedisStreamKeys.CHAT_MESSAGE_BATCH;
 
-        int count = 0;
-        while (count < 5) {
-            StreamOperations<String, String, String> streamOps = redisTemplate.opsForStream();
+        StreamOperations<String, String, String> streamOps = redisTemplate.opsForStream();
 
-            List<MapRecord<String, String, String>> records = streamOps.read(
-                Consumer.from(groupName, consumerName),
-                StreamReadOptions.empty().count(100),
-                StreamOffset.create(streamKey, ReadOffset.lastConsumed())
-            );
+        List<MapRecord<String, String, String>> records = streamOps.read(
+            Consumer.from(groupName, consumerName),
+            StreamReadOptions.empty().count(MESSAGE_BATCH_SIZE).block(Duration.ofSeconds(1)),
+            StreamOffset.create(streamKey, ReadOffset.lastConsumed())
+        );
 
-            if (records == null || records.isEmpty()) {
-                break;
-            }
-
-            log.info("[채팅 메시지 저장 서버] 채팅 메시지 {}건 저장 시도", records.size());
-            BatchSaveResult result = insertBatch(records);
-            acknowledgeMessage(records, result.retryableErrorIndexes());
-            count++;
-            log.info(
-                "[채팅 메시지 저장 서버] 채팅 메시지 {}건 저장 완료, {}건 중복, {}건 에러 발생",
-                records.size(),
-                result.duplicateIndexes().size(),
-                result.retryableErrorIndexes().size()
-            );
+        if (records == null || records.isEmpty()) {
+            return;
         }
+
+        log.info("[채팅 메시지 저장 서버] 채팅 메시지 {}건 저장 시도", records.size());
+        BatchSaveResult result = insertBatch(records);
+        acknowledgeMessage(records, result.retryableErrorIndexes());
+        log.info(
+            "[채팅 메시지 저장 서버] 채팅 메시지 {}건 저장 완료, {}건 중복, {}건 에러 발생",
+            records.size(),
+            result.duplicateIndexes().size(),
+            result.retryableErrorIndexes().size()
+        );
     }
 
     @Async("messagesBatchExecutor")

@@ -7,7 +7,7 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -20,12 +20,61 @@ dependencies {
     runtimeOnly 'com.mysql:mysql-connector-j:8.4.0'
 
     testImplementation 'com.google.guava:guava:33.2.1-jre'
+    testImplementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
+    testImplementation 'org.mongodb:mongodb-driver-sync:5.1.2'
     testImplementation 'org.springframework.boot:spring-boot-starter-test:3.3.1'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'persistence-performance', 'persistence-bulk-5000', 'cache-stampede'
+    }
+}
+
+tasks.register('cacheStampedeTest', Test) {
+    description = '100개 동시 요청으로 분산 락 적용 전후의 캐시 스탬피드를 비교합니다.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'cache-stampede'
+    }
+    shouldRunAfter tasks.named('test')
+}
+
+tasks.register('persistenceBulk5000PerformanceTest', Test) {
+    description = '5000건 Bulk Insert 메시지 저장 성능을 측정합니다.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'persistence-bulk-5000'
+    }
+    if (System.getProperty('chat.persistence.message-counts')) {
+        systemProperty(
+            'chat.persistence.message-counts',
+            System.getProperty('chat.persistence.message-counts')
+        )
+    }
+    shouldRunAfter tasks.named('test')
+}
+
+tasks.register('persistencePerformanceTest', Test) {
+    description = '일반 Insert와 Bulk Insert 메시지 저장 성능을 비교합니다.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'persistence-performance'
+    }
+    if (System.getProperty('chat.persistence.message-counts')) {
+        systemProperty(
+            'chat.persistence.message-counts',
+            System.getProperty('chat.persistence.message-counts')
+        )
+    }
+    shouldRunAfter tasks.named('test')
 }
 
 tasks.register('prepareWebtoonFixture', JavaExec) {

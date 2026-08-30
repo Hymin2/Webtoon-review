@@ -15,11 +15,6 @@ public class ChatMessageBatchScheduler {
 
     private final ChatMessagePersistenceService chatMessagePersistenceService;
 
-    @Scheduled(fixedDelay = 1000)
-    public void processBatchMessages() {
-        chatMessagePersistenceService.processMessagesBatch();
-    }
-
     @Scheduled(fixedDelay = 30000)
     public void processBatchPendingMessages() {
         chatMessagePersistenceService.processPendingMessagesBatch();

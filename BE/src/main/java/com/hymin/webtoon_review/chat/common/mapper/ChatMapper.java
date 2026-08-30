@@ -110,6 +110,22 @@ public class ChatMapper {
                 .build();
     }
 
+    public static ChatMessageResponse withMessageSequence(
+            ChatMessageResponse chatMessageResponse,
+            Long messageSequence
+    ) {
+        return ChatMessageResponse.builder()
+                .messageId(chatMessageResponse.getMessageId())
+                .roomId(chatMessageResponse.getRoomId())
+                .messageSequence(messageSequence)
+                .messageBlocks(chatMessageResponse.getMessageBlocks())
+                .roomMemberId(chatMessageResponse.getRoomMemberId())
+                .clientMessageId(chatMessageResponse.getClientMessageId())
+                .sender(chatMessageResponse.getSender())
+                .createdAt(chatMessageResponse.getCreatedAt())
+                .build();
+    }
+
     public static ChatMessageDto toChatMessageDto(
             ChatMessageRequest chatMessageRequest,
             Long userId,

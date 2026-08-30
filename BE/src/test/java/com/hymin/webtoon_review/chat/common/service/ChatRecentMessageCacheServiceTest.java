@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.DefaultTypedTuple;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.data.redis.core.script.RedisScript;
@@ -51,7 +52,7 @@ class ChatRecentMessageCacheServiceTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void cachesMessageIdAndContentWithSequenceScore() {
+    void cachesMessageIdAndContentWithSequenceScore() throws Exception {
         ChatMessageResponse message = response("message-2", 2L);
 
         service.cache(message);
@@ -59,17 +60,54 @@ class ChatRecentMessageCacheServiceTest {
         ArgumentCaptor<RedisScript<Long>> scriptCaptor = ArgumentCaptor.forClass(
             RedisScript.class
         );
+        ArgumentCaptor<String> cachedJsonCaptor = ArgumentCaptor.forClass(String.class);
         verify(redisTemplate).execute(
             scriptCaptor.capture(),
             eq(List.of(ZSET_KEY, HASH_KEY)),
             eq("message-2"),
-            anyString(),
+            cachedJsonCaptor.capture(),
             eq("2"),
             eq("300"),
             eq("7200")
         );
         assertThat(scriptCaptor.getValue().getScriptAsString())
             .contains("ZADD", "HSET", "ZREMRANGEBYRANK", "HDEL", "EXPIRE");
+        assertThat(objectMapper.readTree(cachedJsonCaptor.getValue()).get("messageSequence").isNull())
+            .isTrue();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void generatesSequenceAndCachesMessageAtomically() {
+        ChatMessageResponse message = response("message-2", null);
+
+        service.generateSequenceAndCache(message);
+
+        ArgumentCaptor<RedisScript<Long>> scriptCaptor = ArgumentCaptor.forClass(
+            RedisScript.class
+        );
+        verify(redisTemplate).execute(
+            scriptCaptor.capture(),
+            eq(List.of(
+                "chat:room:1:seq",
+                ZSET_KEY,
+                HASH_KEY
+            )),
+            eq("message-2"),
+            anyString(),
+            eq("300"),
+            eq("7200")
+        );
+        assertThat(scriptCaptor.getValue().getScriptAsString())
+            .contains(
+                "PERSIST",
+                "ZSCORE",
+                "return tonumber(existingSequence)",
+                "INCR",
+                "HSET",
+                "ZADD",
+                "return sequence"
+            );
     }
 
     @Test
@@ -92,8 +130,14 @@ class ChatRecentMessageCacheServiceTest {
         ChatMessageResponse sequenceThree = response("message-3", 3L);
         when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
         when(redisTemplate.<String, String>opsForHash()).thenReturn(hashOperations);
-        when(zSetOperations.rangeByScore(ZSET_KEY, 1D, Double.POSITIVE_INFINITY))
-            .thenReturn(new LinkedHashSet<>(List.of("message-2", "message-3")));
+        when(zSetOperations.rangeByScoreWithScores(
+            ZSET_KEY,
+            1D,
+            Double.POSITIVE_INFINITY
+        )).thenReturn(new LinkedHashSet<>(List.of(
+            new DefaultTypedTuple<>("message-2", 2D),
+            new DefaultTypedTuple<>("message-3", 3D)
+        )));
         when(hashOperations.multiGet(HASH_KEY, List.of("message-2", "message-3")))
             .thenReturn(List.of(
                 objectMapper.writeValueAsString(sequenceTwo),
@@ -105,14 +149,23 @@ class ChatRecentMessageCacheServiceTest {
         assertThat(result)
             .extracting(ChatMessageResponse::getMessageId)
             .containsExactly("message-2", "message-3");
+        assertThat(result)
+            .extracting(ChatMessageResponse::getMessageSequence)
+            .containsExactly(2L, 3L);
     }
 
     @Test
     void clearsInconsistentCacheWhenHashContentIsMissing() {
         when(redisTemplate.opsForZSet()).thenReturn(zSetOperations);
         when(redisTemplate.<String, String>opsForHash()).thenReturn(hashOperations);
-        when(zSetOperations.rangeByScore(ZSET_KEY, 1D, Double.POSITIVE_INFINITY))
-            .thenReturn(new LinkedHashSet<>(List.of("message-2", "message-3")));
+        when(zSetOperations.rangeByScoreWithScores(
+            ZSET_KEY,
+            1D,
+            Double.POSITIVE_INFINITY
+        )).thenReturn(new LinkedHashSet<>(List.of(
+            new DefaultTypedTuple<>("message-2", 2D),
+            new DefaultTypedTuple<>("message-3", 3D)
+        )));
         when(hashOperations.multiGet(HASH_KEY, List.of("message-2", "message-3")))
             .thenReturn(java.util.Arrays.asList("message-json", null));
 

@@ -1,9 +1,9 @@
 package com.hymin.webtoon_review.chat.worker.service;
 
-import com.hymin.webtoon_review.global.constant.RedisKeys;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatMessageResponse;
+import com.hymin.webtoon_review.chat.common.service.ChatRecentMessageCacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,30 +11,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class ChatMessageSequenceGenerator {
 
-    private final RedisTemplate<String, Long> redisTemplate;
-    private final ChatMessageSequenceQueryService chatMessageSequenceQueryService;
+    private final ChatRecentMessageCacheService chatRecentMessageCacheService;
 
-    public Long generate(Long roomId) {
-        String key = RedisKeys.CHAT_ROOM_PREFIX + roomId
-            + RedisKeys.CHAT_ROOM_MESSAGE_SEQUENCE_POSTFIX;
-        Long nextSeq = redisTemplate.opsForValue().increment(key);
-
-        if (nextSeq == null || nextSeq == 1) {
-            Long maxSeq = chatMessageSequenceQueryService.getMaxMessageSequence(roomId);
-
-            if (maxSeq > 0) {
-                Boolean isSet = redisTemplate.opsForValue()
-                    .setIfAbsent(key, maxSeq + 1);
-
-                if (Boolean.TRUE.equals(isSet)) {
-                    return maxSeq + 1;
-                } else {
-                    nextSeq = redisTemplate.opsForValue().increment(key);
-                    return nextSeq;
-                }
-            }
+    public Long generateAndCache(ChatMessageResponse message) {
+        Long sequence = chatRecentMessageCacheService.generateSequenceAndCache(message);
+        if (sequence == null) {
+            throw new IllegalStateException("메시지 순번 생성 결과가 없습니다.");
         }
-
-        return nextSeq;
+        return sequence;
     }
 }

@@ -33,6 +33,7 @@ x-backend-common: &backend-common
 x-chat-environment: &chat-environment
   <<: *backend-environment
   SPRING_PROFILES_ACTIVE: chat
+  CHAT_MESSAGE_QUERY_DISTRIBUTED_LOCK_ENABLED: ${CHAT_MESSAGE_QUERY_DISTRIBUTED_LOCK_ENABLED:-true}
 
 x-chat-common: &chat-common
   <<: *backend-common

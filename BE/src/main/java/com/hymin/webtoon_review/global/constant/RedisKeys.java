@@ -20,6 +20,7 @@ public class RedisKeys {
     public static final String CHAT_ROOM_RECENT_MESSAGES_POSTFIX = ":recent-messages";
     public static final String CHAT_ROOM_RECENT_MESSAGE_CONTENTS_POSTFIX =
         ":recent-message-contents";
+    public static final String CHAT_ROOM_MESSAGE_CACHE_LOCK_POSTFIX = ":message-cache:lock";
 
     public static final String CHAT_MESSAGE_SERVER_ID_PREFIX = "chat:message:server-id:";
 

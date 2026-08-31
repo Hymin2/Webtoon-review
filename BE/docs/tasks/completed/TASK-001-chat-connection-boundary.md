@@ -2,7 +2,7 @@
 
 ## Status
 
-- 상태: Active
+- 상태: Completed
 - 유형: 동작 보존형 모듈 경계 분리
 - 기준 문서: `docs/architecture/current-chat.md`, `docs/architecture/target-chat.md`, `docs/invariants.md`
 - 구현 원칙: 이 Task에서는 클래스 이동과 빌드·실행 경계 구성만 수행한다. 클래스 내부 로직 개선, 프로토콜 변경, 저장·전달 방식 변경은 수행하지 않는다.
@@ -58,7 +58,7 @@ flowchart LR
     Connection -->|SimpMessagingTemplate| Client
 ```
 
-`ChatController`는 STOMP transport annotation을 사용하지만 실제 책임은 SEND command adapter이므로 기존 root project에 남긴다. `chat-connection` 실행 artifact가 root project를 runtime dependency로 포함하고 동일한 `chat` profile/component scan을 사용하여 현재 SEND 경로를 계속 노출한다.
+`ChatController`는 STOMP transport annotation을 사용하지만 실제 책임은 SEND command adapter이므로 기존 root project에 남긴다. `chat-connection` 실행 artifact가 root project를 임시 project dependency로 포함하며, `implementation project(':')`를 통해 compile/runtime classpath에서 사용한다. 동일한 `chat` profile/component scan을 사용하여 현재 SEND 경로를 계속 노출한다.
 
 ## Current Class / Package Classification
 
@@ -267,6 +267,13 @@ chat-connection executable module
 8. **`ChatMessageListener`는 bridge payload와 serializer/trace 구현에 직접 결합돼 있다.** `RedisTemplate` serializer, concrete DTO와 `TraceContextManager`를 직접 사용하므로 connection module이 root에 의존한다. payload/port 재설계는 별도 Task다.
 9. **현재 Docker build는 단일 root `bootJar`와 wildcard copy를 전제로 한다.** 두 artifact가 생기면 잘못된 jar 선택 또는 모든 profile에 connection code가 누락될 수 있으므로 artifact별 명시적 packaging 검증이 필요하다.
 10. **Simple Broker는 각 chat process 내부 local broker다.** 이번 분리는 broker relay나 fan-out 방식을 바꾸지 않으며 기존 principal별 `convertAndSendToUser()` 동작을 그대로 유지해야 한다.
+11. **전체 root test suite에 채팅 범위 밖 기존 user 테스트 실패가 있다.** 로컬 dependency 환경을 적용한 `clean test`에서 `UserControllerTest` 8건은 `JwtBlacklistFilter`가 요구하는 `UserService` bean 부재로 context가 생성되지 않았고, `UserServiceTest` 3건은 기존 assertion/NPE로 실패했다. 이번 Task의 package/import/config 이동과 무관하므로 수정하지 않았다.
+
+## Remaining Risks
+
+1. `chat-connection -> root plain jar`는 의도한 임시 dependency지만 connection module이 root 전체 타입에 compile/runtime 접근할 수 있어 경계 강제가 약하다.
+2. 전체 root test suite가 위 user 영역 11건 실패로 green이 아니다. 범위 관련 chat tests, connection test, profile test와 runtime smoke는 통과했다.
+3. 실제 운영 배포 환경의 외부 설정, 장애 종료(SIGKILL)와 장시간 session 수렴은 이번 정상 lifecycle smoke 범위에 포함되지 않았다. INV-011의 목표 단계 개선은 여전히 후속 작업이다.
 
 ## Work Log
 
@@ -284,3 +291,44 @@ chat-connection executable module
 - `ChatServerNodeInitializer` 전체 이동의 runtime 보존 이유와 `temporary mixed boundary` 성격을 명확히 했다.
 - 서버의 `convertAndSendToUser()` destination과 클라이언트의 최종 user destination을 구분했다.
 - production code와 `ACTIVE.md`는 수정하지 않았다.
+
+### 2026-08-31 — TASK-001 구현 완료
+
+#### What Changed
+
+- `settings.gradle`에 `chat-connection` subproject를 추가했다.
+- root build가 `webtoon-review-root-plain.jar`와 `webtoon-review-root.jar`를 명시적으로 생성하고, connection build가 `implementation project(':')`와 직접 필요한 WebSocket/Redis/Jackson/JJWT/Lombok/test dependency를 선언하도록 구성했다.
+- `StompConfig`, `StompChannelInterceptor`, `ChatMessageListener`, `MessageListenerManager`, `ChatServerNodeInitializer`와 기존 `StompChannelInterceptorTest`를 `chat-connection` source set으로 이동했다. package/import 외 내부 로직은 변경하지 않았다.
+- `ChatServerNodeInitializer`는 worker hash ring refresh와 worker event listener를 포함한 기존 구성 그대로 temporary mixed boundary로 이동했다.
+- Dockerfile에 `root-runtime`, `chat-connection-runtime` target을 추가하고 wildcard JAR 선택을 제거했다. Compose의 chat 2대만 connection image를 사용하고 worker 3대와 persister는 root image를 사용하도록 분리했다.
+- `current-chat.md`와 `ACTIVE.md`를 실제 module/package/artifact 상태에 맞게 갱신했다. `target-chat.md`와 `invariants.md`는 변경하지 않았다.
+
+#### Why
+
+- endpoint, protocol, Redis key/topic/payload와 message pipeline을 바꾸지 않고 WebSocket/STOMP 연결 책임의 첫 물리 source/executable 경계를 만들기 위해서다.
+- root가 connection module에 의존하는 cycle을 피하기 위해 문서에 정의된 임시 `chat-connection -> root plain jar` 방향을 사용했다.
+
+#### Verification
+
+- 정적 경계: Move 5개 production class가 connection source에만 한 번 존재하고 `SimpMessagingTemplate`, `EnableWebSocketMessageBroker`, `WebSocketMessageBrokerConfigurer` production 사용이 connection module로 수렴함을 확인했다. `ChatController`, `ChatWorkerStreamListener`, Stream/sequence/persistence class는 root에 남아 있다.
+- `./gradlew :chat-connection:test`: 성공.
+- `./gradlew test --tests "com.hymin.webtoon_review.chat.*"`: 성공.
+- `./gradlew :test --tests "com.hymin.webtoon_review.chat.config.ChatProcessProfileTest" --rerun-tasks`: 성공. `chat-worker`, `chat-persister`가 non-web context로 실행됨을 확인했다.
+- `./gradlew clean test :chat-connection:bootJar bootJar`: 로컬 dependency 환경 적용 후 55개 중 44개 성공, user 영역 11개 실패. 범위 관련 chat/profile/connection 실패는 없으며 상세 원인은 Findings 11에 기록했다.
+- 실패한 전체 test task와 분리해 `./gradlew :chat-connection:bootJar bootJar`: 성공. root plain/root boot/connection boot JAR의 고정 파일명과 manifest를 확인했다. root boot JAR에는 Move class가 없고 connection boot JAR에는 Move class와 `webtoon-review-root-plain.jar`가 포함된다.
+- `docker compose config --quiet`: 성공. chat image와 root backend image가 service별로 분리됨을 확인했다.
+- `docker compose build chat-1 chat-worker`: 성공. 두 Docker target이 명시 artifact를 복사해 image를 생성했다.
+- Compose runtime: chat-1/chat-2는 connection image로 healthy, worker 3대와 persister는 root image로 실행됐다. chat server별 initializer 1~4 단계가 각각 한 번 기록됐고 Simple Broker가 활성화됐다. background process에는 Tomcat/connection initializer log가 없었다.
+- 기존 `ChatCrossServerSendReceiveScenarioTest`: 성공. chat-1과 chat-2 직접 CONNECT/SUBSCRIBE 및 양방향 STOMP SEND가 worker Stream → worker → server Pub/Sub → connection bridge → client로 전달됐다.
+- 별도 runtime probe: SUBSCRIBE 후 UNSUBSCRIBE 시 online/joined-room membership이 `1 -> 0`으로 정리됐고 session/connected-user는 연결 동안 유지됐다. 정상 disconnect 후 cross-server client의 session/joined-room/connected-user 잔여 항목이 없음을 확인했다.
+- chat-1 정상 종료 smoke: 연결 중이던 probe의 session key와 server connected-users key가 모두 삭제됐고 connection이 종료됐다. chat-1 재기동 후 다시 healthy 상태를 확인했다.
+- 새로운 characterization test나 동작 검증 테스트는 작성하지 않았다.
+
+#### Findings
+
+- 전체 root suite의 user 테스트 11건 실패는 Findings 11과 같다.
+- 기존 `ChatWorkerRecoverService`의 non-varargs compile warning과 로컬 test 실행 시 Loki 미기동 상태가 logging initialization에 영향을 주는 현상을 확인했으나 범위 밖이므로 수정하지 않았다.
+
+#### Remaining Risks
+
+- 위 `Remaining Risks` 절과 같다.

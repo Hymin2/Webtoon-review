@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.global.config;
+package com.hymin.webtoon_review.chat.connection.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

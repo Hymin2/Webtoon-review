@@ -6,16 +6,25 @@
 
 - Baseline Commit: `dcfd7e9c2a4db9d7989b91b6d0c7ad7ca77896ed`
 - Status: Reviewed
+- Structural Update: `TASK-001`에 따라 `chat-connection` 물리 모듈 및 실행 artifact 경계를 반영함 (2026-08-31)
 
 확인 기준은 다음 세 실행 프로필이다.
 
 | 프로필 | 역할 | 실행 형태 |
 |---|---|---|
-| `chat` | STOMP 연결, 메시지 수신·라우팅, REST 조회, 사용자에게 실시간 전달 | Web application |
+| `chat` | STOMP 연결, 메시지 수신·라우팅, REST 조회, 사용자에게 실시간 전달 | `chat-connection` executable artifact인 Web application. 기존 root plain jar를 runtime dependency로 포함 |
 | `chat-worker` | 워커별 Stream 소비, sequence 생성, 최근 메시지 캐시, 서버별 Pub/Sub 및 저장 Stream 발행 | `web-application-type: none` |
 | `chat-persister` | 저장 Stream 소비, MongoDB 배치 저장, pending 재처리 | `web-application-type: none` |
 
 `compose.yml`에는 채팅 서버 2개(`chat-1`, `chat-2`), 워커 3개(`chat-worker-1`~`3`), persister 1개(`chat-persister-1`)가 정의되어 있다. `chat-lb`는 Nginx `least_conn` 방식으로 두 채팅 서버에 WebSocket/HTTP 요청을 전달한다.
+
+물리 build/run 경계는 다음과 같다.
+
+- root project는 command/query/worker/persistence 및 공용 infrastructure를 유지하고 `webtoon-review-root-plain.jar`와 `webtoon-review-root.jar`를 생성한다.
+- `chat-connection` Gradle subproject는 `implementation project(':')`로 root plain jar에 임시 의존하고, 기존 `WebtoonReviewApplication`을 main class로 재사용해 `webtoon-review-chat-connection.jar`를 생성한다.
+- `chat-1`, `chat-2` Docker service는 `chat-connection-runtime` target과 connection artifact를 사용한다.
+- `chat-worker-*`, `chat-persister` Docker service는 `root-runtime` target과 root boot artifact를 사용한다.
+- root project는 `chat-connection`에 의존하지 않으므로 Gradle dependency cycle은 없다. 다만 connection module이 root 전체를 볼 수 있는 과도기 dependency는 남아 있다.
 
 ## 2. 전체 구성과 의존 관계
 
@@ -23,7 +32,7 @@
 flowchart LR
     C[STOMP client]
     LB[Nginx chat-lb]
-    CS[chat profile\nChat server]
+    CS[chat-connection artifact\nchat profile]
     WS[(Worker-specific\nRedis Streams)]
     CW[chat-worker profile\nChat worker]
     RC[(Redis cache / session / hash ring)]
@@ -57,6 +66,8 @@ flowchart LR
 - `ChatMessageListener` → `SimpMessagingTemplate`
 - `ChatRoomController` → `ChatFacade` → `ChatMessageQueryService` → 최근 메시지 Redis 캐시 또는 `ChatMessageRepository`(MongoDB)
 - `ChatMessageBatchConsumer` → `ChatMessagePersistenceService` → Redis Stream, `MongoTemplate`
+
+STOMP configuration/lifecycle, Redis-to-STOMP bridge와 chat server lifecycle composition의 production source는 `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection` 아래에 있다. STOMP SEND command adapter인 `ChatController`와 그 command/routing 의존성은 root source에 남아 있으며 connection artifact가 포함한 root plain jar에서 함께 component scan된다.
 
 ## 3. 채팅 메시지 송신 흐름
 
@@ -163,7 +174,7 @@ online member별 session key를 `multiGet()`하여 채팅 서버 이름별로 `{
 
 ### 4.3 채팅 서버에서 STOMP 최종 전달
 
-각 `chat` 서버는 시작 시 자신의 `chat:{serverName}:message` 채널을 `ChatMessageListener`로 구독한다. listener는 `ChatMessageDispatchDto`를 역직렬화하고 각 principal에 대해 다음을 호출한다.
+각 `chat` 서버는 시작 시 connection module의 `ChatMessageListener`로 자신의 `chat:{serverName}:message` 채널을 구독한다. listener는 `ChatMessageDispatchDto`를 역직렬화하고 각 principal에 대해 다음을 호출한다.
 
 ```text
 SimpMessagingTemplate.convertAndSendToUser(
@@ -179,7 +190,7 @@ SimpMessagingTemplate.convertAndSendToUser(
 
 ### 5.1 연결 설정
 
-`StompConfig`는 `chat` 프로필에서만 활성화된다.
+connection module의 `StompConfig`는 `chat` 프로필에서만 활성화된다.
 
 - endpoint: `/stomp-chat`
 - allowed origin pattern: `*`
@@ -213,7 +224,7 @@ destination에 `/room`이 포함된 SUBSCRIBE만 방 구독으로 처리한다. 
 
 UNSUBSCRIBE 시 subscription ID로 room ID를 찾아 두 Set에서 제거한다. `SessionDisconnectEvent`에서는 세션의 모든 구독 방에서 online member를 제거한 뒤 session mapping과 서버의 connected user Set 항목을 제거한다. CONNECT가 끝나기 전에 종료되어 `userId` 또는 `clientId`가 없으면 Redis 정리를 호출하지 않는다.
 
-채팅 서버가 정상 종료되면 `ChatServerNodeInitializer.removeSessionData()`가 서버 connected user Set을 SCAN하고 pipeline으로 각 사용자의 joined room, online member, session mapping을 정리한 뒤 connected user Set을 삭제한다.
+채팅 서버가 정상 종료되면 connection module로 통째로 이동한 `ChatServerNodeInitializer.removeSessionData()`가 서버 connected user Set을 SCAN하고 pipeline으로 각 사용자의 joined room, online member, session mapping을 정리한 뒤 connected user Set을 삭제한다. 이 initializer는 현재 worker hash ring과 worker event 구독도 유지하는 temporary mixed boundary다.
 
 `UserChatRoom.isConnected`를 변경하는 `ChatService.connect()`/`disconnect()`는 존재하지만, 현재 `src/main/java`에서 호출하는 코드는 확인되지 않았다. STOMP 구독 상태는 위 Redis Set들로 관리된다.
 
@@ -236,7 +247,7 @@ UNSUBSCRIBE 시 subscription ID로 room ID를 찾아 두 Set에서 제거한다.
 | `chat:worker:events` | 워커 initializer, 워커 recovery | 모든 채팅 서버의 `ChatWorkerEvenetMessageListener` | 워커 합류·종료·장애 시 채팅 서버의 로컬 hash ring refresh |
 | `chat:events` | `ChatServerNodeInitializer` | 현재 저장소에서 listener가 확인되지 않음 | 채팅 서버 시작/종료 이벤트 발행 |
 
-구독 등록과 해제는 `MessageListenerManager`가 `RedisMessageListenerContainer`에 `ChannelTopic`을 추가·제거하는 방식으로 관리한다.
+구독 등록과 해제는 connection module의 `MessageListenerManager`가 `RedisMessageListenerContainer`에 `ChannelTopic`을 추가·제거하는 방식으로 관리한다.
 
 ## 8. 메시지 sequence 생성 및 사용
 
@@ -389,6 +400,16 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 
 ## Appendix A. 주요 컴포넌트와 메서드
 
+다음 5개 production class는 `chat-connection` module의 `com.hymin.webtoon_review.chat.connection` 하위 package에 위치한다.
+
+- `config.StompConfig`
+- `interceptor.StompChannelInterceptor`
+- `listener.ChatMessageListener`
+- `manager.MessageListenerManager`
+- `initializer.ChatServerNodeInitializer` (temporary mixed boundary)
+
+그 외 표의 command/query/worker/persistence 컴포넌트는 root project에 남아 있다.
+
 | 영역 | 클래스 | 주요 메서드와 역할 |
 |---|---|---|
 | STOMP 설정 | `StompConfig` | `registerStompEndpoints()`, `configureMessageBroker()`, `configureClientInboundChannel()` |
@@ -423,13 +444,13 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `src/main/resources/application-chat-worker.yml`
 - `src/main/resources/application-chat-persister.yml`
 - `src/main/java/com/hymin/webtoon_review/WebtoonReviewApplication.java`
-- `src/main/java/com/hymin/webtoon_review/global/config/StompConfig.java`
+- `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/config/StompConfig.java`
 - `src/main/java/com/hymin/webtoon_review/global/config/RedisConfig.java`
 - `src/main/java/com/hymin/webtoon_review/global/config/AsyncConfig.java`
 
 ### 채팅 서버와 세션
 
-- `src/main/java/com/hymin/webtoon_review/global/inspector/StompChannelInterceptor.java`
+- `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/interceptor/StompChannelInterceptor.java`
 - `src/main/java/com/hymin/webtoon_review/chat/common/service/ChatSessionService.java`
 - `src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatController.java`
 - `src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatRoomController.java`
@@ -438,8 +459,9 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `src/main/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdService.java`
 - `src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageRoutingService.java`
 - `src/main/java/com/hymin/webtoon_review/chat/server/route/ChatWorkerLocalHashRing.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/initializer/ChatServerNodeInitializer.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/listener/ChatMessageListener.java`
+- `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/initializer/ChatServerNodeInitializer.java`
+- `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/listener/ChatMessageListener.java`
+- `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/manager/MessageListenerManager.java`
 - `src/main/java/com/hymin/webtoon_review/chat/server/listener/ChatWorkerEvenetMessageListener.java`
 
 ### 워커, 캐시와 복구
@@ -479,5 +501,5 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `src/test/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdServiceTest.java`
 - `src/test/java/com/hymin/webtoon_review/chat/server/service/ChatMessageRoutingServiceTest.java`
 - `src/test/java/com/hymin/webtoon_review/chat/persister/service/ChatMessagePersistenceServiceTest.java`
-- `src/test/java/com/hymin/webtoon_review/global/inspector/StompChannelInterceptorTest.java`
+- `chat-connection/src/test/java/com/hymin/webtoon_review/chat/connection/interceptor/StompChannelInterceptorTest.java`
 - `../chat-test-client/src/main/java/com/hymin/chattest/client/ChatTestClient.java`

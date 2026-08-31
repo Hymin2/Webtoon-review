@@ -1,12 +1,12 @@
-package com.hymin.webtoon_review.chat.server.initializer;
+package com.hymin.webtoon_review.chat.connection.initializer;
 
-import com.hymin.webtoon_review.chat.server.listener.ChatMessageListener;
+import com.hymin.webtoon_review.chat.connection.listener.ChatMessageListener;
+import com.hymin.webtoon_review.chat.connection.manager.MessageListenerManager;
 import com.hymin.webtoon_review.chat.server.listener.ChatWorkerEvenetMessageListener;
 import com.hymin.webtoon_review.chat.server.route.ChatWorkerLocalHashRing;
 import com.hymin.webtoon_review.chat.common.service.ChatSessionService;
 import com.hymin.webtoon_review.global.constant.RedisKeys;
 import com.hymin.webtoon_review.global.constant.RedisTopicNames;
-import com.hymin.webtoon_review.global.manager.MessageListenerManager;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.chat.server.listener;
+package com.hymin.webtoon_review.chat.connection.listener;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

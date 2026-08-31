@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.global.inspector;
+package com.hymin.webtoon_review.chat.connection.interceptor;
 
 import com.hymin.webtoon_review.chat.common.service.ChatSessionService;
 import com.hymin.webtoon_review.global.security.JwtService;

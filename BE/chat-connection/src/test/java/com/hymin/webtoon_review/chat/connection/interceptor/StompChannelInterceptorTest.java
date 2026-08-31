@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.global.inspector;
+package com.hymin.webtoon_review.chat.connection.interceptor;
 
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;

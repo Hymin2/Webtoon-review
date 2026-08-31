@@ -1,4 +1,4 @@
-package com.hymin.webtoon_review.global.manager;
+package com.hymin.webtoon_review.chat.connection.manager;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

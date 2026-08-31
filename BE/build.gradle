@@ -74,3 +74,12 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+tasks.named('jar') {
+    enabled = true
+    archiveFileName = 'webtoon-review-root-plain.jar'
+}
+
+tasks.named('bootJar') {
+    archiveFileName = 'webtoon-review-root.jar'
+}

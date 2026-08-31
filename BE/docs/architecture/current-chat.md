@@ -6,13 +6,13 @@
 
 - Baseline Commit: `dcfd7e9c2a4db9d7989b91b6d0c7ad7ca77896ed`
 - Status: Reviewed
-- Structural Update: `TASK-001`에 따라 `chat-connection` 물리 모듈 및 실행 artifact 경계를 반영함 (2026-08-31)
+- Structural Update: `TASK-001`의 `chat-connection`과 `TASK-002`의 `chat-api` 물리 모듈 경계를 반영함 (2026-08-31)
 
 확인 기준은 다음 세 실행 프로필이다.
 
 | 프로필 | 역할 | 실행 형태 |
 |---|---|---|
-| `chat` | STOMP 연결, 메시지 수신·라우팅, REST 조회, 사용자에게 실시간 전달 | `chat-connection` executable artifact인 Web application. 기존 root plain jar를 runtime dependency로 포함 |
+| `chat` | STOMP 연결, 메시지 수신·라우팅, REST 조회, 사용자에게 실시간 전달 | `chat-connection` executable artifact인 Web application. `chat-api` library와 root plain jar를 runtime dependency로 포함 |
 | `chat-worker` | 워커별 Stream 소비, sequence 생성, 최근 메시지 캐시, 서버별 Pub/Sub 및 저장 Stream 발행 | `web-application-type: none` |
 | `chat-persister` | 저장 Stream 소비, MongoDB 배치 저장, pending 재처리 | `web-application-type: none` |
 
@@ -20,11 +20,12 @@
 
 물리 build/run 경계는 다음과 같다.
 
-- root project는 command/query/worker/persistence 및 공용 infrastructure를 유지하고 `webtoon-review-root-plain.jar`와 `webtoon-review-root.jar`를 생성한다.
-- `chat-connection` Gradle subproject는 `implementation project(':')`로 root plain jar에 임시 의존하고, 기존 `WebtoonReviewApplication`을 main class로 재사용해 `webtoon-review-chat-connection.jar`를 생성한다.
+- root project는 worker routing/consume, persistence 및 공용 infrastructure를 유지하고 `webtoon-review-root-plain.jar`와 `webtoon-review-root.jar`를 생성한다.
+- `chat-api` Gradle subproject는 message command/query와 현재 결합된 room API source를 가지는 library이며 `implementation project(':')`로 root plain jar에 임시 의존해 `webtoon-review-chat-api.jar`를 생성한다. 독립 executable은 만들지 않는다.
+- `chat-connection` Gradle subproject는 root와 `chat-api`에 의존하고, 기존 `WebtoonReviewApplication`을 main class로 재사용해 `webtoon-review-chat-connection.jar`를 생성한다.
 - `chat-1`, `chat-2` Docker service는 `chat-connection-runtime` target과 connection artifact를 사용한다.
 - `chat-worker-*`, `chat-persister` Docker service는 `root-runtime` target과 root boot artifact를 사용한다.
-- root project는 `chat-connection`에 의존하지 않으므로 Gradle dependency cycle은 없다. 다만 connection module이 root 전체를 볼 수 있는 과도기 dependency는 남아 있다.
+- root project는 `chat-api`나 `chat-connection`에 의존하지 않는다. Gradle dependency는 `chat-connection -> chat-api -> root`와 기존 `chat-connection -> root`의 비순환 구조다. 다만 두 child module이 root 전체를 볼 수 있는 과도기 dependency는 남아 있다.
 
 ## 2. 전체 구성과 의존 관계
 
@@ -67,7 +68,7 @@ flowchart LR
 - `ChatRoomController` → `ChatFacade` → `ChatMessageQueryService` → 최근 메시지 Redis 캐시 또는 `ChatMessageRepository`(MongoDB)
 - `ChatMessageBatchConsumer` → `ChatMessagePersistenceService` → Redis Stream, `MongoTemplate`
 
-STOMP configuration/lifecycle, Redis-to-STOMP bridge와 chat server lifecycle composition의 production source는 `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection` 아래에 있다. STOMP SEND command adapter인 `ChatController`와 그 command/routing 의존성은 root source에 남아 있으며 connection artifact가 포함한 root plain jar에서 함께 component scan된다.
+STOMP configuration/lifecycle, Redis-to-STOMP bridge와 chat server lifecycle composition의 production source는 `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection` 아래에 있다. `ChatController`, `ChatRoomController`, `ChatFacade`, `ChatService`, message ID/query/lock/metric production source는 `chat-api/src/main/java/com/hymin/webtoon_review/chat/server` 아래에 있다. `chat-connection` artifact가 `chat-api`와 root plain jar를 함께 포함하고 동일한 `chat` profile/component scan으로 조립한다. `ChatMessageRoutingService`, hash ring, worker, cache와 persistence 구현은 root source에 남아 있다.
 
 ## 3. 채팅 메시지 송신 흐름
 
@@ -408,7 +409,7 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `manager.MessageListenerManager`
 - `initializer.ChatServerNodeInitializer` (temporary mixed boundary)
 
-그 외 표의 command/query/worker/persistence 컴포넌트는 root project에 남아 있다.
+표의 message command/query 컴포넌트는 `chat-api` module에, worker routing/consume, cache와 persistence 컴포넌트는 root project에 위치한다. `ChatRoomController`, `ChatFacade`, `ChatService`는 현재 결합을 보존하기 위해 전체 이동한 temporary mixed boundary다.
 
 | 영역 | 클래스 | 주요 메서드와 역할 |
 |---|---|---|
@@ -452,11 +453,11 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 
 - `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/interceptor/StompChannelInterceptor.java`
 - `src/main/java/com/hymin/webtoon_review/chat/common/service/ChatSessionService.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatController.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatRoomController.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/facade/ChatFacade.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/service/ChatService.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdService.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatController.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatRoomController.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/facade/ChatFacade.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatService.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdService.java`
 - `src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageRoutingService.java`
 - `src/main/java/com/hymin/webtoon_review/chat/server/route/ChatWorkerLocalHashRing.java`
 - `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/initializer/ChatServerNodeInitializer.java`
@@ -473,8 +474,9 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `src/main/java/com/hymin/webtoon_review/chat/worker/scheduler/ChatWorkerHeartbeatScheduler.java`
 - `src/main/java/com/hymin/webtoon_review/chat/worker/scheduler/ChatWorkerRecoveryMonitor.java`
 - `src/main/java/com/hymin/webtoon_review/chat/common/service/ChatRecentMessageCacheService.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageQueryService.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageCacheLockService.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageQueryService.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageCacheLockService.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/metrics/ChatMessageQueryMetrics.java`
 
 ### 저장과 데이터 모델
 
@@ -497,8 +499,8 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 ### 동작 확인에 참고한 테스트
 
 - `src/test/java/com/hymin/webtoon_review/chat/common/service/ChatRecentMessageCacheServiceTest.java`
-- `src/test/java/com/hymin/webtoon_review/chat/server/service/ChatMessageQueryServiceTest.java`
-- `src/test/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdServiceTest.java`
+- `chat-api/src/test/java/com/hymin/webtoon_review/chat/server/service/ChatMessageQueryServiceTest.java`
+- `chat-api/src/test/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdServiceTest.java`
 - `src/test/java/com/hymin/webtoon_review/chat/server/service/ChatMessageRoutingServiceTest.java`
 - `src/test/java/com/hymin/webtoon_review/chat/persister/service/ChatMessagePersistenceServiceTest.java`
 - `chat-connection/src/test/java/com/hymin/webtoon_review/chat/connection/interceptor/StompChannelInterceptorTest.java`

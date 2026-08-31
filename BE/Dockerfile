@@ -4,10 +4,12 @@ WORKDIR /workspace
 
 COPY gradle gradle
 COPY gradlew build.gradle settings.gradle ./
+COPY chat-api/build.gradle chat-api/build.gradle
 COPY chat-connection/build.gradle chat-connection/build.gradle
 RUN chmod +x gradlew
 
 COPY src src
+COPY chat-api/src chat-api/src
 COPY chat-connection/src chat-connection/src
 RUN ./gradlew bootJar :chat-connection:bootJar --no-daemon \
     && cp build/libs/webtoon-review-root.jar /workspace/root-app.jar \

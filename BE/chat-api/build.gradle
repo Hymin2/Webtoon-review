@@ -25,12 +25,16 @@ repositories {
 
 dependencies {
     implementation project(':')
-    implementation project(':chat-api')
 
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    implementation 'io.micrometer:micrometer-core'
+    implementation 'io.micrometer:micrometer-tracing-bridge-otel'
 
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
@@ -47,6 +51,10 @@ tasks.named('test') {
 }
 
 tasks.named('bootJar') {
-    archiveFileName = 'webtoon-review-chat-connection.jar'
-    mainClass = 'com.hymin.webtoon_review.WebtoonReviewApplication'
+    enabled = false
+}
+
+tasks.named('jar') {
+    enabled = true
+    archiveFileName = 'webtoon-review-chat-api.jar'
 }

@@ -57,18 +57,4 @@ public class AsyncConfig {
         return executor;
     }
 
-    @Bean(name = "chatWorkerRecoverExecutor")
-    @Profile("chat-worker")
-    public Executor chatWorkerRecoverExecutor() {
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-
-        executor.setCorePoolSize(2);
-        executor.setMaxPoolSize(5);
-        executor.setQueueCapacity(50);
-        executor.setThreadNamePrefix("ChatWorkerRecover-");
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
-
-        executor.initialize();
-        return executor;
-    }
 }

@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 class ChatProcessProfileTest {
 
     @ParameterizedTest
-    @ValueSource(strings = "chat-persister")
+    @ValueSource(strings = "chat-worker")
     void 백그라운드_채팅_프로세스는_웹_서버_없이_실행된다(String profile) {
         SpringApplication application = new SpringApplication(EmptyConfiguration.class);
         application.setBannerMode(Banner.Mode.OFF);

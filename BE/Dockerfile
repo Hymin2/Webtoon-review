@@ -6,14 +6,17 @@ COPY gradle gradle
 COPY gradlew build.gradle settings.gradle ./
 COPY chat-api/build.gradle chat-api/build.gradle
 COPY chat-connection/build.gradle chat-connection/build.gradle
+COPY chat-dispatcher/build.gradle chat-dispatcher/build.gradle
 RUN chmod +x gradlew
 
 COPY src src
 COPY chat-api/src chat-api/src
 COPY chat-connection/src chat-connection/src
-RUN ./gradlew bootJar :chat-connection:bootJar --no-daemon \
+COPY chat-dispatcher/src chat-dispatcher/src
+RUN ./gradlew bootJar :chat-connection:bootJar :chat-dispatcher:bootJar --no-daemon \
     && cp build/libs/webtoon-review-root.jar /workspace/root-app.jar \
-    && cp chat-connection/build/libs/webtoon-review-chat-connection.jar /workspace/chat-connection-app.jar
+    && cp chat-connection/build/libs/webtoon-review-chat-connection.jar /workspace/chat-connection-app.jar \
+    && cp chat-dispatcher/build/libs/webtoon-review-chat-dispatcher.jar /workspace/chat-dispatcher-app.jar
 
 FROM eclipse-temurin:17-jre-alpine AS runtime-base
 
@@ -39,4 +42,10 @@ FROM runtime-base AS chat-connection-runtime
 
 COPY --from=builder --chown=app:app \
     /workspace/chat-connection-app.jar \
+    /app/app.jar
+
+FROM runtime-base AS chat-dispatcher-runtime
+
+COPY --from=builder --chown=app:app \
+    /workspace/chat-dispatcher-app.jar \
     /app/app.jar

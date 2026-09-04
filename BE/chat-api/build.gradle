@@ -24,7 +24,8 @@ repositories {
 }
 
 dependencies {
-    implementation project(':')
+    implementation project(':app')
+    implementation project(':chat-room')
 
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'

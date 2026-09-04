@@ -24,7 +24,7 @@ repositories {
 }
 
 dependencies {
-    implementation project(':')
+    implementation project(':app')
     implementation project(':chat-api')
 
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'

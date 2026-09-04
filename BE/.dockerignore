@@ -6,5 +6,5 @@ build
 logs
 *.log
 
-src/main/generated
-src/main/resources/firebase.json
+**/src/main/generated
+**/src/main/resources/firebase.json

@@ -184,3 +184,9 @@ replay_pid*
 /logs/
 
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij
+
+# Gradle multi-module generated output
+**/.gradle/
+**/build/
+**/src/main/generated/
+**/src/test/generated/

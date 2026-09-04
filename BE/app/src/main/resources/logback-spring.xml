@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - [traceId=%X{traceId:-none}]
+        %msg%n
+      </pattern>
+    </encoder>
+  </appender>
+
+  <springProperty scope="context" name="INSTANCE_NAME" source="server.instance.name"
+    defaultValue="unknown-server"/>
+  <springProperty scope="context" name="APPLICATION_NAME" source="spring.application.name"
+    defaultValue="webtoon-review"/>
+  <springProperty scope="context" name="SERVICE_ROLE" source="chat.role"
+    defaultValue="api"/>
+  <springProperty scope="context" name="LOKI_URL" source="logging.loki.url"
+    defaultValue="http://localhost:3100/loki/api/v1/push"/>
+
+  <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
+    <http>
+      <url>${LOKI_URL}</url>
+    </http>
+    <format>
+      <label>
+        <pattern>app=${APPLICATION_NAME},role=${SERVICE_ROLE},instance=${INSTANCE_NAME}</pattern>
+      </label>
+      <message class="com.github.loki4j.logback.JsonLayout">
+        <includeTimestamp>true</includeTimestamp>
+        <includeLevel>true</includeLevel>
+        <includeThreadName>true</includeThreadName>
+        <includeLoggerName>true</includeLoggerName>
+        <includeMessage>true</includeMessage>
+        <includeMdc>true</includeMdc>
+        <includeStackTrace>true</includeStackTrace>
+      </message>
+    </format>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="LOKI"/>
+  </root>
+</configuration>

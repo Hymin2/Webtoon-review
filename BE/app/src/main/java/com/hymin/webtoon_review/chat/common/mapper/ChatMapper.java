@@ -1,0 +1,93 @@
+package com.hymin.webtoon_review.chat.common.mapper;
+
+import com.hymin.webtoon_review.chat.common.dto.ChatMessageDto;
+import com.hymin.webtoon_review.chat.common.dto.ChatRequest.ChatMessageRequest;
+import com.hymin.webtoon_review.chat.common.dto.ChatResponse.ChatMessageResponse;
+import com.hymin.webtoon_review.chat.common.entity.ChatMessage;
+import com.hymin.webtoon_review.user.entity.User;
+import java.util.List;
+
+public class ChatMapper {
+
+    public static ChatMessageResponse toChatMessageResponse(
+            ChatMessageDto chatMessageDto,
+            Long messageSequence,
+            String createdAt
+    ) {
+        return ChatMessageResponse.builder()
+                .messageId(chatMessageDto.getMessageId())
+                .roomId(chatMessageDto.getRoomId())
+                .roomMemberId(chatMessageDto.getRoomMemberId())
+                .clientMessageId(chatMessageDto.getClientMessageId())
+                .messageBlocks(chatMessageDto.getMessageBlocks())
+                .messageSequence(messageSequence)
+                .createdAt(createdAt)
+                .sender(chatMessageDto.getSenderNickname())
+                .build();
+    }
+
+    public static ChatMessage toChatMessage(ChatMessageResponse chatMessageResponse, Long senderId,
+                                            String traceId) {
+        return ChatMessage.builder()
+                .id(chatMessageResponse.getMessageId())
+                .roomId(chatMessageResponse.getRoomId())
+                .senderId(senderId)
+                .roomMemberId(chatMessageResponse.getRoomMemberId())
+                .messageBlocks(chatMessageResponse.getMessageBlocks())
+                .messageSequence(chatMessageResponse.getMessageSequence())
+                .clientMessageId(chatMessageResponse.getClientMessageId())
+                .traceId(traceId)
+                .sender(chatMessageResponse.getSender())
+                .createdAt(chatMessageResponse.getCreatedAt())
+                .build();
+    }
+
+    public static ChatMessageResponse toChatMessageResponse(ChatMessage chatMessage) {
+        return ChatMessageResponse.builder()
+                .messageId(chatMessage.getId())
+                .roomId(chatMessage.getRoomId())
+                .messageSequence(chatMessage.getMessageSequence())
+                .messageBlocks(chatMessage.getMessageBlocks())
+                .roomMemberId(chatMessage.getRoomMemberId())
+                .clientMessageId(chatMessage.getClientMessageId())
+                .sender(chatMessage.getSender())
+                .createdAt(chatMessage.getCreatedAt())
+                .build();
+    }
+
+    public static ChatMessageResponse withMessageSequence(
+            ChatMessageResponse chatMessageResponse,
+            Long messageSequence
+    ) {
+        return ChatMessageResponse.builder()
+                .messageId(chatMessageResponse.getMessageId())
+                .roomId(chatMessageResponse.getRoomId())
+                .messageSequence(messageSequence)
+                .messageBlocks(chatMessageResponse.getMessageBlocks())
+                .roomMemberId(chatMessageResponse.getRoomMemberId())
+                .clientMessageId(chatMessageResponse.getClientMessageId())
+                .sender(chatMessageResponse.getSender())
+                .createdAt(chatMessageResponse.getCreatedAt())
+                .build();
+    }
+
+    public static ChatMessageDto toChatMessageDto(
+            ChatMessageRequest chatMessageRequest,
+            Long userId,
+            String nickname,
+            String roomMemberId,
+            String traceId,
+            String messageId
+    ) {
+        return ChatMessageDto.builder()
+                .messageId(messageId)
+                .roomId(chatMessageRequest.getRoomId())
+                .messageBlocks(chatMessageRequest.getMessageBlocks())
+                .roomMemberId(roomMemberId)
+                .clientMessageId(chatMessageRequest.getClientMessageId())
+                .traceId(traceId)
+                .senderId(userId)
+                .senderNickname(nickname)
+                .build();
+    }
+}

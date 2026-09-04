@@ -4,17 +4,20 @@ WORKDIR /workspace
 
 COPY gradle gradle
 COPY gradlew build.gradle settings.gradle ./
+COPY app/build.gradle app/build.gradle
+COPY chat-room/build.gradle chat-room/build.gradle
 COPY chat-api/build.gradle chat-api/build.gradle
 COPY chat-connection/build.gradle chat-connection/build.gradle
 COPY chat-dispatcher/build.gradle chat-dispatcher/build.gradle
 RUN chmod +x gradlew
 
-COPY src src
+COPY app/src app/src
+COPY chat-room/src chat-room/src
 COPY chat-api/src chat-api/src
 COPY chat-connection/src chat-connection/src
 COPY chat-dispatcher/src chat-dispatcher/src
-RUN ./gradlew bootJar :chat-connection:bootJar :chat-dispatcher:bootJar --no-daemon \
-    && cp build/libs/webtoon-review-root.jar /workspace/root-app.jar \
+RUN ./gradlew :app:bootJar :chat-connection:bootJar :chat-dispatcher:bootJar --no-daemon \
+    && cp app/build/libs/webtoon-review-root.jar /workspace/root-app.jar \
     && cp chat-connection/build/libs/webtoon-review-chat-connection.jar /workspace/chat-connection-app.jar \
     && cp chat-dispatcher/build/libs/webtoon-review-chat-dispatcher.jar /workspace/chat-dispatcher-app.jar
 

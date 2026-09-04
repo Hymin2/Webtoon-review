@@ -6,13 +6,13 @@
 
 - Baseline Commit: `dcfd7e9c2a4db9d7989b91b6d0c7ad7ca77896ed`
 - Status: Reviewed
-- Structural Update: `TASK-001`의 `chat-connection`, `TASK-002`의 `chat-api`, `TASK-003`의 `chat-dispatcher` 물리 모듈 경계와 `TASK-004`의 별도 HTTP persistence-first command 경계를 반영함 (2026-09-04)
+- Structural Update: `TASK-001`~`TASK-004`의 물리 모듈·HTTP persistence-first command 경계와 `TASK-005`의 `app`/`chat-room` ownership 및 실행 artifact 경계를 반영함 (2026-09-04)
 
 확인 기준은 다음 세 실행 프로필이다.
 
 | 프로필 | 역할 | 실행 형태 |
 |---|---|---|
-| `chat` | STOMP 연결, 메시지 수신·라우팅, REST 조회, 사용자에게 실시간 전달 | `chat-connection` executable artifact인 Web application. `chat-api` library와 root plain jar를 runtime dependency로 포함 |
+| `chat` | STOMP 연결, 메시지 수신·라우팅, REST 조회, 사용자에게 실시간 전달 | `chat-connection` executable artifact인 Web application. `chat-api`와 `app` library를 runtime dependency로 포함 |
 | `chat-worker` | 워커별 Stream 소비, sequence 생성, 최근 메시지 캐시, 서버별 Pub/Sub 및 저장 Stream 발행 | `chat-dispatcher` executable artifact인 non-web application |
 | `chat-persister` | 저장 Stream 소비, MongoDB 배치 저장, pending 재처리 | `web-application-type: none` |
 
@@ -20,13 +20,15 @@
 
 물리 build/run 경계는 다음과 같다.
 
-- root project는 worker routing producer, shared cache/session/contract/infrastructure와 persistence를 유지하고 `webtoon-review-root-plain.jar`와 `webtoon-review-root.jar`를 생성한다.
-- `chat-api` Gradle subproject는 message command/query와 현재 결합된 room API source를 가지는 library이며 `implementation project(':')`로 root plain jar에 임시 의존해 `webtoon-review-chat-api.jar`를 생성한다. 독립 executable은 만들지 않는다.
-- `chat-connection` Gradle subproject는 root와 `chat-api`에 의존하고, 기존 `WebtoonReviewApplication`을 main class로 재사용해 `webtoon-review-chat-connection.jar`를 생성한다.
-- `chat-dispatcher` Gradle subproject는 root에만 의존하고, 기존 `WebtoonReviewApplication`과 `chat-worker` profile을 재사용해 `webtoon-review-chat-dispatcher.jar`를 생성한다. worker Stream consume/fan-out/ACK와 lifecycle/recovery source 및 worker 전용 listener container/recovery executor를 소유한다.
+- root project는 source 없는 Gradle aggregator다.
+- `app` Gradle subproject는 `WebtoonReviewApplication`, non-room application feature, shared chat contract/message/cache/session/routing/infrastructure와 persistence를 소유하고 `webtoon-review-app.jar`를 생성한다. `chat-persister` executable role도 이 artifact를 사용한다.
+- `chat-room` Gradle subproject는 MySQL room/membership model, repository/projection, authorization service와 room REST API를 소유하는 library다. `app`에만 의존하며 독립 executable은 만들지 않는다.
+- `chat-api` Gradle subproject는 message command/query와 STOMP/message-history orchestration을 소유하고 `app`, `chat-room`에 의존하는 library다. 독립 executable은 만들지 않는다.
+- `chat-connection` Gradle subproject는 `app`과 `chat-api`에 의존하고 기존 `WebtoonReviewApplication`을 main class로 재사용해 `webtoon-review-chat-connection.jar`를 생성한다.
+- `chat-dispatcher` Gradle subproject는 `app`과 `chat-room`에 의존하고 기존 `WebtoonReviewApplication`과 `chat-worker` profile을 재사용해 `webtoon-review-chat-dispatcher.jar`를 생성한다. worker Stream consume/fan-out/ACK와 lifecycle/recovery source 및 worker 전용 listener container/recovery executor를 소유한다.
 - `chat-1`, `chat-2` Docker service는 `chat-connection-runtime` target과 connection artifact를 사용한다.
-- `chat-worker-*` Docker service는 `chat-dispatcher-runtime` target과 dispatcher artifact를 사용하고, `chat-persister`는 `root-runtime` target과 root boot artifact를 계속 사용한다.
-- root project는 child module에 의존하지 않는다. Gradle dependency는 `chat-connection -> chat-api -> root`, `chat-connection -> root`, `chat-dispatcher -> root`의 비순환 구조다. 다만 child module이 root 전체를 볼 수 있는 과도기 dependency는 남아 있다.
+- `chat-worker-*` Docker service는 `chat-dispatcher-runtime` target과 dispatcher artifact를 사용하고, `chat-persister`는 `root-runtime` target을 통해 `app`이 생성한 기존 persister boot artifact를 사용한다.
+- root project는 child module에 의존하지 않는다. Gradle dependency는 `chat-room -> app`, `chat-api -> app, chat-room`, `chat-connection -> app, chat-api`, `chat-dispatcher -> app, chat-room`의 비순환 구조다.
 
 ## 2. 전체 구성과 의존 관계
 
@@ -66,14 +68,15 @@ flowchart LR
 주요 의존 방향은 다음과 같다.
 
 - `ChatController` → `ChatFacade` → `ChatService`, `ChatServerMessageIdService`, `ChatMessageRoutingService`
-- `ChatMessageCommandController` → `CreateChatMessageCommandService` → `UserChatRoomRepository` membership 확인 / `ChatMessageCommandRepository` Mongo write
+- `ChatMessageCommandController` → `CreateChatMessageCommandService` → `chat-room` membership 확인 / `ChatMessageCommandRepository` Mongo write
 - `ChatMessageRoutingService` → `ChatWorkerLocalHashRing`, Redis Stream
-- `ChatWorkerStreamListener` → `ChatMessageSequenceGenerator`, `ChatRecentMessageCacheService`, `ChatSessionService`, `UserChatRoomRepository`, Redis Pub/Sub, 저장용 Redis Stream
+- `ChatWorkerStreamListener` → `ChatMessageSequenceGenerator`, `ChatRecentMessageCacheService`, `ChatSessionService`, `chat-room`의 `UserChatRoomRepository`, Redis Pub/Sub, 저장용 Redis Stream
 - `ChatMessageListener` → `SimpMessagingTemplate`
-- `ChatRoomController` → `ChatFacade` → `ChatMessageQueryService` → 최근 메시지 Redis 캐시 또는 `ChatMessageRepository`(MongoDB)
+- room API controller → room facade/service(`chat-room`) → app user/webtoon service와 room repository
+- `ChatMessageHistoryController` → `ChatMessageQueryService` → `chat-room` membership 확인 → 최근 메시지 Redis 캐시 또는 `ChatMessageRepository`(MongoDB)
 - `ChatMessageBatchConsumer` → `ChatMessagePersistenceService` → Redis Stream, `MongoTemplate`
 
-STOMP configuration/lifecycle, Redis-to-STOMP bridge와 chat server lifecycle composition의 production source는 `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection` 아래에 있다. `ChatController`, `ChatRoomController`, `ChatFacade`, `ChatService`, message ID/query/lock/metric production source는 `chat-api/src/main/java/com/hymin/webtoon_review/chat/server` 아래에 있다. worker listener/lifecycle/recovery production source는 기존 package를 유지한 채 `chat-dispatcher/src/main/java` 아래에 있다. `ChatMessageRoutingService`, hash ring, shared cache/session과 persistence 구현은 root source에 남아 있다.
+STOMP configuration/lifecycle, Redis-to-STOMP bridge와 chat server lifecycle composition의 production source는 `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection` 아래에 있다. `ChatController`, message command/query facade/service와 message ID/query/lock/metric production source는 `chat-api/src/main/java/com/hymin/webtoon_review/chat/server` 아래에 있다. room/member model, repository, authorization service와 room REST facade/controller는 `chat-room/src/main/java` 아래에 있다. worker listener/lifecycle/recovery production source는 `chat-dispatcher/src/main/java` 아래에 있다. `ChatMessageRoutingService`, hash ring, shared cache/session과 persistence 구현은 `app/src/main/java` 아래에 있다.
 
 ## 3. 채팅 메시지 송신 흐름
 
@@ -247,7 +250,7 @@ UNSUBSCRIBE 시 subscription ID로 room ID를 찾아 두 Set에서 제거한다.
 
 채팅 서버가 정상 종료되면 connection module로 통째로 이동한 `ChatServerNodeInitializer.removeSessionData()`가 서버 connected user Set을 SCAN하고 pipeline으로 각 사용자의 joined room, online member, session mapping을 정리한 뒤 connected user Set을 삭제한다. 이 initializer는 현재 worker hash ring과 worker event 구독도 유지하는 temporary mixed boundary다.
 
-`UserChatRoom.isConnected`를 변경하는 `ChatService.connect()`/`disconnect()`는 존재하지만, 현재 `src/main/java`에서 호출하는 코드는 확인되지 않았다. STOMP 구독 상태는 위 Redis Set들로 관리된다.
+`UserChatRoom.isConnected`를 변경하는 `chat-room`의 `ChatService.connect()`/`disconnect()`는 존재하지만, 현재 module source에서 호출하는 코드는 확인되지 않았다. STOMP 구독 상태는 위 Redis Set들로 관리된다.
 
 ## 6. Redis Stream 사용 위치와 역할
 
@@ -317,7 +320,7 @@ MongoDB `chat_messages`에는 `(roomId, messageSequence)` unique partial compoun
 GET /chat/room/{roomId}/messages?messageSequence={n}
 ```
 
-`ChatRoomController` → `ChatFacade.getMessagesAfter()` → `ChatMessageQueryService.getMessagesAfter()` 순서로 호출된다. facade는 먼저 `ChatService.getRoomMemberId()`를 호출해 요청 사용자가 방 참여자인지 확인한다.
+`ChatMessageHistoryController` → `ChatFacade.getMessagesAfter()` → `ChatMessageQueryService.getMessagesAfter()` 순서로 호출된다. facade는 먼저 `chat-room`의 `ChatService.getRoomMemberId()`를 호출해 요청 사용자가 방 참여자인지 확인한다.
 
 ### 10.1 최근 메시지 캐시 구조
 
@@ -405,8 +408,8 @@ MongoDB compose 서비스는 transaction 활성화를 위해 `rs0` single-node r
 
 - `chat:events` 채널은 채팅 서버가 시작/종료 시 발행하지만, 현재 저장소에서 이를 구독하는 listener는 확인되지 않았다.
 - `active-chat-servers:{serverName}` key는 채팅 서버 시작 시 30초 TTL로 등록되고 종료 시 삭제되지만, TTL을 갱신하거나 이 key를 읽는 코드가 현재 저장소에서 확인되지 않았다.
-- `UserChatRoom.lastReadMessageSequence`를 갱신하는 메서드나 호출 경로가 현재 `src/main/java`에서 확인되지 않았다.
-- `ChatService.connect()`와 `disconnect()` 및 이에 따른 `UserChatRoom.isConnected` 갱신 호출이 현재 `src/main/java`에서 확인되지 않았다.
+- `UserChatRoom.lastReadMessageSequence`를 갱신하는 메서드나 호출 경로가 현재 module source에서 확인되지 않았다.
+- `ChatService.connect()`와 `disconnect()` 및 이에 따른 `UserChatRoom.isConnected` 갱신 호출이 현재 module source에서 확인되지 않았다.
 - persister의 dead-letter 이동은 주석만 있고 실제 보관 위치나 후속 처리 경로가 확인되지 않았다.
 - 정상 처리된 Redis Stream entry를 trim/delete하는 정책은 현재 코드에서 확인되지 않았다.
 - 저장소의 TASK-004 설정은 MongoDB database 기본값 `test`와 replica set 기본값 `rs0`을 명시한다. `test` 기본값은 기존 history reader/persister와의 호환을 위한 것이며, 저장소 밖 운영 배포가 같은 topology/값을 사용하는지는 별도 확인이 필요하다.
@@ -431,7 +434,7 @@ MongoDB compose 서비스는 transaction 활성화를 위해 `rs0` single-node r
 - `manager.MessageListenerManager`
 - `initializer.ChatServerNodeInitializer` (temporary mixed boundary)
 
-표의 message command/query 컴포넌트는 `chat-api` module에, worker consume/lifecycle/recovery 컴포넌트는 `chat-dispatcher` module에 위치한다. worker routing producer, shared cache/session과 persistence 컴포넌트는 root project에 남아 있다. `ChatRoomController`, `ChatFacade`, `ChatService`와 dispatcher의 legacy worker transport 책임은 현재 결합을 보존하기 위한 temporary mixed boundary다.
+표의 message command/query 컴포넌트는 `chat-api` module에, room/member 컴포넌트는 `chat-room` module에, worker consume/lifecycle/recovery 컴포넌트는 `chat-dispatcher` module에 위치한다. worker routing producer, shared cache/session과 persistence 컴포넌트는 `app` module에 있다. `ChatFacade`의 STOMP/message-history 책임과 dispatcher의 legacy worker transport 책임은 현재 동작 보존을 위한 temporary mixed boundary다.
 
 | 영역 | 클래스 | 주요 메서드와 역할 |
 |---|---|---|
@@ -462,37 +465,38 @@ MongoDB compose 서비스는 transaction 활성화를 위해 `rs0` single-node r
 
 - `compose.yml`
 - `nginx/chat.conf`
-- `src/main/resources/application.yml`
-- `src/main/resources/application-chat.yml`
+- `app/src/main/resources/application.yml`
+- `app/src/main/resources/application-chat.yml`
 - `chat-dispatcher/src/main/resources/application-chat-worker.yml`
-- `src/main/resources/application-chat-persister.yml`
-- `src/main/java/com/hymin/webtoon_review/WebtoonReviewApplication.java`
+- `app/src/main/resources/application-chat-persister.yml`
+- `app/src/main/java/com/hymin/webtoon_review/WebtoonReviewApplication.java`
 - `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/config/StompConfig.java`
-- `src/main/java/com/hymin/webtoon_review/global/config/RedisConfig.java`
-- `src/main/java/com/hymin/webtoon_review/global/config/AsyncConfig.java`
-- `src/main/java/com/hymin/webtoon_review/global/config/MongoTransactionConfiguration.java`
-- `src/main/java/com/hymin/webtoon_review/global/config/MongoIndexConfiguration.java`
+- `app/src/main/java/com/hymin/webtoon_review/global/config/RedisConfig.java`
+- `app/src/main/java/com/hymin/webtoon_review/global/config/AsyncConfig.java`
+- `app/src/main/java/com/hymin/webtoon_review/global/config/MongoTransactionConfiguration.java`
+- `app/src/main/java/com/hymin/webtoon_review/global/config/MongoIndexConfiguration.java`
 - `chat-dispatcher/src/main/java/com/hymin/webtoon_review/chat/dispatcher/config/ChatDispatcherRedisConfig.java`
 - `chat-dispatcher/src/main/java/com/hymin/webtoon_review/chat/dispatcher/config/ChatDispatcherAsyncConfig.java`
 
 ### 채팅 서버와 세션
 
 - `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/interceptor/StompChannelInterceptor.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/service/ChatSessionService.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/common/service/ChatSessionService.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatController.java`
-- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatRoomController.java`
+- `chat-room/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatRoomController.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatMessageCommandController.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatMessageHistoryController.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/CreateChatMessageCommandService.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/repository/ChatMessageCommandRepository.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/facade/ChatFacade.java`
-- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatService.java`
+- `chat-room/src/main/java/com/hymin/webtoon_review/chat/common/service/ChatService.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdService.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageRoutingService.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/route/ChatWorkerLocalHashRing.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageRoutingService.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/server/route/ChatWorkerLocalHashRing.java`
 - `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/initializer/ChatServerNodeInitializer.java`
 - `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/listener/ChatMessageListener.java`
 - `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/manager/MessageListenerManager.java`
-- `src/main/java/com/hymin/webtoon_review/chat/server/listener/ChatWorkerEvenetMessageListener.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/server/listener/ChatWorkerEvenetMessageListener.java`
 
 ### 워커, 캐시와 복구
 
@@ -503,30 +507,30 @@ MongoDB compose 서비스는 transaction 활성화를 위해 `rs0` single-node r
 - `chat-dispatcher/src/main/java/com/hymin/webtoon_review/chat/worker/scheduler/ChatWorkerHeartbeatScheduler.java`
 - `chat-dispatcher/src/main/java/com/hymin/webtoon_review/chat/worker/scheduler/ChatWorkerRecoveryMonitor.java`
 - `chat-dispatcher/src/main/java/com/hymin/webtoon_review/global/manager/StreamListenerManager.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/service/ChatRecentMessageCacheService.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/common/service/ChatRecentMessageCacheService.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageQueryService.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatMessageCacheLockService.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/metrics/ChatMessageQueryMetrics.java`
 
 ### 저장과 데이터 모델
 
-- `src/main/java/com/hymin/webtoon_review/chat/persister/consumer/ChatMessageBatchConsumer.java`
-- `src/main/java/com/hymin/webtoon_review/chat/persister/service/ChatMessagePersistenceService.java`
-- `src/main/java/com/hymin/webtoon_review/chat/persister/initializer/ChatMessageBatchStreamInitializer.java`
-- `src/main/java/com/hymin/webtoon_review/chat/persister/scheduler/ChatMessageBatchScheduler.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/entity/ChatMessage.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/entity/RoomSequence.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/entity/MessageCreatedOutbox.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/entity/ChatRoom.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/entity/UserChatRoom.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/repository/ChatMessageRepository.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/repository/ChatRoomRepository.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/repository/UserChatRoomRepository.java`
-- `src/main/java/com/hymin/webtoon_review/chat/common/mapper/ChatMapper.java`
-- `src/main/java/com/hymin/webtoon_review/global/constant/RedisKeys.java`
-- `src/main/java/com/hymin/webtoon_review/global/constant/RedisStreamKeys.java`
-- `src/main/java/com/hymin/webtoon_review/global/constant/RedisTopicNames.java`
-- `src/main/java/com/hymin/webtoon_review/global/constant/RedisGroupNames.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/persister/consumer/ChatMessageBatchConsumer.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/persister/service/ChatMessagePersistenceService.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/persister/initializer/ChatMessageBatchStreamInitializer.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/persister/scheduler/ChatMessageBatchScheduler.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/common/entity/ChatMessage.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/common/entity/RoomSequence.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/common/entity/MessageCreatedOutbox.java`
+- `chat-room/src/main/java/com/hymin/webtoon_review/chat/common/entity/ChatRoom.java`
+- `chat-room/src/main/java/com/hymin/webtoon_review/chat/common/entity/UserChatRoom.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/common/repository/ChatMessageRepository.java`
+- `chat-room/src/main/java/com/hymin/webtoon_review/chat/common/repository/ChatRoomRepository.java`
+- `chat-room/src/main/java/com/hymin/webtoon_review/chat/common/repository/UserChatRoomRepository.java`
+- `app/src/main/java/com/hymin/webtoon_review/chat/common/mapper/ChatMapper.java`
+- `app/src/main/java/com/hymin/webtoon_review/global/constant/RedisKeys.java`
+- `app/src/main/java/com/hymin/webtoon_review/global/constant/RedisStreamKeys.java`
+- `app/src/main/java/com/hymin/webtoon_review/global/constant/RedisTopicNames.java`
+- `app/src/main/java/com/hymin/webtoon_review/global/constant/RedisGroupNames.java`
 
 ### 동작 확인에 참고한 테스트
 

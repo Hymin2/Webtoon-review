@@ -11,6 +11,8 @@ x-backend-environment: &backend-environment
   REDIS_PASSWORD: ${REDIS_PASSWORD}
   MONGODB_HOST: mongodb
   MONGODB_PORT: 27017
+  MONGODB_DATABASE: ${MONGODB_DATABASE:-test}
+  MONGODB_REPLICA_SET: ${MONGODB_REPLICA_SET:-rs0}
   JWT_KEY: ${JWT_KEY}
   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: http://otel-collector:4318/v1/traces
   OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: http://otel-collector:4318/v1/metrics
@@ -96,15 +98,30 @@ services:
 
   mongodb:
     image: mongo:8.0.28
+    command: ["mongod", "--replSet", "${MONGODB_REPLICA_SET:-rs0}", "--bind_ip_all"]
     ports:
       - "${MONGODB_PORT:-27017}:27017"
     volumes:
       - mongodb-data:/data/db
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      test:
+        - CMD-SHELL
+        - >-
+          mongosh --quiet --eval '
+          try {
+            rs.status()
+          } catch (error) {
+            if (error.code === 94) {
+              rs.initiate({_id: "${MONGODB_REPLICA_SET:-rs0}", members: [{_id: 0, host: "mongodb:27017"}]})
+            } else {
+              throw error
+            }
+          }
+          quit(db.hello().isWritablePrimary ? 0 : 1)'
       interval: 5s
       timeout: 5s
-      retries: 10
+      retries: 20
+      start_period: 10s
 
   chat-1:
     <<: *chat-common

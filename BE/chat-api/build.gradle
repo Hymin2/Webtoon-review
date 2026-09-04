@@ -47,7 +47,20 @@ dependencies {
 }
 
 tasks.named('test') {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'mongo-replica-set'
+    }
+}
+
+tasks.register('messageCommandMongoIntegrationTest', Test) {
+    description = 'single-node MongoDB replica set에서 message command transaction을 검증합니다.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'mongo-replica-set'
+    }
+    shouldRunAfter tasks.named('test')
 }
 
 tasks.named('bootJar') {

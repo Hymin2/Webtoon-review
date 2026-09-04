@@ -46,8 +46,7 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
     mongodb:
-      host: ${MONGODB_HOST:localhost}
-      port: ${MONGODB_PORT:27017}
+      uri: mongodb://${MONGODB_HOST:localhost}:${MONGODB_PORT:27017}/${MONGODB_DATABASE:test}?replicaSet=${MONGODB_REPLICA_SET:rs0}&directConnection=true
       auto-index-creation: true
   application:
     name: webtoon-review

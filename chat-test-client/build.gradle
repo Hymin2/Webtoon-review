@@ -28,8 +28,34 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform {
-        excludeTags 'persistence-performance', 'persistence-bulk-5000', 'cache-stampede'
+        excludeTags 'persistence-performance', 'persistence-bulk-5000', 'cache-stampede',
+            'message-command-transaction-performance'
     }
+}
+
+tasks.register('messageCommandTransactionPerformanceTest', Test) {
+    description = 'Message+Outbox와 RoomSequence+Message+Outbox transaction 성능을 비교합니다.'
+    group = 'verification'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    useJUnitPlatform {
+        includeTags 'message-command-transaction-performance'
+    }
+    testLogging.showStandardStreams = true
+    [
+        'task004.mongodb.uri',
+        'chat.message-command.performance.requests',
+        'chat.message-command.performance.concurrency',
+        'chat.message-command.performance.repeats',
+        'chat.message-command.performance.warmup-requests',
+        'chat.message-command.performance.distributed-rooms',
+        'chat.message-command.performance.max-attempts'
+    ].each { propertyName ->
+        if (System.getProperty(propertyName)) {
+            systemProperty(propertyName, System.getProperty(propertyName))
+        }
+    }
+    shouldRunAfter tasks.named('test')
 }
 
 tasks.register('cacheStampedeTest', Test) {

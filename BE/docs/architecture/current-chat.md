@@ -6,7 +6,7 @@
 
 - Baseline Commit: `dcfd7e9c2a4db9d7989b91b6d0c7ad7ca77896ed`
 - Status: Reviewed
-- Structural Update: `TASK-001`의 `chat-connection`, `TASK-002`의 `chat-api`, `TASK-003`의 `chat-dispatcher` 물리 모듈 경계를 반영함 (2026-08-31)
+- Structural Update: `TASK-001`의 `chat-connection`, `TASK-002`의 `chat-api`, `TASK-003`의 `chat-dispatcher` 물리 모듈 경계와 `TASK-004`의 별도 HTTP persistence-first command 경계를 반영함 (2026-09-04)
 
 확인 기준은 다음 세 실행 프로필이다.
 
@@ -33,6 +33,7 @@
 ```mermaid
 flowchart LR
     C[STOMP client]
+    HC[HTTP client]
     LB[Nginx chat-lb]
     CS[chat-connection artifact\nchat profile]
     WS[(Worker-specific\nRedis Streams)]
@@ -41,10 +42,11 @@ flowchart LR
     PS[(Server-specific\nRedis Pub/Sub)]
     BS[(chat-message-batch:stream)]
     CP[chat-persister profile]
-    MDB[(MongoDB\nchat_messages)]
+    MDB[(MongoDB single-node replica set\nchat_messages / room_sequence /\nchat_message_outbox)]
     MYSQL[(MySQL\nchat_room / user_chat_room)]
 
     C <-->|WebSocket + STOMP| LB
+    HC -->|POST /chat/room/{roomId}/messages| LB
     LB <--> CS
     CS -->|room membership 조회| MYSQL
     CS -->|consistent hash로 선택 후 XADD| WS
@@ -56,6 +58,7 @@ flowchart LR
     CW -->|XADD| BS
     BS -->|consumer group| CP
     CP -->|unordered bulk insert| MDB
+    CS -->|Mongo transaction\nsequence + message + outbox| MDB
     CS -->|cache miss 조회| MDB
     CS <-->|최근 메시지 캐시| RC
 ```
@@ -63,6 +66,7 @@ flowchart LR
 주요 의존 방향은 다음과 같다.
 
 - `ChatController` → `ChatFacade` → `ChatService`, `ChatServerMessageIdService`, `ChatMessageRoutingService`
+- `ChatMessageCommandController` → `CreateChatMessageCommandService` → `UserChatRoomRepository` membership 확인 / `ChatMessageCommandRepository` Mongo write
 - `ChatMessageRoutingService` → `ChatWorkerLocalHashRing`, Redis Stream
 - `ChatWorkerStreamListener` → `ChatMessageSequenceGenerator`, `ChatRecentMessageCacheService`, `ChatSessionService`, `UserChatRoomRepository`, Redis Pub/Sub, 저장용 Redis Stream
 - `ChatMessageListener` → `SimpMessagingTemplate`
@@ -108,6 +112,21 @@ STOMP configuration/lifecycle, Redis-to-STOMP bridge와 chat server lifecycle co
 - 선택한 워커 Stream에 직렬화된 `ChatMessageDto`를 `XADD`한다. Spring Data의 `ObjectRecord`를 사용하므로 listener는 record의 `payload` field를 읽는다.
 
 워커 노드의 시작·정상 종료·장애 감지는 Pub/Sub 채널 `chat:worker:events`에 이벤트를 발행한다. 각 채팅 서버의 `ChatWorkerEvenetMessageListener`는 이벤트 내용 자체를 분기하지 않고 hash ring 전체를 `refresh()`한다.
+
+### 3.4 TASK-004 HTTP persistence-first command
+
+기존 STOMP SEND와 별도로 `chat-api`에 `POST /chat/room/{roomId}/messages`가 추가됐다. controller는 `@Auth Authentication.details`의 user ID와 principal name, path의 room ID 및 body의 `clientMessageId`/`messageBlocks`를 transport-neutral command로 변환한다. 최초 durable 생성은 실제 HTTP `201 Created`, 같은 `(roomId, senderId, clientMessageId)`의 기존 durable 결과는 `200 OK`를 반환한다.
+
+`CreateChatMessageCommandService`는 기존 `UserChatRoomRepository`로 MySQL `user_chat_room`의 authoritative membership과 `roomMemberId`를 먼저 확인한다. 이후 명시적으로 `mongoTransactionManager`에서 만든 Spring `TransactionTemplate`을 사용해 하나의 Mongo transaction에서 다음을 수행한다. 별도 custom transaction executor는 두지 않으며, retry loop가 transaction commit 예외까지 감싸도록 service가 transaction template을 호출한다.
+
+1. `room_sequence`의 room document를 `findAndModify + $inc`로 증가시킨다.
+2. `chat_messages`에 신규 `ChatMessage`를 insert한다.
+3. `chat_message_outbox`에 `MessageCreated` record를 insert한다.
+4. 세 write를 함께 commit한다.
+
+신규 message/outbox는 `save`/upsert가 아니라 `MongoTemplate.insert`를 사용한다. 동일 key의 순차 retry는 transaction 전에 기존 message와 대응 outbox를 확인하고, 동시 duplicate race는 loser transaction 종료 후 durable 결과를 bounded 조회한다. `TransientTransactionError`는 설정된 최대 attempt 안에서 transaction body 전체를 재시도하며 retry와 exhaustion metric을 기록한다. `UnknownTransactionCommitResult`는 body를 재실행하지 않고 durable message/outbox를 확인하며, 결과를 확정할 수 없으면 2xx로 응답하지 않는다.
+
+이 HTTP path는 Redis worker Stream, Redis sequence/cache/Pub/Sub, 기존 STOMP `ChatController.sendMessage()`, persistence Stream 및 chat-persister를 호출하지 않는다. Outbox Relay/Kafka가 아직 없으므로 HTTP로 생성한 message는 TASK-004만으로 realtime Push되지 않는다. 또한 기존 room counter seed와 legacy/new writer cutover가 없으므로 legacy-active room에 production traffic을 개방할 수 있다고 해석하지 않는다.
 
 ## 4. Worker 처리와 실시간 전달 흐름
 
@@ -380,6 +399,8 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 
 코드에는 `moveToDeadLetterQueue(records)` 호출이 주석으로만 남아 있고 실제 dead-letter 저장 또는 별도 Stream 발행 구현은 확인되지 않았다.
 
+MongoDB compose 서비스는 transaction 활성화를 위해 `rs0` single-node replica set으로 실행되고 healthcheck에서 idempotent `rs.initiate()`와 writable primary 상태를 확인한다. 이는 secondary/failover가 없는 개발·검증 topology이며 HA 구성이 아니다. 애플리케이션 database 기본값은 기존 history reader/persister와의 호환을 위한 `test`, replica set 기본값은 `rs0`이고 환경 변수로 명시할 수 있다.
+
 ## 13. 확인되지 않았거나 불명확한 부분
 
 - `chat:events` 채널은 채팅 서버가 시작/종료 시 발행하지만, 현재 저장소에서 이를 구독하는 listener는 확인되지 않았다.
@@ -388,7 +409,7 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `ChatService.connect()`와 `disconnect()` 및 이에 따른 `UserChatRoom.isConnected` 갱신 호출이 현재 `src/main/java`에서 확인되지 않았다.
 - persister의 dead-letter 이동은 주석만 있고 실제 보관 위치나 후속 처리 경로가 확인되지 않았다.
 - 정상 처리된 Redis Stream entry를 trim/delete하는 정책은 현재 코드에서 확인되지 않았다.
-- 저장소 내부 설정에는 MongoDB database 이름이 명시되어 있지 않다. 실제 database 선택값은 외부 환경 또는 Spring 기본 동작까지 확인해야 확정할 수 있다.
+- 저장소의 TASK-004 설정은 MongoDB database 기본값 `test`와 replica set 기본값 `rs0`을 명시한다. `test` 기본값은 기존 history reader/persister와의 호환을 위한 것이며, 저장소 밖 운영 배포가 같은 topology/값을 사용하는지는 별도 확인이 필요하다.
 - 현재 hash ring topology가 유지되는 동안 같은 room의 메시지는 consistent hash로 같은 워커 Stream에 라우팅된다. 다만 worker join/down 등으로 topology가 변경되면 해당 room의 대상 Stream이 변경될 수 있으며, 이 전환 구간을 포함한 end-to-end ordering 보장 범위는 현재 저장소의 설정·문서·테스트에서 명확히 확인되지 않았다.
 
 ## 14. 추가 확인이 필요한 부분
@@ -449,6 +470,8 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `chat-connection/src/main/java/com/hymin/webtoon_review/chat/connection/config/StompConfig.java`
 - `src/main/java/com/hymin/webtoon_review/global/config/RedisConfig.java`
 - `src/main/java/com/hymin/webtoon_review/global/config/AsyncConfig.java`
+- `src/main/java/com/hymin/webtoon_review/global/config/MongoTransactionConfiguration.java`
+- `src/main/java/com/hymin/webtoon_review/global/config/MongoIndexConfiguration.java`
 - `chat-dispatcher/src/main/java/com/hymin/webtoon_review/chat/dispatcher/config/ChatDispatcherRedisConfig.java`
 - `chat-dispatcher/src/main/java/com/hymin/webtoon_review/chat/dispatcher/config/ChatDispatcherAsyncConfig.java`
 
@@ -458,6 +481,9 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `src/main/java/com/hymin/webtoon_review/chat/common/service/ChatSessionService.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatController.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatRoomController.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/controller/ChatMessageCommandController.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/CreateChatMessageCommandService.java`
+- `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/repository/ChatMessageCommandRepository.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/facade/ChatFacade.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatService.java`
 - `chat-api/src/main/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdService.java`
@@ -489,6 +515,8 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `src/main/java/com/hymin/webtoon_review/chat/persister/initializer/ChatMessageBatchStreamInitializer.java`
 - `src/main/java/com/hymin/webtoon_review/chat/persister/scheduler/ChatMessageBatchScheduler.java`
 - `src/main/java/com/hymin/webtoon_review/chat/common/entity/ChatMessage.java`
+- `src/main/java/com/hymin/webtoon_review/chat/common/entity/RoomSequence.java`
+- `src/main/java/com/hymin/webtoon_review/chat/common/entity/MessageCreatedOutbox.java`
 - `src/main/java/com/hymin/webtoon_review/chat/common/entity/ChatRoom.java`
 - `src/main/java/com/hymin/webtoon_review/chat/common/entity/UserChatRoom.java`
 - `src/main/java/com/hymin/webtoon_review/chat/common/repository/ChatMessageRepository.java`
@@ -507,5 +535,7 @@ DB 조회는 `ChatMessageRepository.findByRoomIdAndMessageSequenceGreaterThanOrd
 - `chat-api/src/test/java/com/hymin/webtoon_review/chat/server/service/ChatServerMessageIdServiceTest.java`
 - `src/test/java/com/hymin/webtoon_review/chat/server/service/ChatMessageRoutingServiceTest.java`
 - `src/test/java/com/hymin/webtoon_review/chat/persister/service/ChatMessagePersistenceServiceTest.java`
+- `chat-api/src/test/java/com/hymin/webtoon_review/chat/server/service/CreateChatMessageMongoIntegrationTest.java`
+- `../chat-test-client/src/test/java/com/hymin/chattest/scenario/ChatMessageCommandTransactionPerformanceScenarioTest.java`
 - `chat-connection/src/test/java/com/hymin/webtoon_review/chat/connection/interceptor/StompChannelInterceptorTest.java`
 - `../chat-test-client/src/main/java/com/hymin/chattest/client/ChatTestClient.java`
